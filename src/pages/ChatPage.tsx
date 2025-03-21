@@ -235,10 +235,14 @@ export function ChatPage() {
             content: input,
             sender: 'user',
 <<<<<<< HEAD
+<<<<<<< HEAD
             createdAt: new Date().toLocaleString(),
 =======
             createdAt: new Date().toISOString(),
 >>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
+=======
+            createdAt: new Date().toLocaleString(),
+>>>>>>> 00c88c1 (feat: update timestamp)
         };
 
         // Update chat with user message
@@ -246,10 +250,14 @@ export function ChatPage() {
         updateChat(currentChatId, {
             messages: updatedMessages,
 <<<<<<< HEAD
+<<<<<<< HEAD
             updatedAt: new Date().toLocaleString(),
 =======
             updatedAt: new Date().toISOString(),
 >>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
+=======
+            updatedAt: new Date().toLocaleString(),
+>>>>>>> 00c88c1 (feat: update timestamp)
             title: updatedMessages.length === 1 ? input.slice(0, 30) : currentChat?.title,
         });
 
@@ -260,20 +268,28 @@ export function ChatPage() {
             content: '', // ，"..."
             sender: 'ai',
 <<<<<<< HEAD
+<<<<<<< HEAD
             createdAt: new Date().toLocaleString(),
 =======
             createdAt: new Date().toISOString(),
 >>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
+=======
+            createdAt: new Date().toLocaleString(),
+>>>>>>> 00c88c1 (feat: update timestamp)
         };
 
         // AI
         updateChat(currentChatId, {
             messages: [...updatedMessages, aiMessage],
 <<<<<<< HEAD
+<<<<<<< HEAD
             updatedAt: new Date().toLocaleString(),
 =======
             updatedAt: new Date().toISOString(),
 >>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
+=======
+            updatedAt: new Date().toLocaleString(),
+>>>>>>> 00c88c1 (feat: update timestamp)
         });
 
         setInput('');
@@ -360,10 +376,14 @@ export function ChatPage() {
                                         content: `Error: ${jsonData.error?.message || 'An unknown error occurred'}`,
                                     }],
 <<<<<<< HEAD
+<<<<<<< HEAD
                                     updatedAt: new Date().toLocaleString(),
 =======
                                     updatedAt: new Date().toISOString(),
 >>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
+=======
+                                    updatedAt: new Date().toLocaleString(),
+>>>>>>> 00c88c1 (feat: update timestamp)
                                 });
                                 break;
 
@@ -424,10 +444,14 @@ export function ChatPage() {
                     content: 'Sorry, I encountered an issue and couldn\'t respond to your request. Please try again later.',
                 }],
 <<<<<<< HEAD
+<<<<<<< HEAD
                 updatedAt: new Date().toLocaleString(),
 =======
                 updatedAt: new Date().toISOString(),
 >>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
+=======
+                updatedAt: new Date().toLocaleString(),
+>>>>>>> 00c88c1 (feat: update timestamp)
             });
         }
     };
@@ -452,10 +476,14 @@ export function ChatPage() {
                             content: newContent,
                         }],
 <<<<<<< HEAD
+<<<<<<< HEAD
                         updatedAt: new Date().toLocaleString(),
 =======
                         updatedAt: new Date().toISOString(),
 >>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
+=======
+                        updatedAt: new Date().toLocaleString(),
+>>>>>>> 00c88c1 (feat: update timestamp)
                     });
                 } else {
                     // AI，AI
@@ -465,6 +493,7 @@ export function ChatPage() {
                             content: newContent,
                             sender: 'ai',
 <<<<<<< HEAD
+<<<<<<< HEAD
                             createdAt: new Date().toLocaleString(),
                         }],
                         updatedAt: new Date().toLocaleString(),
@@ -473,6 +502,11 @@ export function ChatPage() {
                         }],
                         updatedAt: new Date().toISOString(),
 >>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
+=======
+                            createdAt: new Date().toLocaleString(),
+                        }],
+                        updatedAt: new Date().toLocaleString(),
+>>>>>>> 00c88c1 (feat: update timestamp)
                     });
                 }
             }
