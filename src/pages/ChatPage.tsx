@@ -205,14 +205,14 @@ export function ChatPage() {
             id: Date.now().toString(),
             content: input,
             sender: 'user',
-            createdAt: new Date().toISOString(),
+            createdAt: new Date().toLocaleString(),
         };
 
         // Update chat with user message
         const updatedMessages = [...(currentChat?.messages || []), userMessage];
         updateChat(currentChatId, {
             messages: updatedMessages,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toLocaleString(),
             title: updatedMessages.length === 1 ? input.slice(0, 30) : currentChat?.title,
         });
 
@@ -222,13 +222,13 @@ export function ChatPage() {
             id: aiMessageId,
             content: '', // ，"..."
             sender: 'ai',
-            createdAt: new Date().toISOString(),
+            createdAt: new Date().toLocaleString(),
         };
 
         // AI
         updateChat(currentChatId, {
             messages: [...updatedMessages, aiMessage],
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toLocaleString(),
         });
 
         setInput('');
@@ -314,7 +314,7 @@ export function ChatPage() {
                                         ...aiMessage,
                                         content: `Error: ${jsonData.error?.message || 'An unknown error occurred'}`,
                                     }],
-                                    updatedAt: new Date().toISOString(),
+                                    updatedAt: new Date().toLocaleString(),
                                 });
                                 break;
 
@@ -374,7 +374,7 @@ export function ChatPage() {
                     ...aiMessage,
                     content: 'Sorry, I encountered an issue and couldn\'t respond to your request. Please try again later.',
                 }],
-                updatedAt: new Date().toISOString(),
+                updatedAt: new Date().toLocaleString(),
             });
         }
     };
@@ -398,7 +398,7 @@ export function ChatPage() {
                             ...lastMessage,
                             content: newContent,
                         }],
-                        updatedAt: new Date().toISOString(),
+                        updatedAt: new Date().toLocaleString(),
                     });
                 } else {
                     // AI，AI
@@ -407,9 +407,9 @@ export function ChatPage() {
                             id: Date.now().toString(),
                             content: newContent,
                             sender: 'ai',
-                            createdAt: new Date().toISOString(),
+                            createdAt: new Date().toLocaleString(),
                         }],
-                        updatedAt: new Date().toISOString(),
+                        updatedAt: new Date().toLocaleString(),
                     });
                 }
             }
