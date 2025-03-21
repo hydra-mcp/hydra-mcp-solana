@@ -505,6 +505,7 @@ export function saveChats(chats: Chat[]): void {
 
 export function loadChats(): Chat[] {
   try {
+<<<<<<< HEAD
     const allChats: Chat[] = [];
 
     // Find all localStorage keys that start with STORAGE_KEY_PREFIX
@@ -518,6 +519,13 @@ export function loadChats(): Chat[] {
           allChats.push(...chats);
         }
       }
+=======
+    const storedChats = localStorage.getItem(STORAGE_KEY);
+    if (storedChats) {
+      // Parse the stored data
+      const chats: Chat[] = JSON.parse(storedChats);
+      return chats;
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
     }
 
     // Sort by update time, latest first

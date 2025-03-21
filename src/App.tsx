@@ -8,6 +8,7 @@ import Home from '@/pages/index';
 import { Toaster } from '@/components/ui/toaster';
 import { ErrorHandler } from '@/components/ErrorHandler';
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 import { IOSDesktop } from '@/pages/IOSDesktop';
 import { WalletFinder } from '@/pages/WalletFinder';
@@ -20,6 +21,8 @@ import SolanaPaymentPage from './pages/SolanaPaymentPage';
 =======
 import { SolanaPaymentPage } from './pages/SolanaPaymentPage';
 >>>>>>> 39ec333 (feat: implement Solana recharge feature with wallet connection, transaction handling, and UI enhancements for better user experience)
+=======
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
 
 function App() {
   const [chats, setChats] = useState<Chat[]>([]);

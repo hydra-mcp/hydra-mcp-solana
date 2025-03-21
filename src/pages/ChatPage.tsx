@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
 import { Send, ChevronDown, Sparkles, Loader2, Info, CheckCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -123,8 +126,13 @@ export function ChatPage() {
             id: Date.now().toString(),
             title: 'New Chat',
             messages: [],
+<<<<<<< HEAD
             createdAt: new Date().toLocaleString(),
             updatedAt: new Date().toLocaleString(),
+=======
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
         };
         setChats(prev => [newChat, ...prev]);
         setCurrentChatId(newChat.id);
@@ -155,7 +163,11 @@ export function ChatPage() {
                                 ...chat,
                                 ...updates,
                                 messages: newMessages,
+<<<<<<< HEAD
                                 updatedAt: new Date().toLocaleString() // 
+=======
+                                updatedAt: new Date().toISOString() // 
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
                             };
                         }
 
@@ -222,14 +234,22 @@ export function ChatPage() {
             id: Date.now().toString(),
             content: input,
             sender: 'user',
+<<<<<<< HEAD
             createdAt: new Date().toLocaleString(),
+=======
+            createdAt: new Date().toISOString(),
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
         };
 
         // Update chat with user message
         const updatedMessages = [...(currentChat?.messages || []), userMessage];
         updateChat(currentChatId, {
             messages: updatedMessages,
+<<<<<<< HEAD
             updatedAt: new Date().toLocaleString(),
+=======
+            updatedAt: new Date().toISOString(),
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
             title: updatedMessages.length === 1 ? input.slice(0, 30) : currentChat?.title,
         });
 
@@ -239,13 +259,21 @@ export function ChatPage() {
             id: aiMessageId,
             content: '', // ，"..."
             sender: 'ai',
+<<<<<<< HEAD
             createdAt: new Date().toLocaleString(),
+=======
+            createdAt: new Date().toISOString(),
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
         };
 
         // AI
         updateChat(currentChatId, {
             messages: [...updatedMessages, aiMessage],
+<<<<<<< HEAD
             updatedAt: new Date().toLocaleString(),
+=======
+            updatedAt: new Date().toISOString(),
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
         });
 
         setInput('');
@@ -331,7 +359,11 @@ export function ChatPage() {
                                         ...aiMessage,
                                         content: `Error: ${jsonData.error?.message || 'An unknown error occurred'}`,
                                     }],
+<<<<<<< HEAD
                                     updatedAt: new Date().toLocaleString(),
+=======
+                                    updatedAt: new Date().toISOString(),
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
                                 });
                                 break;
 
@@ -391,7 +423,11 @@ export function ChatPage() {
                     ...aiMessage,
                     content: 'Sorry, I encountered an issue and couldn\'t respond to your request. Please try again later.',
                 }],
+<<<<<<< HEAD
                 updatedAt: new Date().toLocaleString(),
+=======
+                updatedAt: new Date().toISOString(),
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
             });
         }
     };
@@ -415,7 +451,11 @@ export function ChatPage() {
                             ...lastMessage,
                             content: newContent,
                         }],
+<<<<<<< HEAD
                         updatedAt: new Date().toLocaleString(),
+=======
+                        updatedAt: new Date().toISOString(),
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
                     });
                 } else {
                     // AI，AI
@@ -424,9 +464,15 @@ export function ChatPage() {
                             id: Date.now().toString(),
                             content: newContent,
                             sender: 'ai',
+<<<<<<< HEAD
                             createdAt: new Date().toLocaleString(),
                         }],
                         updatedAt: new Date().toLocaleString(),
+=======
+                            createdAt: new Date().toISOString(),
+                        }],
+                        updatedAt: new Date().toISOString(),
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
                     });
                 }
             }

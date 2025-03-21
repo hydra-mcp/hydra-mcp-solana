@@ -3,7 +3,11 @@
 import { Chat } from "@/types/chat";
 import { MessageBubble } from "./MessageBubble";
 import { memo, useEffect, useState } from "react";
+<<<<<<< HEAD
 import { Bot, MessageSquarePlus, ArrowRight, Info, CheckCircle, Loader2, BrainCircuit, Sparkles, Zap, Stars, Lightbulb, XCircle } from "lucide-react";
+=======
+import { Bot, MessageSquarePlus, ArrowRight, Info, CheckCircle, Loader2 } from "lucide-react";
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
 import { Button } from "@/components/ui/button";
 =======
 import React, { useCallback, useState } from 'react';
@@ -38,6 +42,14 @@ interface ChatContainerProps {
 >>>>>>> f14550e (feat: enhance chat functionality with error handling and retry mechanism for streaming messages)
 }
 
+
+export interface ProcessingStage {
+    content: string;
+    message: string;
+    // 0: start 1: done 2: failed
+    status: number;
+}
+
 interface ChatContainerProps {
     currentChat: Chat | undefined;
     isStreaming: boolean;
@@ -52,6 +64,7 @@ export const ChatContainer = memo(({
     messagesEndRef,
     onNewChat,
 <<<<<<< HEAD
+<<<<<<< HEAD
     processingStage
 }: ChatContainerProps) => {
     const [, setForceUpdate] = useState(0);
@@ -63,6 +76,11 @@ export const ChatContainer = memo(({
     const { isLoadingChats } = useChatContext();
 <<<<<<< HEAD
 >>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
+=======
+    processingStage
+}: ChatContainerProps) => {
+    const [, setForceUpdate] = useState(0);
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
 
     useEffect(() => {
         if (isStreaming && currentChat?.messages.length) {
@@ -184,6 +202,7 @@ export const ChatContainer = memo(({
                 {currentChat.messages.map((message, index) => (
                     <MessageBubble
                         key={`${message.id}-${isStreaming && index === currentChat.messages.length - 1 ? Date.now() : 'static'}`}
+<<<<<<< HEAD
 =======
     // Show empty state when there is no chat history
 =======
@@ -226,6 +245,8 @@ export const ChatContainer = memo(({
                     <StreamingMessageBubble
                         key={message.id}
 >>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
+=======
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
                         message={message}
 <<<<<<< HEAD
                         isStreaming={isStreaming && index === currentChat.messages.length - 1 && message.sender === 'ai'}
@@ -239,12 +260,16 @@ export const ChatContainer = memo(({
                         </div>
                         {processingStage.map((stage, index) => {
                             const isCompleted = stage.status === 1;
+<<<<<<< HEAD
                             const isError = stage.status === 2;
+=======
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
                             const stageText = stage.message.trim();
                             if (!stageText) return null;
 
                             return (
                                 <div key={index} className="flex items-center gap-2 pl-1">
+<<<<<<< HEAD
                                     {stage.content === '' ? (
                                         <div className="relative w-7 h-7 flex items-center justify-center overflow-hidden rounded-full group">
                                             <div className="absolute inset-0 bg-gradient-to-br from-violet-500/20 via-indigo-500/15 to-blue-500/10 rounded-full shadow-inner"></div>
@@ -276,6 +301,17 @@ export const ChatContainer = memo(({
                                     )}>
                                         {stageText}
                                         {!isCompleted && !isError && index === processingStage.length - 1 ? '...' : ''}
+=======
+                                    {isCompleted ? (
+                                        <CheckCircle className="h-3 w-3 text-green-500 shrink-0" />
+                                    ) : index === processingStage.length - 1 || index == 0 ? (
+                                        <Loader2 className="h-3 w-3 text-primary animate-spin shrink-0" />
+                                    ) : (
+                                        <div className="h-3 w-3 rounded-full bg-primary/30 shrink-0" />
+                                    )}
+                                    <span className={isCompleted ? 'text-green-600 font-medium' : 'text-muted-foreground'}>
+                                        {stageText}{!isCompleted && index === processingStage.length - 1 ? '...' : ''}
+>>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
                                     </span>
                                 </div>
                             );
