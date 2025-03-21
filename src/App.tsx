@@ -1,14 +1,11 @@
-import { Moon, Sun, Bot, Send, ChevronDown, PanelLeftOpen, PanelLeftClose } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import { ChatMessage } from '@/components/chat/ChatMessage';
-import { ChatList } from '@/components/chat/ChatList';
-import { Chat, Message } from '@/types/chat';
-import { sendMessage } from '@/lib/api';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { Login } from './Login';
+import { AppLayout } from '@/layouts/AppLayout';
+import { ChatPage } from '@/pages/ChatPage';
+import { Toaster } from '@/components/ui/toaster';
+import { ErrorHandler } from '@/components/ErrorHandler';
 
 function App() {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -82,7 +79,7 @@ function App() {
         sender: 'ai',
         timestamp: new Date(),
       };
-      
+
       updateChat(currentChatId, {
         messages: [...updatedMessages, aiMessage],
         updatedAt: new Date(),
@@ -118,133 +115,31 @@ function App() {
   }, []);
 
   return (
-    <div className={cn(
-      'flex h-screen flex-col bg-background transition-colors duration-300',
-      isDarkMode ? 'dark' : ''
-    )}>
-      <aside
-        className={cn(
-          'fixed left-0 top-0 z-20 h-full w-64 transform border-r bg-background transition-transform duration-300',
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        )}
-      >
-        <div className="flex h-14 items-center border-b px-4">
-          <h2 className="font-semibold">Chat History</h2>
-        </div>
-        <div className="p-4">
-          <ChatList
-            chats={chats}
-            currentChatId={currentChatId}
-            onSelectChat={setCurrentChatId}
-            onNewChat={createNewChat}
-          />
-        </div>
-      </aside>
+    <BrowserRouter>
+      <AuthProvider>
+        {/* Global Toaster for notifications */}
+        <Toaster />
 
-      {/* Header */}
-      <header className="fixed top-0 z-10 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className={cn(
-          'container flex h-14 items-center',
-          isSidebarOpen && 'ml-64 transition-[margin] duration-300'
-        )}>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="mr-2"
-          >
-            {isSidebarOpen ? (
-              <PanelLeftClose className="h-5 w-5" />
-            ) : (
-              <PanelLeftOpen className="h-5 w-5" />
-            )}
-          </Button>
-          <div className="flex items-center gap-2 font-bold">
-            <Bot className="h-6 w-6 animate-pulse text-primary" />
-            <span className="hidden sm:inline-block">AI Chat Assistant</span>
-          </div>
-          <div className="flex flex-1 items-center justify-end">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="transition-transform hover:scale-110"
-            >
-              {isDarkMode ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
-            </Button>
-          </div>
-        </div>
-      </header>
+        {/* Global API error handler */}
+        <ErrorHandler />
 
-      {/* Main Chat Area */}
-      <main className={cn(
-        'container flex-1 pt-16 pb-16',
-        isSidebarOpen && 'ml-64 transition-[margin] duration-300'
-      )}>
-        <ScrollArea
-          ref={scrollAreaRef}
-          className="h-full rounded-lg border bg-muted/50"
-          onScroll={handleScroll}
-        >
-          <div className="flex flex-col gap-4 p-4">
-            {currentChat?.messages.map((message) => (
-              <ChatMessage
-                key={message.id}
-                message={message}
-                isCurrentChat={true}
-              />
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
 
-        {/* Scroll to Bottom Button */}
-        {isScrolledUp && (
-          <Button
-            variant="secondary"
-            size="icon"
-            className="fixed bottom-20 right-4 z-10 rounded-full shadow-lg transition-transform hover:scale-110"
-            onClick={scrollToBottom}
-          >
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        )}
-      </main>
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<ChatPage />} />
+              {/* Add more routes here as needed */}
+            </Route>
+          </Route>
 
-      {/* Input Area */}
-      <footer className={cn(
-        'fixed bottom-0 right-0 border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60',
-        isSidebarOpen ? 'left-64' : 'left-0',
-        'transition-[left] duration-300'
-      )}>
-        <div className="container flex gap-2 py-4 pr-4">
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Type your message..."
-            className="min-h-10 max-h-32 resize-none"
-          />
-          <Button
-            disabled={!currentChatId}
-            onClick={handleSend}
-            className="shrink-0 transition-transform hover:scale-105"
-          >
-            <Send className="h-4 w-4" />
-            <span className="ml-2 hidden sm:inline-block">Send</span>
-          </Button>
-        </div>
-      </footer>
-    </div>
+          {/* Fallback Route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
