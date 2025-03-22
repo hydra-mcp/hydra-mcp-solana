@@ -4,10 +4,14 @@ import { Chat } from "@/types/chat";
 import { MessageBubble } from "./MessageBubble";
 import { memo, useEffect, useState } from "react";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { Bot, MessageSquarePlus, ArrowRight, Info, CheckCircle, Loader2, BrainCircuit, Sparkles, Zap, Stars, Lightbulb, XCircle } from "lucide-react";
 =======
 import { Bot, MessageSquarePlus, ArrowRight, Info, CheckCircle, Loader2 } from "lucide-react";
 >>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
+=======
+import { Bot, MessageSquarePlus, ArrowRight, Info, CheckCircle, Loader2, BrainCircuit, Sparkles, Zap, Stars, Lightbulb, XCircle } from "lucide-react";
+>>>>>>> 4a87fb3 (feat: Update ChatContainer and ChatPage components; add error handling visuals and change timestamp format)
 import { Button } from "@/components/ui/button";
 =======
 import React, { useCallback, useState } from 'react';
@@ -261,9 +265,13 @@ export const ChatContainer = memo(({
                         {processingStage.map((stage, index) => {
                             const isCompleted = stage.status === 1;
 <<<<<<< HEAD
+<<<<<<< HEAD
                             const isError = stage.status === 2;
 =======
 >>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
+=======
+                            const isError = stage.status === 2;
+>>>>>>> 4a87fb3 (feat: Update ChatContainer and ChatPage components; add error handling visuals and change timestamp format)
                             const stageText = stage.message.trim();
                             if (!stageText) return null;
 
@@ -301,6 +309,7 @@ export const ChatContainer = memo(({
                                     )}>
                                         {stageText}
                                         {!isCompleted && !isError && index === processingStage.length - 1 ? '...' : ''}
+<<<<<<< HEAD
 =======
                                     {isCompleted ? (
                                         <CheckCircle className="h-3 w-3 text-green-500 shrink-0" />
@@ -312,6 +321,8 @@ export const ChatContainer = memo(({
                                     <span className={isCompleted ? 'text-green-600 font-medium' : 'text-muted-foreground'}>
                                         {stageText}{!isCompleted && index === processingStage.length - 1 ? '...' : ''}
 >>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
+=======
+>>>>>>> 4a87fb3 (feat: Update ChatContainer and ChatPage components; add error handling visuals and change timestamp format)
                                     </span>
                                 </div>
                             );

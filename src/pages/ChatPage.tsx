@@ -127,12 +127,17 @@ export function ChatPage() {
             title: 'New Chat',
             messages: [],
 <<<<<<< HEAD
+<<<<<<< HEAD
             createdAt: new Date().toLocaleString(),
             updatedAt: new Date().toLocaleString(),
 =======
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
 >>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
+=======
+            createdAt: new Date().toLocaleString(),
+            updatedAt: new Date().toLocaleString(),
+>>>>>>> 4a87fb3 (feat: Update ChatContainer and ChatPage components; add error handling visuals and change timestamp format)
         };
         setChats(prev => [newChat, ...prev]);
         setCurrentChatId(newChat.id);
@@ -164,10 +169,14 @@ export function ChatPage() {
                                 ...updates,
                                 messages: newMessages,
 <<<<<<< HEAD
+<<<<<<< HEAD
                                 updatedAt: new Date().toLocaleString() // 
 =======
                                 updatedAt: new Date().toISOString() // 
 >>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
+=======
+                                updatedAt: new Date().toLocaleString() // 
+>>>>>>> 4a87fb3 (feat: Update ChatContainer and ChatPage components; add error handling visuals and change timestamp format)
                             };
                         }
 
