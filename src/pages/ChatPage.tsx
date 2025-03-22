@@ -106,8 +106,8 @@ export function ChatPage() {
             id: Date.now().toString(),
             title: 'New Chat',
             messages: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            createdAt: new Date().toLocaleString(),
+            updatedAt: new Date().toLocaleString(),
         };
         setChats(prev => [newChat, ...prev]);
         setCurrentChatId(newChat.id);
@@ -138,7 +138,7 @@ export function ChatPage() {
                                 ...chat,
                                 ...updates,
                                 messages: newMessages,
-                                updatedAt: new Date().toISOString() // 
+                                updatedAt: new Date().toLocaleString() // 
                             };
                         }
 
