@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Lock, User, Eye, EyeOff } from 'lucide-react';
@@ -6,37 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-
-interface StarProps {
-    size: number;
-    top: string;
-    left: string;
-    opacity: number;
-    delay: number;
-    duration: number;
-    twinkleType: 'default' | 'random';
-    color?: string;
-    type?: 'normal' | 'bright' | 'flare';
-}
-
-interface MeteorProps {
-    top: string;
-    left: string;
-    delay: number;
-    duration: number;
-    size: number;
-    angle: number;
-    color?: string;
-}
-
-interface GalaxyProps {
-    width: string;
-    height: string;
-    top: string;
-    left: string;
-    rotation: number;
-    opacity: number;
-}
 
 export function Login() {
     const [username, setUsername] = useState('');
@@ -46,6 +15,8 @@ export function Login() {
     const navigate = useNavigate();
     const { toast } = useToast();
     const { login } = useAuth();
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const animationFrameId = useRef<number>();
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
@@ -89,352 +60,230 @@ export function Login() {
         }
     };
 
-    //  - useMemo
-    const backgroundLayers = useMemo(() => {
-        //  - ，
-        const foregroundElements = Array.from({ length: 5 }).map((_, i) => ({
-            id: `fg-${i}`,
-            size: Math.random() * 180 + 120,
-            initialPosition: {
-                x: `${Math.random() * 100}%`,
-                y: `${Math.random() * 100}%`,
-            },
-            duration: Math.random() * 25 + 45,
-            delay: Math.random() * 5,
+    // Canvas animation - draws and animates all background effects
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Set canvas to full screen size with device pixel ratio for sharpness
+        const updateCanvasSize = () => {
+            const dpr = window.devicePixelRatio || 1;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+
+            ctx.scale(dpr, dpr);
+        };
+
+        updateCanvasSize();
+        window.addEventListener('resize', updateCanvasSize);
+
+        // Star properties
+        const stars = Array.from({ length: 100 }, () => ({
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            size: Math.random() * 2 + 0.5,
+            opacity: 0.3 + Math.random() * 0.7,
+            twinkleSpeed: 1 + Math.random() * 3,
+            twinklePhase: Math.random() * Math.PI * 2
+        }));
+
+        // Nebula/background glow properties
+        const nebulas = Array.from({ length: 5 }, () => ({
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            size: Math.random() * 300 + 200,
             opacity: 0.03 + Math.random() * 0.04,
-            movement: {
-                x: Math.random() * 35 - 17.5,
-                y: Math.random() * 35 - 17.5,
-            },
-            blur: 1 + Math.random() * 3,
-            layer: 'foreground',
+            color: Math.random() > 0.5 ? '#4169e1' : '#5e35b1'
         }));
 
-        //  - ，
-        const middlegroundElements = Array.from({ length: 5 }).map((_, i) => ({
-            id: `mg-${i}`,
-            size: Math.random() * 250 + 180,
-            initialPosition: {
-                x: `${Math.random() * 100}%`,
-                y: `${Math.random() * 100}%`,
-            },
-            duration: Math.random() * 35 + 65,
-            delay: Math.random() * 7,
-            opacity: 0.02 + Math.random() * 0.03,
-            movement: {
-                x: Math.random() * 25 - 12.5,
-                y: Math.random() * 25 - 12.5,
-            },
-            blur: 3 + Math.random() * 4,
-            layer: 'middleground',
-        }));
+        // Meteor properties
+        const meteors: {
+            x: number;
+            y: number;
+            length: number;
+            speed: number;
+            opacity: number;
+            active: boolean;
+            timeToLaunch: number;
+        }[] = [];
 
-        //  - ，
-        const backgroundElements = Array.from({ length: 3 }).map((_, i) => ({
-            id: `bg-${i}`,
-            size: Math.random() * 380 + 280,
-            initialPosition: {
-                x: `${Math.random() * 100}%`,
-                y: `${Math.random() * 100}%`,
-            },
-            duration: Math.random() * 60 + 80,
-            delay: Math.random() * 10,
-            opacity: 0.01 + Math.random() * 0.02,
-            movement: {
-                x: Math.random() * 15 - 7.5,
-                y: Math.random() * 15 - 7.5,
-            },
-            blur: 5 + Math.random() * 15,
-            layer: 'background',
-        }));
+        // Animation loop
+        let lastMeteorTime = 0;
+        const animate = (timestamp: number) => {
+            if (!ctx || !canvas) return;
 
-        return [...foregroundElements, ...middlegroundElements, ...backgroundElements];
-    }, []);
+            ctx.clearRect(0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
 
-    // 
-    const starColors = useMemo(() => [
-        'rgba(255, 255, 255, 0.9)', // 
-        'rgba(220, 235, 255, 0.9)', // 
-        'rgba(255, 230, 220, 0.9)', // 
-        'rgba(255, 255, 220, 0.9)', // 
-        'rgba(220, 255, 240, 0.9)', // 
-    ], []);
+            // Draw nebulas (large blurred background elements)
+            nebulas.forEach(nebula => {
+                const gradient = ctx.createRadialGradient(
+                    nebula.x, nebula.y, 0,
+                    nebula.x, nebula.y, nebula.size
+                );
 
-    // 
-    const stars = useMemo(() => {
-        //  - 
-        const mainStars = Array.from({ length: 120 }).map((_, i): StarProps => ({
-            size: Math.random() * 2.5 + 0.8, // 0.8-3.3px 
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            opacity: 0.3 + Math.random() * 0.7, // 
-            delay: Math.random() * 5, // 
-            duration: 2 + Math.random() * 4, // 
-            twinkleType: Math.random() > 0.7 ? 'random' : 'default', // 30%
-            color: starColors[Math.floor(Math.random() * starColors.length)],
-            type: 'normal'
-        }));
+                gradient.addColorStop(0, `${nebula.color}${Math.floor(nebula.opacity * 100).toString(16).padStart(2, '0')}`);
+                gradient.addColorStop(1, 'transparent');
 
-        //  - ，
-        const brightStars = Array.from({ length: 15 }).map((_, i): StarProps => ({
-            size: Math.random() * 3 + 2.5, // 2.5-5.5px 
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            opacity: 0.7 + Math.random() * 0.3, // 
-            delay: Math.random() * 3, // 
-            duration: 3 + Math.random() * 5, // 
-            twinkleType: 'random', // 
-            color: starColors[Math.floor(Math.random() * starColors.length)],
-            type: 'bright'
-        }));
+                ctx.beginPath();
+                ctx.fillStyle = gradient;
+                ctx.arc(nebula.x, nebula.y, nebula.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
 
-        //  - 
-        const flareStars = Array.from({ length: 5 }).map((_, i): StarProps => ({
-            size: Math.random() * 2 + 3, // 3-5px 
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            opacity: 0.8 + Math.random() * 0.2, // 
-            delay: Math.random() * 4, // 
-            duration: 6 + Math.random() * 4, // 
-            twinkleType: 'random',
-            color: i % 2 === 0 ? 'rgba(220, 235, 255, 0.95)' : 'rgba(255, 230, 220, 0.95)', // 
-            type: 'flare'
-        }));
+            // Draw stars with twinkling effect
+            stars.forEach(star => {
+                const twinkle = Math.sin(timestamp / 1000 * star.twinkleSpeed + star.twinklePhase) * 0.5 + 0.5;
+                const currentOpacity = star.opacity * (0.5 + twinkle * 0.5);
 
-        return [...mainStars, ...brightStars, ...flareStars];
-    }, [starColors]);
+                ctx.beginPath();
+                ctx.fillStyle = `rgba(255, 255, 255, ${currentOpacity})`;
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
 
-    // 
-    const meteorColors = useMemo(() => [
-        'rgba(255, 255, 255, 0.9)', // 
-        'rgba(200, 220, 255, 0.9)', // 
-        'rgba(255, 220, 200, 0.9)', // 
-    ], []);
+                // Add glow effect to larger stars
+                if (star.size > 1.2) {
+                    ctx.beginPath();
+                    const glow = ctx.createRadialGradient(
+                        star.x, star.y, 0,
+                        star.x, star.y, star.size * 4
+                    );
+                    glow.addColorStop(0, `rgba(255, 255, 255, ${currentOpacity * 0.4})`);
+                    glow.addColorStop(1, 'transparent');
 
-    // 
-    const Meteor = useCallback(({ top, left, delay, duration, size, angle, color = 'rgba(255, 255, 255, 0.9)' }: MeteorProps) => (
-        <div
-            className="absolute overflow-hidden"
-            style={{
-                top,
-                left,
-                transform: `rotate(${angle}deg)`,
-                transformOrigin: 'left top',
-                width: '150px',
-                height: '2px',
-                opacity: 0
-            }}
-        >
-            <div
-                className="absolute animate-meteor"
-                style={{
-                    height: `${size}px`,
-                    background: `linear-gradient(90deg, transparent 0%, ${color} 30%, ${color} 70%, transparent 100%)`,
-                    borderRadius: '100px',
-                    animationDelay: `${delay}s`,
-                    animationDuration: `${duration}s`,
-                }}
-            >
-                {/*  */}
-                <div
-                    className="absolute h-full rounded-full animate-meteor-glow"
-                    style={{
-                        right: 0,
-                        width: `${size * 2}px`,
-                        background: color,
-                        animationDelay: `${delay}s`,
-                        animationDuration: `${duration * 0.5}s`
-                    }}
-                ></div>
-            </div>
-        </div>
-    ), []);
+                    ctx.fillStyle = glow;
+                    ctx.arc(star.x, star.y, star.size * 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
 
-    // 
-    const meteors = useMemo(() => {
-        return Array.from({ length: 10 }).map((_, i) => ({
-            id: `meteor-${i}`,
-            top: `${Math.random() * 40}%`, // 
-            left: `${Math.random() * 100 - 20}%`, // 
-            delay: Math.random() * 20 + i * 3, // ，
-            duration: 3 + Math.random() * 4, // 
-            size: 1 + Math.random() * 2, // 
-            angle: -35 - Math.random() * 20, // ，
-            color: meteorColors[Math.floor(Math.random() * meteorColors.length)],
-        }));
-    }, [meteorColors]);
+            // Create new meteors periodically
+            if (timestamp - lastMeteorTime > 2000 && meteors.length < 3) {
+                lastMeteorTime = timestamp;
 
-    // 
-    const galaxies = useMemo(() => {
-        return [
-            {
-                width: '800px',
-                height: '300px',
-                top: '20%',
-                left: '10%',
-                rotation: 15,
-                opacity: 0.08,
-            },
-            {
-                width: '600px',
-                height: '250px',
-                top: '60%',
-                left: '60%',
-                rotation: -25,
-                opacity: 0.06,
+                if (Math.random() < 0.3) { // 30% chance to create meteor
+                    meteors.push({
+                        x: Math.random() * window.innerWidth,
+                        y: 0,
+                        length: Math.random() * 100 + 50,
+                        speed: Math.random() * 300 + 200,
+                        opacity: 0.7 + Math.random() * 0.3,
+                        active: true,
+                        timeToLaunch: Math.random() * 1000
+                    });
+                }
             }
-        ];
+
+            // Draw and update meteors
+            meteors.forEach((meteor, index) => {
+                if (meteor.timeToLaunch > 0) {
+                    meteor.timeToLaunch -= timestamp / 60;
+                    return;
+                }
+
+                ctx.save();
+
+                // Create meteor gradient
+                const gradient = ctx.createLinearGradient(
+                    meteor.x, meteor.y,
+                    meteor.x + meteor.length, meteor.y + meteor.length
+                );
+
+                gradient.addColorStop(0, `rgba(255, 255, 255, ${meteor.opacity})`);
+                gradient.addColorStop(0.3, `rgba(200, 220, 255, ${meteor.opacity * 0.8})`);
+                gradient.addColorStop(1, 'transparent');
+
+                ctx.beginPath();
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2;
+                ctx.moveTo(meteor.x, meteor.y);
+                ctx.lineTo(meteor.x + meteor.length, meteor.y + meteor.length);
+                ctx.stroke();
+
+                // Draw glow at meteor head
+                const glowGradient = ctx.createRadialGradient(
+                    meteor.x, meteor.y, 0,
+                    meteor.x, meteor.y, 10
+                );
+
+                glowGradient.addColorStop(0, `rgba(255, 255, 255, ${meteor.opacity})`);
+                glowGradient.addColorStop(1, 'transparent');
+
+                ctx.fillStyle = glowGradient;
+                ctx.arc(meteor.x, meteor.y, 10, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+
+                // Update meteor position
+                const delta = timestamp / 1000 * meteor.speed / 60;
+                meteor.x += delta;
+                meteor.y += delta;
+
+                // Remove meteors that go off screen
+                if (meteor.x > window.innerWidth || meteor.y > window.innerHeight) {
+                    meteors[index].active = false;
+                }
+            });
+
+            // Clean up inactive meteors
+            for (let i = meteors.length - 1; i >= 0; i--) {
+                if (!meteors[i].active) {
+                    meteors.splice(i, 1);
+                }
+            }
+
+            animationFrameId.current = requestAnimationFrame(animate);
+        };
+
+        animationFrameId.current = requestAnimationFrame(animate);
+
+        // Cleanup
+        return () => {
+            if (animationFrameId.current) {
+                cancelAnimationFrame(animationFrameId.current);
+            }
+            window.removeEventListener('resize', updateCanvasSize);
+        };
     }, []);
 
-    // 
+    // 标题字母动画效果保留因为交互元素数量少
     const titleLetters = useMemo(() => {
         const title = "HYDRA-AI";
         return title.split('').map((letter, index) => ({
             letter,
-            delay: index * 0.1, // 
+            delay: index * 0.1,
             animationDelay: index * 0.15 + "s",
         }));
     }, []);
 
     return (
         <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-blue-900 via-indigo-900 to-black">
-            {/*  */}
-            <div className="absolute inset-0 bg-blue-500/5 backdrop-blur-[180px]"></div>
+            {/* Canvas for all background animations */}
+            <canvas
+                ref={canvasRef}
+                className="absolute inset-0 w-full h-full"
+                style={{ zIndex: 0 }}
+            />
 
-            {/*  */}
-            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-blue-500/5 blur-[150px] animate-pulse-slow"></div>
-            <div className="absolute bottom-1/4 right-1/3 w-[500px] h-[500px] rounded-full bg-indigo-500/5 blur-[120px] animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
-            <div className="absolute top-2/3 left-1/4 w-[400px] h-[400px] rounded-full bg-violet-500/5 blur-[100px] animate-pulse-slow" style={{ animationDelay: '4s' }}></div>
-
-            {/*  */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {galaxies.map((galaxy, i) => (
-                    <div
-                        key={`galaxy-${i}`}
-                        className="absolute rounded-full bg-gradient-to-r from-transparent via-blue-300/5 to-transparent animate-galaxy-fade"
-                        style={{
-                            width: galaxy.width,
-                            height: galaxy.height,
-                            top: galaxy.top,
-                            left: galaxy.left,
-                            opacity: galaxy.opacity,
-                            transform: `rotate(${galaxy.rotation}deg)`,
-                            background: i % 2 === 0
-                                ? 'linear-gradient(90deg, transparent, rgba(180, 210, 255, 0.1), transparent)'
-                                : 'linear-gradient(90deg, transparent, rgba(220, 180, 255, 0.1), transparent)'
-                        }}
-                    >
-                        <div className="absolute inset-0 animate-galaxy-rotate">
-                            {/*  */}
-                            {Array.from({ length: 30 }).map((_, j) => (
-                                <div
-                                    key={`galaxy-star-${i}-${j}`}
-                                    className="absolute rounded-full bg-white"
-                                    style={{
-                                        width: `${1 + Math.random() * 2}px`,
-                                        height: `${1 + Math.random() * 2}px`,
-                                        top: `${Math.random() * 100}%`,
-                                        left: `${Math.random() * 100}%`,
-                                        opacity: 0.3 + Math.random() * 0.7,
-                                        boxShadow: '0 0 2px 0 rgba(255, 255, 255, 0.5)'
-                                    }}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/*  -  */}
-            <div className="absolute inset-0 overflow-hidden">
-                {stars.map((star, i) => (
-                    <div
-                        key={`star-${i}`}
-                        className={`absolute rounded-full ${star.type === 'flare'
-                            ? 'animate-flare'
-                            : star.twinkleType === 'random'
-                                ? 'animate-twinkle-random'
-                                : 'animate-twinkle'
-                            }`}
-                        style={{
-                            width: `${star.size}px`,
-                            height: `${star.size}px`,
-                            top: star.top,
-                            left: star.left,
-                            backgroundColor: star.color,
-                            boxShadow: star.type === 'flare'
-                                ? `0 0 ${star.size * 4}px ${star.size}px ${star.color?.replace(/[^,]+(?=\))/, '0.7')}`
-                                : `0 0 ${star.size * 2}px 0 ${star.color?.replace(/[^,]+(?=\))/, '0.6')}`,
-                            opacity: star.opacity,
-                            animationDelay: `${star.delay}s`,
-                            animationDuration: `${star.duration}s`,
-                            zIndex: star.type === 'flare' ? 3 : 1
-                        }}
-                    />
-                ))}
-            </div>
-
-            {/*  */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {meteors.map((meteor) => (
-                    <Meteor
-                        key={meteor.id}
-                        top={meteor.top}
-                        left={meteor.left}
-                        delay={meteor.delay}
-                        duration={meteor.duration}
-                        size={meteor.size}
-                        angle={meteor.angle}
-                        color={meteor.color}
-                    />
-                ))}
-            </div>
-
-            {/*  */}
-            <div className="absolute inset-0 overflow-hidden">
-                {backgroundLayers.map((element) => (
-                    <motion.div
-                        key={element.id}
-                        className={`absolute rounded-full bg-white/10 ${element.layer === 'foreground' ? 'z-[2]' :
-                            element.layer === 'middleground' ? 'z-[1]' : 'z-[0]'
-                            }`}
-                        style={{
-                            width: element.size,
-                            height: element.size,
-                            left: element.initialPosition.x,
-                            top: element.initialPosition.y,
-                            filter: `blur(${element.blur}px)`,
-                        }}
-                        initial={{ opacity: 0 }}
-                        animate={{
-                            scale: [1, 1.02, 1],
-                            opacity: [element.opacity, element.opacity * 1.2, element.opacity],
-                            x: [0, element.movement.x, 0],
-                            y: [0, element.movement.y, 0],
-                        }}
-                        transition={{
-                            duration: element.duration,
-                            delay: element.delay,
-                            repeat: Infinity,
-                            repeatType: "reverse",
-                            ease: [0.4, 0.0, 0.6, 1],
-                        }}
-                    />
-                ))}
-            </div>
-
-            {/*  */}
+            {/* Login form */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, ease: "easeOut" }}
                 className="relative w-full max-w-md mx-4 z-10"
+                style={{ willChange: 'transform, opacity' }}
             >
-                {/*  */}
                 <div className="absolute inset-0 bg-blue-400/10 rounded-2xl blur-xl -m-2"></div>
 
                 <div className="bg-black/30 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/10 relative">
-                    {/*  */}
                     <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-2xl">
                         <div className="absolute -top-40 -left-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
                         <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl"></div>
@@ -452,6 +301,7 @@ export function Login() {
                                 initial={{ y: 60 }}
                                 animate={{ y: 0 }}
                                 transition={{ duration: 0.8, ease: "easeOut" }}
+                                style={{ willChange: 'transform' }}
                             >
                                 <div className="flex justify-center items-center mb-2">
                                     {titleLetters.map((item, index) => (
@@ -466,7 +316,8 @@ export function Login() {
                                             }}
                                             className="inline-block text-5xl font-bold"
                                             style={{
-                                                color: index === 6 ? '#4BB4F8' : 'white'
+                                                color: index === 6 ? '#4BB4F8' : 'white',
+                                                willChange: 'transform, opacity'
                                             }}
                                         >
                                             <span
@@ -486,6 +337,7 @@ export function Login() {
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ duration: 0.6, delay: 1, ease: "easeOut" }}
                             className="text-3xl font-bold text-white mb-2"
+                            style={{ willChange: 'transform, opacity' }}
                         >
                             User Login
                         </motion.h1>
@@ -504,6 +356,7 @@ export function Login() {
                             initial={{ x: -10, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+                            style={{ willChange: 'transform, opacity' }}
                         >
                             <div className="relative">
                                 <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -521,6 +374,7 @@ export function Login() {
                             initial={{ x: -10, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+                            style={{ willChange: 'transform, opacity' }}
                         >
                             <div className="relative">
                                 <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -561,6 +415,7 @@ export function Login() {
                             initial={{ y: 10, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+                            style={{ willChange: 'transform, opacity' }}
                         >
                             <Button
                                 type="submit"
