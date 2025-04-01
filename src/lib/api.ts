@@ -62,6 +62,12 @@ export async function apiRequest<T>(
 
     // Handle 401 error - token expired
     if (response.status === 401) {
+      // 需要获取body中的detail
+      const errorBody = await response.json().catch(() => ({}));
+      const errorMessage = errorBody.detail ||
+        errorBody.error ||
+        `API request failed with status ${response.status}`;
+
       // Try to refresh token
       try {
         await refreshTokenRequest();
@@ -81,7 +87,7 @@ export async function apiRequest<T>(
         });
 
         if (!retryResponse.ok) {
-          throw new Error(`API request failed with status ${retryResponse.status}`);
+          throw new Error(errorMessage);
         }
 
         if (retryResponse.status === 204 || retryResponse.status === 404) {
@@ -95,10 +101,12 @@ export async function apiRequest<T>(
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user_info');
 
-        // 重定向到登录页面
-        window.location.href = '/login';
+        // 如果已经是登录页面，则不重定向
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
 
-        throw new Error('Authentication failed, please login again');
+        throw new Error(errorMessage);
       }
     }
 
@@ -147,7 +155,7 @@ export async function apiRequest<T>(
     // 检查是否是认证错误，如果是则重定向到登录页面
     if (error instanceof Error &&
       (error.message.includes('Authentication failed') ||
-        error.message.includes('Token refresh failed'))) {
+        error.message.includes('Token refresh failed')) && window.location.pathname !== '/login') {
       window.location.href = '/login';
     }
 

@@ -57,7 +57,7 @@ export function ErrorHandler() {
                     title: 'API Error',
                     description: message || 'An unexpected error occurred',
                     variant: 'destructive',
-                    duration: 3000,
+                    duration: 5000,
                 });
             }
         };
