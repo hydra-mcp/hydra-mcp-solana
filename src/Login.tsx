@@ -254,7 +254,6 @@ export function Login() {
         };
     }, []);
 
-    // 标题字母动画效果保留因为交互元素数量少
     const titleLetters = useMemo(() => {
         const title = "HYDRA-AI";
         return title.split('').map((letter, index) => ({

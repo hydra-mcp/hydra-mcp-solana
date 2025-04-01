@@ -18,7 +18,7 @@ export const MessageBubble = ({ message, isStreaming }: MessageBubbleProps) => {
     const [copied, setCopied] = useState(false);
     const [copiedCodeBlockIndex, setCopiedCodeBlockIndex] = useState<number | null>(null);
 
-    // 复制整个消息内容
+    // Copy the entire message content
     const handleCopy = async () => {
         const success = await copyToClipboard(message.content, false);
         if (success) {
@@ -27,7 +27,7 @@ export const MessageBubble = ({ message, isStreaming }: MessageBubbleProps) => {
         }
     };
 
-    // 复制代码块内容
+    // Copy the code block content
     const handleCopyCode = useCallback(async (code: string, index: number) => {
         const success = await copyToClipboard(code, false);
         if (success) {

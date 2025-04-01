@@ -16,8 +16,10 @@ interface SidebarContext {
     toggleSidebar: () => void;
 }
 
-export function ChatPage() {
-    const { isSidebarOpen, toggleSidebar } = useOutletContext<SidebarContext>();
+export function ChatPage({ isModal = false }: { isModal?: boolean }) {
+    // Try to get sidebarContext from context, but it may not exist in modal mode
+    const sidebarContext = useOutletContext<SidebarContext | null>();
+    const { isSidebarOpen = false, toggleSidebar = () => { } } = sidebarContext || {};
     const [chats, setChats] = useState<Chat[]>([]);
     const [currentChatId, setCurrentChatId] = useState<string | null>(null);
     const [input, setInput] = useState('');
@@ -469,6 +471,37 @@ export function ChatPage() {
         }
     }, [currentChat?.messages, isStreaming, isManualScrolling]);
 
+    // Auto focus input field in modal mode
+    useEffect(() => {
+        if (isModal) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 300);
+        }
+    }, [isModal, currentChatId]);
+
+    // Additional useEffect to ensure the input field is focused in modal mode
+    useEffect(() => {
+        if (isModal && inputRef.current) {
+            const focusInterval = setInterval(() => {
+                if (document.activeElement !== inputRef.current) {
+                    inputRef.current?.focus();
+                } else {
+                    clearInterval(focusInterval);
+                }
+            }, 500);
+
+            return () => clearInterval(focusInterval);
+        }
+    }, [isModal]);
+
+    // Handle window click events to ensure the input field is focused when clicking on the window in modal mode
+    const handleWindowClick = () => {
+        if (isModal) {
+            inputRef.current?.focus();
+        }
+    };
+
     // Cleanup timeout on unmount
     useEffect(() => {
         return () => {
@@ -479,47 +512,49 @@ export function ChatPage() {
     }, []);
 
     return (
-        <>
-            {/* Sidebar */}
-            <aside
-                className={cn(
-                    'fixed left-0 top-0 z-40 h-full transform border-r bg-background/95 backdrop-blur-md transition-all duration-300 shadow-lg lg:z-30',
-                    'w-72 lg:w-72',
-                    isSidebarOpen
-                        ? 'translate-x-0'
-                        : '-translate-x-full'
-                )}
-            >
-                <div className="flex h-14 items-center border-b px-4">
-                    <h2 className="font-semibold flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-                        <span>Chat History</span>
-                    </h2>
-                </div>
-                <div className="h-[calc(100vh-3.5rem)] overflow-y-auto">
-                    <div className="p-4">
-                        <ChatList
-                            chats={chats}
-                            currentChatId={currentChatId}
-                            onSelectChat={(id) => {
-                                setCurrentChatId(id);
-                                if (window.innerWidth < 1024) { // lg breakpoint
-                                    toggleSidebar();
-                                }
-                            }}
-                            onNewChat={() => {
-                                createNewChat();
-                            }}
-                            onDeleteChat={handleDeleteChat}
-                            onClearAllChats={handleClearAllChats}
-                            isLoading={isLoadingChats}
-                        />
+        <div onClick={handleWindowClick} className={cn(isModal && 'h-full flex flex-col')}>
+            {/* Sidebar - Not displayed in modal mode*/}
+            {!isModal && (
+                <aside
+                    className={cn(
+                        'fixed left-0 top-0 z-40 h-full transform border-r bg-background/95 backdrop-blur-md transition-all duration-300 shadow-lg lg:z-30',
+                        'w-72 lg:w-72',
+                        isSidebarOpen
+                            ? 'translate-x-0'
+                            : '-translate-x-full'
+                    )}
+                >
+                    <div className="flex h-14 items-center border-b px-4">
+                        <h2 className="font-semibold flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                            <span>Chat History</span>
+                        </h2>
                     </div>
-                </div>
-            </aside>
+                    <div className="h-[calc(100vh-3.5rem)] overflow-y-auto">
+                        <div className="p-4">
+                            <ChatList
+                                chats={chats}
+                                currentChatId={currentChatId}
+                                onSelectChat={(id) => {
+                                    setCurrentChatId(id);
+                                    if (window.innerWidth < 1024) { // lg breakpoint
+                                        toggleSidebar();
+                                    }
+                                }}
+                                onNewChat={() => {
+                                    createNewChat();
+                                }}
+                                onDeleteChat={handleDeleteChat}
+                                onClearAllChats={handleClearAllChats}
+                                isLoading={isLoadingChats}
+                            />
+                        </div>
+                    </div>
+                </aside>
+            )}
 
-            {/* Sidebar overlay */}
-            {isSidebarOpen && (
+            {/* Sidebar overlay - Not displayed in modal mode */}
+            {!isModal && isSidebarOpen && (
                 <div
                     className="fixed inset-0 lg:hidden bg-background/80 backdrop-blur-sm z-30 transition-opacity duration-300"
                     onClick={toggleSidebar}
@@ -528,12 +563,13 @@ export function ChatPage() {
 
             {/* Main Chat Area */}
             <main className={cn(
-                'relative z-10 min-h-screen pt-14 pb-20',
-                isSidebarOpen ? 'lg:pl-72' : '',
+                'relative z-20',
+                isModal ? 'flex flex-col h-full pb-16' : 'min-h-screen pt-14 pb-20',
+                !isModal && isSidebarOpen ? 'lg:pl-72' : '',
                 'transition-all duration-300'
             )}>
                 <div className={cn(
-                    'container mx-auto h-full py-4',
+                    isModal ? 'h-full flex flex-col' : 'container mx-auto h-full py-4',
                     'transition-all duration-300'
                 )}>
                     <div className="flex items-center mb-4 px-4">
@@ -544,7 +580,10 @@ export function ChatPage() {
                     </div>
                     <ScrollArea
                         ref={scrollAreaRef}
-                        className="h-[calc(100vh-8.5rem)] rounded-lg border bg-background/5 shadow-inner"
+                        className={cn(
+                            "rounded-lg border bg-background/5 shadow-inner flex-1",
+                            isModal ? "h-[calc(100%-4.5rem)]" : "h-[calc(100vh-8.5rem)]"
+                        )}
                         onScroll={handleScroll}
                     >
                         <div className="px-4">
@@ -563,7 +602,10 @@ export function ChatPage() {
                         <Button
                             variant="secondary"
                             size="icon"
-                            className="fixed bottom-24 right-6 z-10 rounded-full shadow-lg transition-transform hover:scale-110 animate-bounce-slow"
+                            className={cn(
+                                "z-40 rounded-full shadow-lg transition-transform hover:scale-110 animate-bounce-slow",
+                                isModal ? "absolute bottom-20 right-6" : "fixed bottom-24 right-6"
+                            )}
                             onClick={scrollToBottom}
                         >
                             <ChevronDown className="h-4 w-4" />
@@ -574,24 +616,13 @@ export function ChatPage() {
 
             {/* Input Area */}
             <footer className={cn(
-                "fixed bottom-0 z-20 border-t bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-lg",
-                isSidebarOpen ? 'lg:left-72' : 'left-0',
+                "border-t bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-lg z-40",
+                isModal
+                    ? "absolute bottom-0 left-0 right-0"
+                    : "fixed bottom-0 z-20",
+                !isModal && isSidebarOpen ? 'lg:left-72' : 'left-0',
                 'right-0 transition-all duration-300'
             )}>
-                {/* {processingStage && (
-                    <div className="w-full py-1.5 px-4 flex items-center gap-2 text-xs border-b border-primary/10">
-                        <div className="container mx-auto flex items-center gap-2 text-primary">
-                            {processingStage.map(stage => stage.message).includes('') ? (
-                                <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                            ) : (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            )}
-                            <span className={processingStage.map(stage => stage.message).includes('') ? 'text-green-600 font-medium' : 'animate-pulse'}>
-                                {processingStage.map(stage => stage.message).join(' - ')}
-                            </span>
-                        </div>
-                    </div>
-                )} */}
                 <div className="container mx-auto flex gap-2 py-2 sm:py-4">
                     <div className="flex gap-2 w-full px-4">
                         <AutoResizeTextarea
@@ -605,14 +636,19 @@ export function ChatPage() {
                                 }
                             }}
                             placeholder="Type your message..."
-                            className="min-h-[40px] max-h-[120px] sm:max-h-[200px] flex-1 resize-none rounded-lg border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/30 transition-shadow text-sm sm:text-base"
+                            className={cn(
+                                "min-h-[40px] max-h-[120px] sm:max-h-[200px] flex-1 resize-none rounded-lg",
+                                "border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/30",
+                                "transition-shadow text-sm sm:text-base z-50"
+                            )}
                             disabled={isStreaming}
+                            autoFocus={isModal}
                         />
                         <Button
                             disabled={!currentChatId || isStreaming || !input.trim()}
                             onClick={handleSend}
                             className={cn(
-                                "shrink-0 transition-all px-2 sm:px-4",
+                                "shrink-0 transition-all px-2 sm:px-4 z-50",
                                 isStreaming ? "opacity-50" : "hover:scale-105 hover:shadow-md hover:shadow-primary/20"
                             )}
                         >
@@ -626,6 +662,6 @@ export function ChatPage() {
                     </div>
                 </div>
             </footer>
-        </>
+        </div>
     );
 } 

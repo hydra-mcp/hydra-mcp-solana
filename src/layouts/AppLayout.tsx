@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { NavBar } from '@/components/NavBar';
 import { useTheme } from '@/hooks/use-theme';
 import { useState } from 'react';
@@ -6,6 +6,10 @@ import { useState } from 'react';
 export function AppLayout() {
     const { isDarkMode, toggleTheme } = useTheme();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const location = useLocation();
+
+    // Check if the current path is the Voice page
+    const isVoicePage = location.pathname === '/voice';
 
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
