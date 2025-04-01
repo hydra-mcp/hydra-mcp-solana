@@ -19,6 +19,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     user: UserInfo | null;
     login: (username: string, password: string) => Promise<void>;
+    loginWithWallet: (walletPublicKey: string, signature: string, nonce?: string) => Promise<void>;
     logout: () => void;
     refreshToken: () => Promise<void>;
     getToken: () => string | null;
@@ -159,6 +160,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    // Update wallet login method to include signature
+    const loginWithWallet = async (walletPublicKey: string, signature: string, nonce?: string) => {
+        try {
+            setLoading(true);
+
+            // Create the request body based on whether nonce is provided
+            const requestBody = nonce
+                ? { wallet_address: walletPublicKey, signature, nonce }
+                : { wallet_address: walletPublicKey, signature };
+
+            // Call API endpoint for wallet login with signature verification
+            const data = await apiRequest<AuthResponse>('/auth/wallet-login', {
+                method: 'POST',
+                body: JSON.stringify(requestBody),
+            });
+
+            // Store tokens to localStorage
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('refresh_token', data.refresh_token);
+            localStorage.setItem('user_info', JSON.stringify(data.user_info));
+
+            // Also store wallet address for future reference
+            localStorage.setItem('wallet_address', walletPublicKey);
+
+            setIsAuthenticated(true);
+            setUser(data.user_info);
+            setLastUserFetch(Date.now());
+        } catch (error) {
+            console.error('Wallet login error:', error);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const refreshToken = async () => {
         try {
             await refreshTokenRequest();
@@ -197,6 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user_info');
+        localStorage.removeItem('wallet_address'); // Also clear wallet address
 
         setIsAuthenticated(false);
         setUser(null);
@@ -215,6 +252,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             isAuthenticated,
             user,
             login,
+            loginWithWallet,
             logout,
             refreshToken,
             getToken,
