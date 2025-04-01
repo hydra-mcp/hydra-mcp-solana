@@ -19,6 +19,23 @@ interface NonceResponse {
     expires_in: number;
 }
 
+// 更新全局Window接口定义以包含Phantom类型
+declare global {
+    interface Window {
+        phantom?: {
+            solana?: {
+                isPhantom: boolean;
+                connect: () => Promise<{ publicKey: { toString: () => string } }>;
+                signMessage: (message: Uint8Array, encoding: string) => Promise<{ signature: any }>;
+                disconnect: () => Promise<void>;
+                request: (params: any) => Promise<any>;
+                on: (event: string, callback: any) => void;
+                removeAllListeners: () => void;
+            };
+        };
+    }
+}
+
 export function PhantomLoginForm({ isActive }: PhantomLoginFormProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [hasPhantomWallet, setHasPhantomWallet] = useState(false);
@@ -105,11 +122,11 @@ export function PhantomLoginForm({ isActive }: PhantomLoginFormProps) {
             const nonce = await getNonce(walletPublicKey);
 
             // Show toast for user to sign message
-            toast({
-                title: 'Signature required',
-                description: 'Please sign the message in your wallet to authenticate',
-                duration: 5000,
-            });
+            // toast({
+            //     title: 'Signature required',
+            //     description: 'Please sign the message in your wallet to authenticate',
+            //     duration: 5000,
+            // });
 
             // Step 3: Sign the nonce with wallet
             const signature = await signMessage(nonce);
@@ -433,21 +450,4 @@ export function PhantomLoginForm({ isActive }: PhantomLoginFormProps) {
             )}
         </motion.div>
     );
-}
-
-// Add Phantom type to the Window object
-declare global {
-    interface Window {
-        phantom?: {
-            solana?: {
-                isPhantom: boolean;
-                connect: () => Promise<{ publicKey: { toString: () => string } }>;
-                signMessage: (message: Uint8Array, encoding: string) => Promise<{ signature: any }>;
-                disconnect: () => Promise<void>;
-                request: (params: any) => Promise<any>;
-                on: (event: string, callback: any) => void;
-                removeAllListeners: () => void;
-            };
-        };
-    }
 } 

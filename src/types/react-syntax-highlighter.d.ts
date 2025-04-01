@@ -1,9 +1,9 @@
 declare module 'react-syntax-highlighter' {
-    import { ReactNode } from 'react';
+    import { ReactNode, CSSProperties } from 'react';
 
     export interface SyntaxHighlighterProps {
         language?: string;
-        style?: any;
+        style?: CSSProperties | { [key: string]: CSSProperties };
         children?: ReactNode;
         className?: string;
         PreTag?: string | React.ComponentType<any>;

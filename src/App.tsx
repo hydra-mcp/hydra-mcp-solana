@@ -5,7 +5,6 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Login } from './Login';
 import { AppLayout } from '@/layouts/AppLayout';
 import { ChatPage } from '@/pages/ChatPage';
-import { Voice } from '@/pages/Voice';
 import Home from '@/pages/index';
 import { PhantomTest } from '@/pages/PhantomTest';
 import { Toaster } from '@/components/ui/toaster';

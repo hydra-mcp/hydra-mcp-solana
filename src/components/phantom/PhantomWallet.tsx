@@ -382,6 +382,7 @@ declare global {
             solana?: {
                 isPhantom: boolean;
                 connect: () => Promise<{ publicKey: { toString: () => string } }>;
+                signMessage: (message: Uint8Array, encoding: string) => Promise<{ signature: any }>;
                 disconnect: () => Promise<void>;
                 request: (params: any) => Promise<any>;
                 on: (event: string, callback: any) => void;
