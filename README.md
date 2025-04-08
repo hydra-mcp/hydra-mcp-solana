@@ -1,25 +1,32 @@
 # HYDRA-AI Frontend
 
-HYDRA-AI is a modern AI chat application built with React, TypeScript, and Tailwind CSS. The project utilizes the latest web technology stack to provide a smooth, responsive user experience.
+HYDRA-AI is a modern AI chat application built with React, TypeScript, and Tailwind CSS. The project utilizes the latest web technology stack to provide a smooth, responsive user experience for blockchain project analysis and AI assistant interactions.
 
 ## Features
 
-- 🔐 User authentication system
-- 💬 Real-time AI chat functionality
-- 🎨 Modern UI, using Tailwind CSS and Shadcn components
-- 📱 Responsive design, compatible with various devices
+- 🔐 User authentication system with token-based authorization and refresh functionality
+- 💬 Real-time AI chat functionality with SSE (Server-Sent Events) streaming responses
+- 🔍 Blockchain project analysis capabilities through specialized AI assistants
+- 📊 Multi-stage processing visualization for complex analysis tasks
+- 💾 Local chat history management with persistence
+- 🔔 Toast notifications and error handling system
+- 🎨 Modern UI using Tailwind CSS and Shadcn components
+- 📱 Responsive design with specialized layouts for different devices (including iOS)
 - 🚀 Built with Vite, providing a fast development experience
+- 👛 Wallet connectivity features for blockchain interactions
 
 ## Tech Stack
 
 - **Framework**: React 18
 - **Routing**: React Router v7
+- **State Management**: React Context API
 - **Styling**: Tailwind CSS
 - **UI Components**: Radix UI / Shadcn
 - **Build Tool**: Vite
 - **Package Manager**: pnpm
 - **Language**: TypeScript
 - **Animation**: Framer Motion
+- **API Communication**: Fetch API with SSE support
 
 ## Development Environment Setup
 
@@ -33,8 +40,8 @@ HYDRA-AI is a modern AI chat application built with React, TypeScript, and Tailw
 1. Clone the repository
 
 ```bash
-git clone https://your-repository-url/hydra-front.git
-cd hydra-front
+git clone https://github.com/hydra-mcp/hydra-mcp-solana.git
+cd hydra-mcp-solana
 ```
 
 2. Install dependencies
@@ -58,6 +65,24 @@ pnpm dev
 ```
 
 The application will run on [http://localhost:5173](http://localhost:5173).
+
+## Application Structure
+
+The application is organized into the following key components:
+
+### Core Components
+
+- **Chat Interface**: A full-featured chat UI with message history, streaming responses, and context management
+- **Authentication System**: Login page with token-based authentication
+- **Wallet Integration**: Connection to blockchain wallets for crypto interactions
+- **Error Handling**: Global error boundary and API error handling system
+
+### Pages
+
+- **Home**: Landing page for the application
+- **ChatPage**: Main chat interface with AI assistant
+- **WalletFinder**: Interface for connecting to blockchain wallets
+- **IOSDesktop**: Specialized interface for iOS devices
 
 ## Build and Deployment
 
@@ -153,46 +178,25 @@ The built files will be located in the `dist` directory.
 
 ```
 src/
-├── components/       # Reusable components
-├── contexts/         # React contexts
-├── hooks/            # Custom React hooks
-├── layouts/          # Layout components
-├── lib/              # General utility functions
-├── pages/            # Page components
-├── types/            # TypeScript type definitions
-├── App.tsx           # Main application component
-├── Login.tsx         # Login page
-├── index.css         # Global styles
-└── main.tsx          # Application entry point
+├── components/        # Reusable UI components
+│   ├── chat/          # Chat-related components
+│   ├── ui/            # Core UI components (Shadcn)
+│   ├── phantom/       # Wallet connection components
+│   └── ios/           # iOS-specific components
+├── contexts/          # React contexts for state management
+├── hooks/             # Custom React hooks
+├── layouts/           # Layout components
+├── lib/               # Utility functions and API clients
+│   ├── api.ts         # API communication layer
+│   ├── sse.ts         # Server-Sent Events implementation
+│   └── utils.ts       # General utility functions
+├── pages/             # Application pages
+├── types/             # TypeScript type definitions
+├── App.tsx            # Main application component with routes
+├── Login.tsx          # Authentication page
+├── index.css          # Global styles
+└── main.tsx           # Application entry point
 ```
-
-## Development Guide
-
-### Adding a new page
-
-1. Create a new page component in the `src/pages` directory
-2. Add a new route to `src/App.tsx` for the new page
-
-### Style Guide
-
-The project uses Tailwind CSS, following these conventions:
-
-- Use Tailwind classes for styling
-- Use custom classes to extend Tailwind, such as `.text-shadow-white` and `.text-shadow-blue`
-
-## Troubleshooting
-
-### API connection issues
-
-Ensure your `.env.local` file has the correct API endpoint configuration. For development, you may need to resolve CORS issues.
-
-### Build failed
-
-If the build fails, please try the following steps:
-
-1. Delete the `node_modules` and `dist` directories
-2. Reinstall dependencies: `pnpm install`
-3. Rebuild: `pnpm build`
 
 ## API Documentation
 
@@ -241,67 +245,6 @@ API provides two response modes:
    - **Content event** - Passes actual content blocks
    - **Error event** - Passes error information
    - **Done event** - Represents the end of the stream
-
-### Frontend Integration Example
-
-```javascript
-// Frontend code example using fetch
-async function chatWithAgent(userMessage) {
-  const response = await fetch('/agent/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer YOUR_TOKEN'
-    },
-    body: JSON.stringify({
-      model: 'gpt-4',
-      messages: [
-        { role: 'user', content: userMessage }
-      ],
-      stream: true
-    })
-  });
-
-  // Process streaming response
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    
-    buffer += decoder.decode(value, { stream: true });
-    
-    // Process complete SSE messages
-    const lines = buffer.split('\n\n');
-    buffer = lines.pop();
-    
-    for (const line of lines) {
-      if (line.trim() === '') continue;
-      
-      const [eventType, eventData] = line.split('\n');
-      const type = eventType.replace('event: ', '');
-      const data = JSON.parse(eventData.replace('data: ', ''));
-      
-      // Process different responses based on event type
-      if (type === 'stage') {
-        console.log(`Stage: ${data.stage} - Status: ${data.status}`);
-        updateProgressIndicator(data.stage, data.status);
-      } else if (type === 'content') {
-        if (data.choices[0].delta.content) {
-          appendToResponse(data.choices[0].delta.content);
-        }
-      } else if (type === 'error') {
-        console.error(data.error);
-        showError(data.error.message);
-      } else if (type === 'done') {
-        finishResponse();
-      }
-    }
-  }
-}
-```
 
 ## Contribution
 
