@@ -4,6 +4,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Login } from './Login';
 import { AppLayout } from '@/layouts/AppLayout';
 import { ChatPage } from '@/pages/ChatPage';
+import Home from '@/pages/index';
 import { Toaster } from '@/components/ui/toaster';
 import { ErrorHandler } from '@/components/ErrorHandler';
 
@@ -129,10 +130,15 @@ function App() {
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
+            {/* AppLayout Routes */}
             <Route element={<AppLayout />}>
-              <Route path="/" element={<ChatPage />} />
-              {/* Add more routes here as needed */}
+              <Route path="/" element={<Home />} />
+              <Route path="/chat" element={<ChatPage isModal={false} />} />
             </Route>
+
+            {/* iOS Layout Routes - These don't use the AppLayout */}
+            <Route path="/ios-desktop" element={<IOSDesktop />} />
+            <Route path="/wallet-finder" element={<WalletFinder isModal={false} />} />
           </Route>
 
           {/* Fallback Route */}
