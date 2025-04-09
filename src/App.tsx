@@ -6,7 +6,6 @@ import { Login } from './Login';
 import { AppLayout } from '@/layouts/AppLayout';
 import { ChatPage } from '@/pages/ChatPage';
 import Home from '@/pages/index';
-import { PhantomTest } from '@/pages/PhantomTest';
 import { Toaster } from '@/components/ui/toaster';
 import { ErrorHandler } from '@/components/ErrorHandler';
 import { IOSDesktop } from '@/pages/IOSDesktop';
@@ -33,7 +32,6 @@ function App() {
               <Route element={<AppLayout />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/chat" element={<ChatPage isModal={false} />} />
-                <Route path="/phantom-test" element={<PhantomTest />} />
               </Route>
 
               {/* iOS Layout Routes - These don't use the AppLayout */}
