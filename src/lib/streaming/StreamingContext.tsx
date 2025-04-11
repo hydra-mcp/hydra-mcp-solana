@@ -74,6 +74,9 @@ export function StreamingProvider({
             return [...prev, message];
         });
 
+        // Clear stages when starting a new stream
+        setStages([]);
+
         return messageId;
     }, [currentSessionId]);
 
@@ -121,11 +124,6 @@ export function StreamingProvider({
                 case 'stage':
                     if (processedChunk.stage) {
                         setStages(prev => {
-                            const existingIndex = prev.findIndex(s =>
-                                s.content === processedChunk.stage?.content &&
-                                (!s.sessionId || s.sessionId === currentSessionId)
-                            );
-
                             // Convert status to proper type (0, 1, 2)
                             const stageStatus = (typeof processedChunk.stage?.status === 'number')
                                 ? (processedChunk.stage.status > 1 ? 2 : processedChunk.stage.status < 1 ? 0 : 1) as 0 | 1 | 2
@@ -134,25 +132,39 @@ export function StreamingProvider({
                             const stageContent = processedChunk.stage.content || '';
                             const stageMessage = processedChunk.stage.message || '';
 
-                            if (existingIndex >= 0) {
-                                const updated = [...prev];
-                                updated[existingIndex] = {
-                                    ...updated[existingIndex],
+                            // Generate a unique ID for this stage
+                            const stageId = crypto.randomUUID();
+
+                            // Instead of finding existing stages by content, just update status of stages with matching content
+                            // This preserves the original order while allowing status updates
+                            let updatedPrev = [...prev];
+                            let needToAdd = true;
+
+                            // If a stage with the same content exists, only update its status
+                            for (let i = 0; i < updatedPrev.length; i++) {
+                                if (updatedPrev[i].content === stageContent && updatedPrev[i].message === stageMessage) {
+                                    updatedPrev[i] = {
+                                        ...updatedPrev[i],
+                                        status: stageStatus
+                                    };
+                                    needToAdd = false;
+                                    break;
+                                }
+                            }
+
+                            // If no matching stage was found, add this as a new stage at the end
+                            // This preserves the order in which stages were received
+                            if (needToAdd) {
+                                updatedPrev.push({
+                                    id: stageId,
                                     content: stageContent,
                                     message: stageMessage,
                                     status: stageStatus,
                                     sessionId: currentSessionId
-                                };
-                                return updated;
+                                });
                             }
 
-                            return [...prev, {
-                                id: crypto.randomUUID(),
-                                content: stageContent,
-                                message: stageMessage,
-                                status: stageStatus,
-                                sessionId: currentSessionId
-                            }];
+                            return updatedPrev;
                         });
                     }
                     break;
