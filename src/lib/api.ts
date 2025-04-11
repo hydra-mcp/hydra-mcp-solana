@@ -222,8 +222,19 @@ export async function mockStreamResponse(message: string, onChunk: (chunk: strin
   };
 }
 
+export async function sendWalletFinderMessage(message: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
+  return sendStreamMessage('/agent/chat/completions', message, chatHistory, onChunk);
+}
+
+// WalletFinder stream message request
+export async function sendChatMessage(message: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
+  // return sendStreamMessage('/mcp/chat/completions', message, chatHistory, onChunk);
+  return sendStreamMessage('/mcp/chat/completions', message, chatHistory, onChunk);
+}
+
 // Stream message request implemented using SSE.ts
-export async function sendStreamMessage(
+async function sendStreamMessage(
+  url: string,
   message: string,
   chatHistory: Message[],
   onChunk: (chunk: string) => void
@@ -262,7 +273,7 @@ export async function sendStreamMessage(
       let stageMessages: string[] = [];
 
       // Create SSE connection
-      const source = new SSE(`${baseUrl}/agent/chat/completions`, {
+      const source = new SSE(`${baseUrl}${url}`, {
         headers,
         method: 'POST',
         payload: JSON.stringify({
@@ -304,7 +315,7 @@ export async function sendStreamMessage(
             if (!newToken) {
               throw new Error('Token refresh failed');
             }
-            sendStreamMessage(message, chatHistory, onChunk).then((response) => {
+            sendStreamMessage(url, message, chatHistory, onChunk).then((response) => {
               resolve(response);
             }).catch((error) => {
               reject(error);
@@ -529,23 +540,56 @@ export async function sendStreamMessage(
   });
 }
 
-// Keep original function as fallback
-export async function sendMessage(message: string): Promise<OpenAIResponse> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
+export async function sendMessage(url: string, message: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
+  try {
+    // 构建完整URL
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const fullUrl = `${baseUrl}${url}`;
 
-  // Simulate OpenAI response format
-  return {
-    id: Date.now().toString(),
-    choices: [
-      {
-        message: {
-          content: MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)] +
-            " " + message,
-        },
-      },
-    ],
-  };
+    // 获取访问令牌
+    const token = getAccessToken();
+
+    // 构建请求头
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // 构建消息体，仅包含当前消息
+    const payload = {
+      messages: chatHistory.map(msg => ({ role: msg.sender === 'user' ? 'user' : 'assistant', content: msg.content })),
+      stream: false
+    };
+
+    // 发送请求
+    const response = await fetch(fullUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload)
+    });
+
+    // 处理错误响应
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || errorData.error || `请求失败，状态码：${response.status}`;
+
+      // 触发全局API错误事件
+      triggerApiError(errorMessage, response.status, fullUrl);
+
+      throw new Error(errorMessage);
+    }
+
+    // 解析并返回响应
+    const data = await response.json();
+    onChunk && onChunk(data.choices[0].message.content);
+    return data as OpenAIResponse;
+  } catch (error) {
+    console.error("发送消息错误:", error);
+    throw error;
+  }
 }
 
 // Chat history management functions

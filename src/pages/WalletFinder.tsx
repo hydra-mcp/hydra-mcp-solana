@@ -1,317 +1,678 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@/hooks/use-theme';
-import { cn } from '@/lib/utils';
-import { Send, X, Bot } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { IOSNavBar } from '@/components/ios/IOSNavBar';
+import { Send, ChevronDown, Sparkles, Loader2, Info, CheckCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { cn, uuid } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea';
+import { useToast } from '@/hooks/use-toast';
+import { ChatList } from '@/components/chat/ChatList';
+import { Chat, Message, MessageSender } from '@/types/chat';
+import { sendChatMessage, saveChats, loadChats, deleteChat, clearAllChats } from '@/lib/api';
+import { ChatContainer, ProcessingStage } from '@/components/chat/ChatContainer';
+import { useOutletContext } from 'react-router-dom';
 
-// Message type definition
-interface Message {
-    id: string;
-    content: string;
-    sender: 'user' | 'ai';
-    timestamp: Date;
-    isComplete?: boolean;
+interface SidebarContext {
+    isSidebarOpen: boolean;
+    toggleSidebar: () => void;
 }
 
-// Typewriter effect component
-const TypewriterText = ({ text, onComplete }: { text: string; onComplete: () => void }) => {
-    const [displayedText, setDisplayedText] = useState('');
-    const [currentIndex, setCurrentIndex] = useState(0);
-
-    useEffect(() => {
-        if (currentIndex < text.length) {
-            const timer = setTimeout(() => {
-                setDisplayedText(prev => prev + text[currentIndex]);
-                setCurrentIndex(currentIndex + 1);
-            }, 15 + Math.random() * 20); // Random delay, simulate real typing effect
-
-            return () => clearTimeout(timer);
-        } else {
-            onComplete();
-        }
-    }, [currentIndex, text, onComplete]);
-
-    return <span>{displayedText}<span className="animate-pulse">|</span></span>;
-};
-
-// Thinking animation component
-const ThinkingAnimation = () => {
-    const { isDarkMode } = useTheme();
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="flex items-center gap-2 p-2"
-        >
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
-            </div>
-            <div className={cn(
-                "px-4 py-2 rounded-2xl max-w-[85%]",
-                isDarkMode ? "bg-gray-700" : "bg-gray-200"
-            )}>
-                <div className="flex gap-1 items-center h-5">
-                    <motion.div
-                        className={cn(
-                            "w-2 h-2 rounded-full",
-                            isDarkMode ? "bg-gray-400" : "bg-gray-500"
-                        )}
-                        animate={{ scale: [0.8, 1.2, 0.8] }}
-                        transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-                    />
-                    <motion.div
-                        className={cn(
-                            "w-2 h-2 rounded-full",
-                            isDarkMode ? "bg-gray-400" : "bg-gray-500"
-                        )}
-                        animate={{ scale: [0.8, 1.2, 0.8] }}
-                        transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
-                    />
-                    <motion.div
-                        className={cn(
-                            "w-2 h-2 rounded-full",
-                            isDarkMode ? "bg-gray-400" : "bg-gray-500"
-                        )}
-                        animate={{ scale: [0.8, 1.2, 0.8] }}
-                        transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
-                    />
-                </div>
-            </div>
-        </motion.div>
-    );
-};
-
-// Message bubble component
-const MessageBubble = ({ message }: { message: Message }) => {
-    const { isDarkMode } = useTheme();
-    const [isComplete, setIsComplete] = useState(!!message.isComplete);
-
-    const handleTypingComplete = () => {
-        setIsComplete(true);
-    };
-
-    return (
-        <motion.div
-            className={cn(
-                "flex w-full mb-4",
-                message.sender === 'user' ? "justify-end" : "justify-start"
-            )}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-        >
-            {message.sender === 'ai' && (
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-                    <Bot className="w-5 h-5 text-white" />
-                </div>
-            )}
-
-            <div className={cn(
-                "max-w-[80%] rounded-2xl p-3 shadow-sm",
-                message.sender === 'user'
-                    ? "bg-blue-500 text-white rounded-tr-none"
-                    : isDarkMode
-                        ? "bg-gray-700 text-white rounded-tl-none"
-                        : "bg-gray-200 text-gray-900 rounded-tl-none"
-            )}>
-                {message.sender === 'ai' && !isComplete ? (
-                    <TypewriterText text={message.content} onComplete={handleTypingComplete} />
-                ) : (
-                    <div>{message.content}</div>
-                )}
-                <div className={cn(
-                    "text-xs mt-1 text-right",
-                    message.sender === 'user'
-                        ? "text-blue-100"
-                        : isDarkMode
-                            ? "text-gray-400"
-                            : "text-gray-500"
-                )}>
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-            </div>
-
-            {message.sender === 'user' && (
-                <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center ml-2 mt-1 flex-shrink-0">
-                    <span className="text-xs font-bold">Me</span>
-                </div>
-            )}
-        </motion.div>
-    );
-};
-
-// WalletFinder application component
 export function WalletFinder({ isModal = false }: { isModal?: boolean }) {
-    const { isDarkMode } = useTheme();
-    const navigate = useNavigate();
+    // Try to get sidebarContext from context, but it may not exist in modal mode
+    const sidebarContext = useOutletContext<SidebarContext | null>();
+    const { isSidebarOpen = false, toggleSidebar = () => { } } = sidebarContext || {};
+    const [chats, setChats] = useState<Chat[]>([]);
+    const [currentChatId, setCurrentChatId] = useState<string | null>(null);
     const [input, setInput] = useState('');
-    const [isThinking, setIsThinking] = useState(false);
+    const [isScrolledUp, setIsScrolledUp] = useState(false);
+    const [isStreaming, setIsStreaming] = useState(false);
+    const [streamingContent, setStreamingContent] = useState('');
+    const [playSentSound, setPlaySentSound] = useState(false);
+    const [playReceivedSound, setPlayReceivedSound] = useState(false);
+    const [isLoadingChats, setIsLoadingChats] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: '1',
-            content: 'Welcome to WalletFinder, I can help you analyze high-value blockchain accounts. Please tell me what you want to query?',
-            sender: 'ai',
-            timestamp: new Date(),
-            isComplete: true
-        }
-    ]);
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
+    const { toast } = useToast();
+    const [isManualScrolling, setIsManualScrolling] = useState(false);
+    const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [processingStage, setProcessingStage] = useState<Array<ProcessingStage>>([]);
+    // current AI message id
+    const [streamMessageId, setStreamMessageId] = useState<string>(uuid());
+    const [isProcessing, setIsProcessing] = useState(false);
 
-    // Scroll to the latest message
+    const currentChat = chats.find(chat => chat.id === currentChatId);
+
+    // Load chats from local storage on initial render
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isThinking]);
+        const loadSavedChats = async () => {
+            setIsLoadingChats(true);
+            try {
+                // Simulate network delay for demo purposes
+                await new Promise(resolve => setTimeout(resolve, 800));
 
-    // Automatically focus on the input field
-    useEffect(() => {
-        // Give a delay to ensure the UI is rendered
-        const timer = setTimeout(() => {
-            inputRef.current?.focus();
-        }, 500);
-
-        return () => clearTimeout(timer);
-    }, []);
-
-    // Send message processing
-    const handleSendMessage = () => {
-        if (!input.trim()) return;
-
-        // Add user message
-        const userMessage: Message = {
-            id: Date.now().toString(),
-            content: input,
-            sender: 'user',
-            timestamp: new Date(),
-            isComplete: true
+                const savedChats = loadChats();
+                if (savedChats.length > 0) {
+                    setChats(savedChats);
+                    setCurrentChatId(savedChats[0].id);
+                } else {
+                    createNewChat();
+                }
+            } catch (error) {
+                console.error('Error loading chats:', error);
+                toast({
+                    title: 'Error loading chats',
+                    description: 'Failed to load your chat history.',
+                    duration: 3000,
+                });
+                createNewChat();
+            } finally {
+                setIsLoadingChats(false);
+            }
         };
 
-        setMessages(prev => [...prev, userMessage]);
-        setInput('');
-        setIsThinking(true);
+        loadSavedChats();
+    }, []);
 
-        // Simulate AI thinking and reply
-        setTimeout(() => {
-            setIsThinking(false);
+    // Save chats whenever they change
+    useEffect(() => {
+        if (chats.length > 0) {
+            saveChats(chats);
+        }
+    }, [chats]);
 
-            // Add AI reply
-            const mockResponses = [
-                "According to my analysis, the most active wallet address on the Ethereum network is 0x28c6c06298d514db089934071355e5743bf21d60, with transactions exceeding 5000 ETH in the past 30 days.",
-                "I found an interesting pattern: the address 0x71C7656EC7ab88b098defB751B7401B5f6d8976F transferred a large amount of funds to multiple DEX platforms in the past week, possibly preparing for a major trading strategy.",
-                "Based on historical data, this address is a whale account, holding approximately 120,000 ETH, valued at about $3.6 billion. The account has recently increased its activity, possibly indicating market changes.",
-                "The analysis shows that this address has frequent interactions with multiple DeFi protocols, especially in liquidity mining, with cumulative profits of about 850 ETH."
-            ];
-
-            const aiMessage: Message = {
-                id: Date.now().toString(),
-                content: mockResponses[Math.floor(Math.random() * mockResponses.length)],
-                sender: 'ai',
-                timestamp: new Date()
-            };
-
-            setMessages(prev => [...prev, aiMessage]);
-        }, 1500 + Math.random() * 1500); // Random thinking time
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        setIsScrolledUp(false);
     };
 
+    const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+        const target = event.target as HTMLDivElement;
+        const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 100;
+        setIsScrolledUp(!isAtBottom);
+
+        // Only mark as manual scrolling if user is actively scrolling up
+        if (!isAtBottom) {
+            setIsManualScrolling(true);
+
+            // Reset manual scrolling flag after a delay of inactivity
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+            }
+
+            scrollTimeoutRef.current = setTimeout(() => {
+                setIsManualScrolling(false);
+            }, 1000);
+        } else {
+            setIsManualScrolling(false);
+        }
+    };
+
+    const createNewChat = () => {
+        // check if there is an empty chat window
+        const emptyChat = chats.find(chat => chat.messages.length === 0);
+
+        if (emptyChat) {
+            // there is an empty chat window, switch to it
+            setCurrentChatId(emptyChat.id);
+
+            // focus on input
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+            return;
+        }
+
+        // there is no empty chat window, create a new chat
+        const newChat: Chat = {
+            id: uuid(),
+            title: 'New Chat',
+            messages: [],
+            createdAt: new Date().toLocaleString(),
+            updatedAt: new Date().toLocaleString(),
+        };
+        setChats(prev => [newChat, ...prev]);
+        setCurrentChatId(newChat.id);
+
+        // focus on input
+        setTimeout(() => {
+            inputRef.current?.focus();
+        }, 100);
+    };
+
+    const updateChat = (chatId: string, updates: Partial<Chat>) => {
+        if (updates.messages && currentChatId === chatId) {
+            setChats(prev => {
+                const newChats = prev.map(chat => {
+                    if (chat.id === chatId) {
+                        const updatedMessages = updates.messages;
+
+                        if (updatedMessages && chat.messages.length > 0 &&
+                            updatedMessages.length === chat.messages.length) {
+                            const lastMessageIndex = updatedMessages.length - 1;
+                            const newMessages = [...chat.messages];
+                            newMessages[lastMessageIndex] = updatedMessages[lastMessageIndex];
+
+                            return {
+                                ...chat,
+                                ...updates,
+                                messages: newMessages,
+                                updatedAt: new Date().toLocaleString() // 
+                            };
+                        }
+
+                        // update messages by id
+                        const messages = [...chat.messages]
+                        updates.messages.forEach(message => {
+                            const index = messages.findIndex(m => m.id === message.id);
+                            if (index !== -1) {
+                                messages[index] = message;
+                            }
+                            else {
+                                messages.push(message);
+                            }
+                        });
+                        return { ...chat, ...updates, messages: messages };
+                    }
+                    return chat;
+                });
+
+                return newChats;
+            });
+        } else {
+            setChats(prev =>
+                prev.map(chat =>
+                    chat.id === chatId ? { ...chat, ...updates } : chat
+                )
+            );
+        }
+    };
+
+    const handleDeleteChat = (chatId: string) => {
+        const updatedChats = deleteChat(chatId);
+        setChats(updatedChats);
+
+        // If the deleted chat was the current one, select the next available chat
+        if (chatId === currentChatId) {
+            setCurrentChatId(updatedChats.length > 0 ? updatedChats[0].id : null);
+
+            // If no chats left, create a new one
+            if (updatedChats.length === 0) {
+                createNewChat();
+            }
+        }
+
+        toast({
+            title: 'Chat deleted',
+            description: 'The chat has been removed.',
+            duration: 3000,
+        });
+    };
+
+    const handleClearAllChats = () => {
+        clearAllChats();
+        setChats([]);
+        createNewChat();
+
+        toast({
+            title: 'All chats cleared',
+            description: 'Your chat history has been cleared.',
+            duration: 3000,
+        });
+    };
+
+    const handleSend = async () => {
+        // 如果输入为空、没有选择聊天、正在流式传输或正在处理中，则不执行操作
+        if (!input.trim() || !currentChatId || isStreaming || isProcessing) return;
+
+        // 立即设置处理中状态，防止重复提交
+        setIsProcessing(true);
+
+        // 先保存当前输入，然后立即清空输入框
+        const currentInput = input.trim();
+        setInput('');
+
+        // 确保输入框清空
+        if (inputRef.current) {
+            inputRef.current.value = '';
+        }
+
+        // Trigger sent sound
+        setPlaySentSound(true);
+        setTimeout(() => setPlaySentSound(false), 300);
+
+        const userMessage: Message = {
+            id: uuid(),
+            content: currentInput,
+            sender: 'user',
+            createdAt: new Date().toLocaleString(),
+        };
+
+        // Create AI message placeholder
+        const aiMessageId = uuid();
+        setStreamMessageId(aiMessageId);
+        const aiMessage: Message = {
+            id: streamMessageId,
+            content: '',
+            sender: 'ai',
+            createdAt: new Date().toLocaleString(),
+        };
+
+        // AI
+        const updatedMessages = [...(currentChat?.messages || []), userMessage];
+        updateChat(currentChatId, {
+            messages: [...updatedMessages, aiMessage],
+            updatedAt: new Date().toLocaleString(),
+            title: updatedMessages.length === 1 ? currentInput.slice(0, 30) : currentChat?.title,
+        });
+
+        setIsStreaming(true);
+        setStreamingContent('');
+        setProcessingStage([{
+            message: 'AI is processing your request...',
+            content: '',
+            status: 0
+        }]);
+
+        let hasReceivedContent = false;
+
+        try {
+            // Use streaming response API with chat history for context
+            await sendChatMessage(
+                currentInput,
+                // Send previous messages for context
+                updatedMessages,
+                (chunk) => {
+                    //  SSE 
+                    try {
+                        const jsonData = JSON.parse(chunk);
+
+                        // stage - typestage
+                        if (jsonData.type === 'stage') {
+                            // state
+                            //  content  stage， ， content ，
+                            setProcessingStage(prevStages => {
+                                const existingStage = prevStages.find(stage => stage.content === jsonData.content);
+                                if (existingStage) {
+                                    // contentstage，
+                                    return prevStages.map(stage =>
+                                        stage.content === jsonData.content ? {
+                                            ...stage,
+                                            message: jsonData.message,
+                                            status: jsonData.status
+                                        } : stage
+                                    );
+                                } else {
+                                    // stage
+                                    return [...prevStages, {
+                                        message: jsonData.message,
+                                        content: jsonData.content,
+                                        status: jsonData.status
+                                    }];
+                                }
+                            });
+                            return;
+                        }
+
+                        switch (jsonData.type) {
+                            case 'content':
+                                if (jsonData.content) {
+                                    handleContentUpdate(jsonData.content);
+                                    hasReceivedContent = true;
+                                }
+                                break;
+
+                            case 'error':
+                                console.error("Error from API:", jsonData.error);
+                                toast({
+                                    title: 'Error',
+                                    description: jsonData.error?.message || 'An error occurred',
+                                    duration: 3000,
+                                });
+
+                                updateChat(currentChatId, {
+                                    messages: [...updatedMessages, {
+                                        ...aiMessage,
+                                        id: streamMessageId,
+                                        content: `Error: ${jsonData.error?.message || 'An unknown error occurred'}`,
+                                    }],
+                                    updatedAt: new Date().toLocaleString(),
+                                });
+                                break;
+
+                            case 'done':
+                                console.log("Stream completed");
+                                setStreamMessageId(uuid());
+                                break;
+
+                            default:
+                                if (jsonData.choices && jsonData.choices[0]?.delta?.content) {
+                                    const content = jsonData.choices[0].delta.content;
+                                    if (content) {
+                                        handleContentUpdate(content);
+                                        hasReceivedContent = true;
+                                    }
+                                }
+                        }
+                    } catch (e) {
+                        console.log("JSON parse error, using raw chunk:", e); // 
+                        if (typeof chunk === 'string' && chunk.trim()) {
+                            // ，
+                            handleContentUpdate(chunk);
+                            hasReceivedContent = true;
+                        }
+                    }
+                }
+            );
+
+            if (!hasReceivedContent) {
+                handleContentUpdate("no response from server.");
+            }
+
+            // Streaming complete
+            setIsStreaming(false);
+            setProcessingStage([]);
+
+            // Focus back to input after streaming is complete
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+
+            // Trigger received sound when AI message is complete
+            setPlayReceivedSound(true);
+            setTimeout(() => setPlayReceivedSound(false), 300);
+        } catch (error) {
+            // Handle error
+            console.error("Error from API:", error);
+            setIsStreaming(false);
+            setProcessingStage([]);
+
+            // Focus back to input after error handling
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+
+            toast({
+                title: 'Error',
+                description: 'Failed to get AI response.',
+                duration: 3000,
+            });
+
+            // Add error message
+            updateChat(currentChatId, {
+                messages: [...updatedMessages, {
+                    ...aiMessage,
+                    id: streamMessageId,
+                    content: 'Sorry, I encountered an issue and couldn\'t respond to your request. Please try again later.',
+                }],
+                updatedAt: new Date().toLocaleString(),
+            });
+        } finally {
+            // 无论成功还是失败，都重置处理中状态
+            setIsProcessing(false);
+            setIsStreaming(false);
+        }
+    };
+
+    // 
+    const handleContentUpdate = (content: string, role: MessageSender = "ai") => {
+        if (!content || !currentChatId) return;
+
+        setStreamingContent(prev => {
+            const newContent = prev + content;
+
+            //  - AI
+            if (currentChat) {
+                const messages = currentChat.messages || [];
+
+                // if there are messages and the last message is an AI message, update it
+                if (messages.length > 0) {
+                    const lastMessage = messages[messages.length - 1];
+
+                    // AI message,
+                    if (lastMessage.sender === 'ai') {
+                        updateChat(currentChatId, {
+                            messages: [...messages.slice(0, -1), {
+                                ...lastMessage,
+                                content: newContent,
+                                id: streamMessageId,
+                            }],
+                            updatedAt: new Date().toLocaleString(),
+                        });
+                    } else {
+                        // if the last message is not an AI message, add a new AI message
+                        updateChat(currentChatId, {
+                            messages: [...messages, {
+                                id: streamMessageId,
+                                content: newContent,
+                                sender: 'ai',
+                                createdAt: new Date().toLocaleString(),
+                            }],
+                            updatedAt: new Date().toLocaleString(),
+                        });
+                    }
+                } else {
+                    // handle the case when the message list is empty
+                    updateChat(currentChatId, {
+                        messages: [{
+                            id: role === "ai" ? streamMessageId : uuid(),
+                            content: newContent,
+                            sender: role,
+                            createdAt: new Date().toLocaleString(),
+                        }],
+                        updatedAt: new Date().toLocaleString(),
+                    });
+                }
+            }
+
+            return newContent;
+        });
+    };
+
+    // Auto-scroll effect
+    useEffect(() => {
+        // Don't auto-scroll if user is manually scrolling up
+        if (!isManualScrolling) {
+            const shouldSmoothScroll = !isStreaming;
+            messagesEndRef.current?.scrollIntoView({
+                behavior: shouldSmoothScroll ? 'smooth' : 'auto'
+            });
+        }
+    }, [currentChat?.messages, isStreaming, isManualScrolling]);
+
+    // Auto focus input field in modal mode
+    useEffect(() => {
+        if (isModal) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 300);
+        }
+    }, [isModal, currentChatId]);
+
+    // Additional useEffect to ensure the input field is focused in modal mode
+    useEffect(() => {
+        if (isModal && inputRef.current) {
+            const focusInterval = setInterval(() => {
+                if (document.activeElement !== inputRef.current) {
+                    inputRef.current?.focus();
+                } else {
+                    clearInterval(focusInterval);
+                }
+            }, 500);
+
+            return () => clearInterval(focusInterval);
+        }
+    }, [isModal]);
+
+    // Handle window click events to ensure the input field is focused when clicking on the window in modal mode
+    const handleWindowClick = () => {
+        if (isModal) {
+            inputRef.current?.focus();
+        }
+    };
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+            }
+        };
+    }, []);
+
     return (
-        <div className={cn(
-            "w-full flex flex-col transition-colors duration-300",
-            isModal ? "h-full" : "min-h-screen",
-            isDarkMode
-                ? "bg-gray-900 text-white"
-                : "bg-gray-50 text-gray-900"
-        )}>
-            {/* iOS navigation bar - only displayed in non-modal mode */}
+        <div onClick={handleWindowClick} className={cn(isModal && 'h-full flex flex-col')}>
+            {/* Sidebar - Not displayed in modal mode*/}
             {!isModal && (
-                <IOSNavBar
-                    title="WalletFinder"
-                    onBack={() => navigate('/ios-desktop')}
+                <aside
+                    className={cn(
+                        'fixed left-0 top-0 z-40 h-full transform border-r bg-background/95 backdrop-blur-md transition-all duration-300 shadow-lg lg:z-30',
+                        'w-72 lg:w-72',
+                        isSidebarOpen
+                            ? 'translate-x-0'
+                            : '-translate-x-full'
+                    )}
+                >
+                    <div className="flex h-14 items-center border-b px-4">
+                        <h2 className="font-semibold flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                            <span>Chat History</span>
+                        </h2>
+                    </div>
+                    <div className="h-[calc(100vh-3.5rem)] overflow-y-auto">
+                        <div className="p-4">
+                            <ChatList
+                                chats={chats}
+                                currentChatId={currentChatId}
+                                onSelectChat={(id) => {
+                                    setCurrentChatId(id);
+                                    if (window.innerWidth < 1024) { // lg breakpoint
+                                        toggleSidebar();
+                                    }
+                                }}
+                                onNewChat={() => {
+                                    createNewChat();
+                                }}
+                                onDeleteChat={handleDeleteChat}
+                                onClearAllChats={handleClearAllChats}
+                                isLoading={isLoadingChats}
+                            />
+                        </div>
+                    </div>
+                </aside>
+            )}
+
+            {/* Sidebar overlay - Not displayed in modal mode */}
+            {!isModal && isSidebarOpen && (
+                <div
+                    className="fixed inset-0 lg:hidden bg-background/80 backdrop-blur-sm z-30 transition-opacity duration-300"
+                    onClick={toggleSidebar}
                 />
             )}
 
-            {/* Message area */}
-            <div className={cn(
-                "flex-1 overflow-y-auto px-4",
-                isModal ? "pt-2" : "pt-16 pb-20"
+            {/* Main Chat Area */}
+            <main className={cn(
+                'relative z-20',
+                isModal ? 'flex flex-col h-full pb-16' : 'min-h-screen pt-14 pb-20',
+                !isModal && isSidebarOpen ? 'lg:pl-72' : '',
+                'transition-all duration-300'
             )}>
-                <AnimatePresence>
-                    {messages.map(message => (
-                        <MessageBubble key={message.id} message={message} />
-                    ))}
+                <div className={cn(
+                    isModal ? 'h-full flex flex-col' : 'container mx-auto h-full py-4',
+                    'transition-all duration-300'
+                )}>
+                    <div className="flex items-center mb-4 px-4">
+                        {/* Chat Title */}
+                        <h1 className="font-semibold text-lg truncate">
+                            {currentChat?.title || "New Chat"}
+                        </h1>
+                    </div>
+                    <ScrollArea
+                        ref={scrollAreaRef}
+                        className={cn(
+                            "rounded-lg border bg-background/5 shadow-inner flex-1",
+                            isModal ? "h-[calc(100%-4.5rem)]" : "h-[calc(100vh-8.5rem)]"
+                        )}
+                        onScroll={handleScroll}
+                    >
+                        <div className="px-4">
+                            <ChatContainer
+                                currentChat={currentChat}
+                                isStreaming={isStreaming}
+                                messagesEndRef={messagesEndRef}
+                                onNewChat={createNewChat}
+                                processingStage={processingStage}
+                            />
+                        </div>
+                    </ScrollArea>
 
-                    {isThinking && <ThinkingAnimation />}
-                </AnimatePresence>
+                    {/* Scroll to Bottom Button */}
+                    {isScrolledUp && (
+                        <Button
+                            variant="secondary"
+                            size="icon"
+                            className={cn(
+                                "z-40 rounded-full shadow-lg transition-transform hover:scale-110 animate-bounce-slow",
+                                isModal ? "absolute bottom-20 right-6" : "fixed bottom-24 right-6"
+                            )}
+                            onClick={scrollToBottom}
+                        >
+                            <ChevronDown className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
+            </main>
 
-                <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input area */}
-            <motion.div
-                initial={{ y: 100 }}
-                animate={{ y: 0 }}
-                className={cn(
-                    isModal
-                        ? "border-t p-2"
-                        : "fixed bottom-0 w-full border-t p-4 backdrop-blur-md",
-                    "transition-colors duration-300",
-                    isDarkMode
-                        ? "bg-gray-900/70 border-gray-800"
-                        : "bg-white/70 border-gray-200"
-                )}
-            >
-                <div className="flex items-center gap-2 max-w-4xl mx-auto">
-                    <div className="relative flex-1">
-                        <input
+            {/* Input Area */}
+            <footer className={cn(
+                "border-t bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-lg z-40",
+                isModal
+                    ? "absolute bottom-0 left-0 right-0"
+                    : "fixed bottom-0 z-20",
+                !isModal && isSidebarOpen ? 'lg:left-72' : 'left-0',
+                'right-0 transition-all duration-300'
+            )}>
+                <div className="container mx-auto flex gap-2 py-2 sm:py-4">
+                    <div className="flex gap-2 w-full px-4">
+                        <AutoResizeTextarea
                             ref={inputRef}
-                            type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                            placeholder="Enter your question..."
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    // 只有在非处理中状态才触发发送
+                                    if (!isProcessing && !isStreaming && input.trim()) {
+                                        handleSend();
+                                    }
+                                }
+                            }}
+                            placeholder="Type your message..."
                             className={cn(
-                                "w-full py-3 px-4 pr-10 rounded-full border focus:outline-none focus:ring-2 transition-all duration-300",
-                                isModal ? "py-2" : "py-3",
-                                isDarkMode
-                                    ? "bg-gray-800 border-gray-700 text-white focus:ring-blue-500"
-                                    : "bg-white border-gray-300 text-gray-900 focus:ring-blue-400"
+                                "min-h-[40px] max-h-[120px] sm:max-h-[200px] flex-1 resize-none rounded-lg",
+                                "border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/30",
+                                "transition-shadow text-sm sm:text-base z-50"
                             )}
+                            disabled={isStreaming || isProcessing}
+                            autoFocus={isModal}
                         />
-                        {input && (
-                            <motion.button
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                exit={{ scale: 0 }}
-                                onClick={() => setInput('')}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            >
-                                <X className="w-5 h-5" />
-                            </motion.button>
-                        )}
+                        <Button
+                            disabled={!currentChatId || isStreaming || isProcessing || !input.trim()}
+                            onClick={handleSend}
+                            className={cn(
+                                "shrink-0 transition-all px-2 sm:px-4 z-50",
+                                (isStreaming || isProcessing) ? "opacity-50" : "hover:scale-105 hover:shadow-md hover:shadow-primary/20"
+                            )}
+                        >
+                            {isStreaming || isProcessing ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Send className="h-4 w-4" />
+                            )}
+                            <span className="ml-2 hidden sm:inline-block">Send</span>
+                        </Button>
                     </div>
-
-                    <button
-                        onClick={handleSendMessage}
-                        disabled={!input.trim()}
-                        className={cn(
-                            "p-3 rounded-full transition-all duration-300 flex-shrink-0",
-                            isModal ? "p-2" : "p-3",
-                            input.trim()
-                                ? "bg-blue-500 text-white shadow-md hover:bg-blue-600"
-                                : "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
-                        )}
-                    >
-                        <Send className={cn(
-                            "transition-transform",
-                            isModal ? "w-5 h-5" : "w-6 h-6",
-                            input.trim() && "transform -rotate-45"
-                        )} />
-                    </button>
                 </div>
-            </motion.div>
+            </footer>
         </div>
     );
 } 

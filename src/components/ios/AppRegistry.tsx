@@ -170,7 +170,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         icon: <WalletFinderIcon />,
         component: (
             <Suspense fallback={<LoadingPlaceholder />}>
-                <ChatComponent />
+                <WalletFinderComponent />
             </Suspense>
         ),
         defaultSize: { width: 800, height: 600 }
@@ -190,7 +190,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         icon: <MessagesIcon />,
         component: (
             <Suspense fallback={<LoadingPlaceholder />}>
-                <WalletFinderComponent />
+                <ChatComponent />
             </Suspense>
         ),
         defaultSize: { width: 900, height: 700 }
