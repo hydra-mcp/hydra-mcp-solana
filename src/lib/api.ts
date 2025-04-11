@@ -2,6 +2,7 @@ import { SSE } from '@/lib/sse';
 import { Chat, Message, OpenAIResponse } from '@/types/chat';
 import { triggerApiError } from '@/components/ErrorHandler';
 import { useAuth } from '@/contexts/AuthContext';
+import { sendChatStream, ChunkType } from '@/lib/streaming/sseClient';
 
 // Add type definition for SSE events
 interface SSEEvent extends CustomEvent {
@@ -228,7 +229,6 @@ export async function sendWalletFinderMessage(message: string, chatHistory: Mess
 
 // WalletFinder stream message request
 export async function sendChatMessage(message: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
-  // return sendStreamMessage('/mcp/chat/completions', message, chatHistory, onChunk);
   return sendStreamMessage('/mcp/chat/completions', message, chatHistory, onChunk);
 }
 
@@ -247,297 +247,48 @@ export async function sendStreamMessage(
     return mockStreamResponse(message, onChunk);
   }
 
-  // Return Promise
-  return new Promise((resolve, reject) => {
-    try {
-      // Convert chat history to OpenAI format
-      const messages = chatHistory.map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
-        content: msg.content
-      }));
+  try {
+    // Convert chat history to OpenAI format
+    const messages = chatHistory.map(msg => ({
+      role: msg.sender === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    }));
 
-      // Add current message
-      // messages.push({ role: 'user', content: message });
-
-      // Get access token
-      const token = getAccessToken();
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    // 使用新的SSE客户端发送请求
+    const result = await sendChatStream(
+      url,
+      messages,
+      // 处理数据块，转换为字符串传递给原始onChunk回调
+      (chunk: ChunkType) => {
+        onChunk(JSON.stringify(chunk));
       }
+    );
 
-      // Store stage messages
-      let stageMessages: string[] = [];
+    // 返回兼容的响应格式
+    return {
+      id: result?.id || Date.now().toString(),
+      choices: [
+        {
+          message: {
+            content: "Stream complete",
+          },
+        },
+      ],
+    };
+  } catch (error) {
+    console.error("Error initializing streaming chat:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
-      // Create SSE connection
-      const source = new SSE(`${baseUrl}${url}`, {
-        headers,
-        method: 'POST',
-        payload: JSON.stringify({
-          messages,
-          stream: true
-        })
-      });
+    onChunk(JSON.stringify({
+      type: 'error',
+      error: {
+        message: errorMessage,
+        type: 'client_error'
+      }
+    }));
 
-      // Handle connection opened
-      source.addEventListener('open', function (e) {
-        console.log('SSE connection opened:', e);
-      });
-
-      // Handle error
-      source.addEventListener('error', function (e) {
-        const event = e as SSEEvent;
-        const errorData = event.data || '';
-        let errorStatus = event.responseCode || 0;
-        let errorMessage = 'Connection failed';
-
-        // Check if it is a 401 unauthorized error
-        if (errorStatus == 401 || errorData.includes('401') || errorData.includes('unauthorized') || errorData.includes('Unauthorized')) {
-          errorMessage = 'Session expired. Please login again.';
-          errorStatus = 401;
-
-          // Close current connection
-          source.close();
-
-          // Notify client that we're attempting to refresh token
-          onChunk(JSON.stringify({
-            type: 'auth_refresh',
-            message: 'Attempting to refresh authentication token...'
-          }));
-
-          // Try to refresh token
-          refreshTokenRequest().then(() => {
-            // Token refresh succeeded, get new token
-            const newToken = getAccessToken();
-            if (!newToken) {
-              throw new Error('Token refresh failed');
-            }
-            sendStreamMessage(url, message, chatHistory, onChunk).then((response) => {
-              resolve(response);
-            }).catch((error) => {
-              reject(error);
-            });
-
-            // Instead of complex event listener transfer, 
-            // simply resolve with a retry message to let the client handle retrying
-            // resolve({
-            //   id: Date.now().toString(),
-            //   choices: [
-            //     {
-            //       message: {
-            //         content: "TOKEN_REFRESHED_RETRY_NEEDED",
-            //       },
-            //     },
-            //   ],
-            // });
-
-          }).catch(() => {
-            // Refresh failed, clear token
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            localStorage.removeItem('user_info');
-
-            // Trigger global API error event, not redirect directly
-            triggerApiError(errorMessage, 401, '/agent/chat/completions');
-
-            // Send error to client
-            onChunk(JSON.stringify({
-              type: 'error',
-              error: {
-                message: errorMessage,
-                type: 'auth_error',
-                status: errorStatus
-              }
-            }));
-
-            reject(new Error(errorMessage));
-          });
-
-          return; // Return early to prevent double error handling
-        } else {
-          errorMessage = `Error: ${errorData}`;
-        }
-
-        console.error('SSE connection error:', errorMessage);
-
-        onChunk(JSON.stringify({
-          type: 'error',
-          error: {
-            message: errorMessage,
-            type: 'connection_error',
-            status: errorStatus
-          }
-        }));
-
-        source.close();
-        reject(new Error(errorMessage));
-      });
-
-      // Handle stage event (stage notification)
-      source.addEventListener('stage', function (e) {
-        const event = e as SSEEvent;
-        const data = event.data || '';
-
-        try {
-          const jsonData = JSON.parse(data);
-          const stageContent = jsonData.stage;
-          const stageStatus = jsonData.status;
-          const messageContent = jsonData.choices?.[0]?.delta?.content || '';
-
-          // Send stage update
-          onChunk(JSON.stringify({
-            type: 'stage',
-            status: stageStatus,
-            content: stageContent,
-            message: messageContent
-          }));
-        } catch (error) {
-          console.warn('Failed to parse stage event:', error, data);
-          // Try to use data directly
-          const stageContent = typeof data === 'string' ? data : 'Unknown stage';
-
-          if (!stageMessages.some(msg => msg.includes(stageContent))) {
-            stageMessages.push(stageContent);
-          }
-
-          const formattedStages = stageMessages.join('|LINE_BREAK|');
-          onChunk(JSON.stringify({
-            type: 'stage',
-            content: formattedStages
-          }));
-        }
-      });
-
-      // Handle content event (content update)
-      source.addEventListener('content', function (e) {
-        const event = e as SSEEvent;
-        const data = event.data || '';
-
-        try {
-          const jsonData = JSON.parse(data);
-          const content = jsonData.choices?.[0]?.delta?.content || '';
-
-          if (content) {
-            onChunk(JSON.stringify({
-              type: 'content',
-              content: content
-            }));
-          }
-        } catch (error) {
-          console.warn('Failed to parse content event:', error, data);
-          // Try to use data directly
-          onChunk(JSON.stringify({
-            type: 'content',
-            content: typeof data === 'string' ? data : ''
-          }));
-        }
-      });
-
-      // Handle message event (default event, handle old format or message without specified event type)
-      source.addEventListener('message', function (e) {
-        const event = e as SSEEvent;
-        const data = event.data || '';
-
-        // If it is a [DONE] message, handle completion
-        if (data === '[DONE]') {
-          onChunk(JSON.stringify({ type: 'done' }));
-          source.close();
-
-          resolve({
-            id: Date.now().toString(),
-            choices: [
-              {
-                message: {
-                  content: "Stream complete",
-                },
-              },
-            ],
-          });
-          return;
-        }
-
-        try {
-          const jsonData = JSON.parse(data);
-
-          // Check if there is a clear type field
-          if (jsonData.type) {
-            if (jsonData.type === 'error') {
-              // Error message
-              onChunk(data);
-              source.close();
-              reject(new Error(jsonData.error?.message || 'Unknown error'));
-              return;
-            }
-
-            // Other type messages directly pass
-            onChunk(data);
-            return;
-          }
-
-          // Check if there is a stage field
-          if (jsonData.stage) {
-            // Already handled through 'stage' event, skip duplicate processing
-            return;
-          }
-
-          // Check if there is content update
-          if (jsonData.choices && jsonData.choices[0]?.delta?.content) {
-            const content = jsonData.choices[0].delta.content;
-            onChunk(JSON.stringify({
-              type: 'content',
-              content: content
-            }));
-          } else {
-            // Unrecognized format, pass original data directly
-            onChunk(data);
-          }
-        } catch (error) {
-          console.warn('Failed to parse message event:', error, data);
-          // Non-JSON message, pass original data directly
-          onChunk(data);
-        }
-      });
-
-      // Handle completion event
-      source.addEventListener('done', function () {
-        source.close();
-        onChunk(JSON.stringify({
-          type: 'done',
-        }));
-
-        resolve({
-          id: Date.now().toString(),
-          choices: [
-            {
-              message: {
-                content: "Stream complete",
-              },
-            },
-          ],
-        });
-      });
-
-      // Start SSE connection
-      source.stream();
-
-    } catch (error) {
-      console.error("Error initializing streaming chat:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-
-      onChunk(JSON.stringify({
-        type: 'error',
-        error: {
-          message: errorMessage,
-          type: 'client_error'
-        }
-      }));
-
-      reject(error);
-    }
-  });
+    throw error;
+  }
 }
 
 export async function sendMessage(url: string, message: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {

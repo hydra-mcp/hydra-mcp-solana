@@ -18,6 +18,7 @@ export interface Chat {
   messages: Message[];
   createdAt: string;
   updatedAt: string;
+  metadata?: Record<string, any>; // Metadata for additional chat information like stages
 }
 
 // Processing stage
@@ -32,6 +33,21 @@ export interface ProcessingStage {
 export interface ChatResponse extends ApiResponse {
   choices?: {
     message?: {
+      content: string;
+    };
+    delta?: {
+      content: string;
+    };
+  }[];
+}
+
+/**
+ * OpenAI响应格式
+ */
+export interface OpenAIResponse {
+  id: string;
+  choices: {
+    message: {
       content: string;
     };
     delta?: {

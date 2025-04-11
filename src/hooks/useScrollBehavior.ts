@@ -1,11 +1,27 @@
 import { useRef, useState, useEffect } from 'react';
+import { useStreaming } from '@/lib/streaming/StreamingContext';
 
 interface UseScrollBehaviorOptions {
-    isStreaming?: boolean;
+    // 提供一个可选的isStreaming参数，以便在StreamingProvider不可用时使用
+    defaultIsStreaming?: boolean;
 }
 
 export function useScrollBehavior(options: UseScrollBehaviorOptions = {}) {
-    const { isStreaming = false } = options;
+    const { defaultIsStreaming = false } = options;
+
+    // 尝试从流式上下文中获取状态，如果不可用则使用默认值
+    const [localIsStreaming, setLocalIsStreaming] = useState(defaultIsStreaming);
+
+    // 安全地使用useStreaming，如果不在Provider中则使用默认值
+    let streamingContext;
+    try {
+        streamingContext = useStreaming();
+    } catch (error) {
+        // 如果useStreaming抛出错误，我们将使用本地状态
+        streamingContext = { isStreaming: localIsStreaming };
+    }
+
+    const { isStreaming } = streamingContext;
 
     const [isScrolledUp, setIsScrolledUp] = useState(false);
     const [isManualScrolling, setIsManualScrolling] = useState(false);
@@ -13,23 +29,23 @@ export function useScrollBehavior(options: UseScrollBehaviorOptions = {}) {
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Scroll to bottom
+    // 滚动到底部
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         setIsScrolledUp(false);
     };
 
-    // Handle scroll event
+    // 处理滚动事件
     const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
         const target = event.target as HTMLDivElement;
         const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 100;
         setIsScrolledUp(!isAtBottom);
 
-        // Mark as manual scrolling only when the user scrolls up
+        // 只有当用户向上滚动时才标记为手动滚动
         if (!isAtBottom) {
             setIsManualScrolling(true);
 
-            // Reset manual scrolling after a delay
+            // 延迟后重置手动滚动标志
             if (scrollTimeoutRef.current) {
                 clearTimeout(scrollTimeoutRef.current);
             }
@@ -42,9 +58,9 @@ export function useScrollBehavior(options: UseScrollBehaviorOptions = {}) {
         }
     };
 
-    // Auto scroll effect
+    // 自动滚动效果
     useEffect(() => {
-        // If the user is manually scrolling, do not auto scroll
+        // 如果用户正在手动滚动，不进行自动滚动
         if (!isManualScrolling) {
             const shouldSmoothScroll = !isStreaming;
             messagesEndRef.current?.scrollIntoView({
@@ -53,7 +69,7 @@ export function useScrollBehavior(options: UseScrollBehaviorOptions = {}) {
         }
     }, [isStreaming, isManualScrolling]);
 
-    // Clean up timeout
+    // 清理定时器
     useEffect(() => {
         return () => {
             if (scrollTimeoutRef.current) {

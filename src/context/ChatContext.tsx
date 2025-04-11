@@ -1,10 +1,10 @@
-import React, { createContext, useContext, ReactNode, useRef } from 'react';
-import { Chat, Message, ProcessingStage } from '@/types/chat';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { Chat } from '@/types/chat';
 import { AppDefinition } from '@/components/ios/AppRegistry';
 
-// Chat context type definition
+// 聊天上下文类型定义
 export interface ChatContextType {
-    // Chat configuration
+    // 聊天配置
     config: {
         apiEndpoint: string;
         appDefinition?: AppDefinition;
@@ -12,21 +12,19 @@ export interface ChatContextType {
         enableHistory?: boolean;
     };
 
-    // Chat status
+    // 聊天状态
     chats: Chat[];
     currentChatId: string | null;
     currentChat: Chat | null;
-    isStreaming: boolean;
     isProcessing: boolean;
-    processingStage: ProcessingStage[];
 
-    // Chat operation methods
+    // 聊天操作方法
     createNewChat: () => void;
     deleteChat: (chatId: string) => void;
     sendMessage: (content: string) => Promise<void>;
     clearAllChats: () => void;
 
-    // Interface related status
+    // 界面相关状态
     isScrolledUp: boolean;
     scrollToBottom: () => void;
     inputRef: React.RefObject<HTMLTextAreaElement>;
@@ -34,10 +32,10 @@ export interface ChatContextType {
     handleScroll: (event: React.UIEvent<HTMLDivElement>) => void;
 }
 
-// Create context
+// 创建上下文
 export const ChatContext = createContext<ChatContextType | null>(null);
 
-// Custom hook for easy access to context
+// 自定义钩子，方便访问上下文
 export function useChatContext() {
     const context = useContext(ChatContext);
     if (!context) {

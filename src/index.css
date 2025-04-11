@@ -314,3 +314,47 @@
 .password-toggle-btn:hover {
   transform: scale(1.1);
 }
+
+/* Custom animations for StageDisplay component */
+@keyframes pulse-gentle {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes light-sweep {
+  0% {
+    transform: translateX(-100%) skewX(-30deg);
+    opacity: 0;
+  }
+
+  20%,
+  80% {
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translateX(100%) skewX(-30deg);
+    opacity: 0;
+  }
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-light-sweep {
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: light-sweep 2.5s ease-in-out infinite;
+}
+
+/* Radial gradient for stage icons */
+.bg-gradient-radial {
+  background-image: radial-gradient(var(--tw-gradient-stops));
+}

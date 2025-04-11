@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea';
 import { useChatContext } from '@/context/ChatContext';
+import { useStreaming } from '@/lib/streaming/StreamingContext';
 
 interface MessageInputProps {
     className?: string;
@@ -21,10 +22,22 @@ export function MessageInput({
     const {
         inputRef,
         sendMessage,
-        isStreaming,
         isProcessing,
         currentChatId
     } = useChatContext();
+
+    // 使用流式消息状态，添加安全处理
+    const [isLocalStreaming, setIsLocalStreaming] = React.useState(false);
+    let streamingState = { isStreaming: isLocalStreaming };
+
+    try {
+        streamingState = useStreaming();
+    } catch (error) {
+        // 如果不在StreamingProvider中，使用本地状态
+        console.warn('MessageInput: 未在StreamingProvider上下文中，使用默认流状态');
+    }
+
+    const { isStreaming } = streamingState;
 
     const [input, setInput] = React.useState('');
     const isDisabled = !currentChatId || isStreaming || isProcessing || !input.trim() || externalDisabled;
@@ -75,8 +88,8 @@ export function MessageInput({
                 ) : (
                     <Send className="h-4 w-4" />
                 )}
-                <span className="ml-2 hidden sm:inline-block">Send</span>
+                <span className="ml-2 hidden sm:inline-block">发送</span>
             </Button>
         </div>
     );
-} 
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, Info, Loader2, CheckCircle } from 'lucide-react';
+import { ChevronDown, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,6 +7,7 @@ import { useChatContext } from '@/context/ChatContext';
 import { ChatSidebar } from '@/components/ChatSidebar';
 import { MessageInput } from '@/components/MessageInput';
 import { ChatContainer } from '@/components/chat/ChatContainer';
+import { useStreaming } from '@/lib/streaming/StreamingContext';
 
 interface ChatInterfaceProps {
     modalMode?: boolean;
@@ -22,13 +23,24 @@ export function ChatInterface({
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
 
+    // 使用流式消息上下文，添加错误处理
+    const [isLocalStreaming, setIsLocalStreaming] = useState(false);
+    let streamingState = { isStreaming: isLocalStreaming };
+
+    try {
+        streamingState = useStreaming();
+    } catch (error) {
+        // 如果不在StreamingProvider中，使用本地状态
+        console.warn('ChatInterface: 未在StreamingProvider上下文中，使用默认流状态');
+    }
+
+    const { isStreaming } = streamingState;
+
     const {
         currentChat,
-        isStreaming,
         isScrolledUp,
         scrollToBottom,
         inputRef,
-        processingStage,
         createNewChat,
         config,
         messagesEndRef,
@@ -65,7 +77,7 @@ export function ChatInterface({
                 className
             )}
         >
-            {/* Sidebar - Displayed in non-modal mode */}
+            {/* 侧边栏 - 非模态模式下显示 */}
             {!modalMode && sidebarEnabled && (
                 <ChatSidebar
                     isSidebarOpen={isSidebarOpen}
@@ -73,7 +85,7 @@ export function ChatInterface({
                 />
             )}
 
-            {/* Main chat area */}
+            {/* 主聊天区域 */}
             <main className={cn(
                 'relative z-20',
                 modalMode ? 'flex flex-col h-full pb-16' : 'min-h-screen pt-14 pb-20',
@@ -84,25 +96,13 @@ export function ChatInterface({
                     modalMode ? 'h-full flex flex-col' : 'container mx-auto h-full py-4',
                     'transition-all duration-300'
                 )}>
-                    {/* Chat title */}
-                    {/* <div className="flex items-center mb-4 px-4">
-                        <h1 className="font-semibold text-lg truncate">
-                            {currentChat?.title || "New Chat"}
-                        </h1>
-                        {config.appDefinition?.title && (
-                            <span className="ml-2 text-sm text-muted-foreground">
-                                ({config.appDefinition.title})
-                            </span>
-                        )}
-                    </div> */}
-
-                    {/* App description */}
+                    {/* 应用描述 */}
                     {config.appDefinition?.description && (
                         <div className="mb-4 mt-4 mx-4 p-3 rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 flex items-center gap-3">
                             <Info className="h-5 w-5 text-blue-500 flex-shrink-0" />
                             <div className="flex-1">
                                 <div className="text-sm text-blue-700 dark:text-blue-300">
-                                    <span className="font-medium">{config.appDefinition.title || "About"}: </span>
+                                    <span className="font-medium">{config.appDefinition.title || "关于"}: </span>
                                     {config.appDefinition.description}
                                 </div>
                             </div>
@@ -126,9 +126,7 @@ export function ChatInterface({
                         <div className="px-4">
                             <ChatContainer
                                 currentChat={currentChat}
-                                isStreaming={isStreaming}
                                 onNewChat={createNewChat}
-                                processingStage={processingStage}
                                 messagesEndRef={messagesEndRef}
                             />
                         </div>
@@ -151,7 +149,7 @@ export function ChatInterface({
                 </div>
             </main>
 
-            {/* Input area */}
+            {/* 输入区域 */}
             <footer className={cn(
                 "border-t bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-lg z-40",
                 modalMode
@@ -164,7 +162,8 @@ export function ChatInterface({
                     <div className="px-4">
                         <MessageInput
                             autoFocus={modalMode}
-                            placeholder="Type your message..."
+                            placeholder="输入您的消息..."
+                            disabled={isStreaming}
                         />
                     </div>
                 </div>

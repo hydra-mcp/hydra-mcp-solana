@@ -1,10 +1,11 @@
-import React, { useRef, ReactNode, useEffect } from 'react';
+import React, { useRef, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppDefinition } from '@/components/ios/AppRegistry';
 import { useChatState } from '@/hooks/useChatState';
-import { useChatMessages } from '@/hooks/useChatMessages';
 import { useScrollBehavior } from '@/hooks/useScrollBehavior';
 import { ChatContext } from '@/context/ChatContext';
+import { StreamingProvider } from '@/lib/streaming/StreamingContext';
+import { useChatWithStreaming } from '@/hooks/useChatWithStreaming';
 
 interface ChatProviderProps {
     children: ReactNode;
@@ -52,12 +53,98 @@ export function ChatProvider({
     });
 
     const {
-        isStreaming,
+        isScrolledUp,
+        messagesEndRef,
+        scrollAreaRef,
+        scrollToBottom,
+        handleScroll
+    } = useScrollBehavior({
+        defaultIsStreaming: false
+    });
+
+    // Generate a unique session ID for this provider instance
+    const sessionId = `${apiEndpoint}-${historyStorageKey}`;
+
+    return (
+        <StreamingProvider
+            options={{
+                onError: (error) => {
+                    toast({
+                        title: 'Streaming Error',
+                        description: error.message || 'Error processing streaming message',
+                        duration: 3000,
+                    });
+                }
+            }}
+            sessionId={sessionId}
+        >
+            <StreamingAwareChat
+                apiEndpoint={apiEndpoint}
+                inputRef={inputRef}
+                currentChatId={currentChatId}
+                currentChat={currentChat}
+                chats={chats}
+                updateChat={updateChat}
+                createNewChat={createNewChat}
+                deleteChatState={deleteChatState}
+                clearAllChatsState={clearAllChatsState}
+                isScrolledUp={isScrolledUp}
+                scrollToBottom={scrollToBottom}
+                messagesEndRef={messagesEndRef}
+                handleScroll={handleScroll}
+                config={{
+                    apiEndpoint,
+                    appDefinition,
+                    historyStorageKey,
+                    enableHistory
+                }}
+            >
+                {children}
+            </StreamingAwareChat>
+        </StreamingProvider>
+    );
+}
+
+// Internal component that uses useStreaming safely after the provider is established
+function StreamingAwareChat({
+    apiEndpoint,
+    inputRef,
+    currentChatId,
+    currentChat,
+    chats,
+    updateChat,
+    createNewChat,
+    deleteChatState,
+    clearAllChatsState,
+    isScrolledUp,
+    scrollToBottom,
+    messagesEndRef,
+    handleScroll,
+    config,
+    children
+}: {
+    apiEndpoint: string;
+    inputRef: React.RefObject<HTMLTextAreaElement>;
+    currentChatId: string | null;
+    currentChat: any;
+    chats: any[];
+    updateChat: any;
+    createNewChat: () => void;
+    deleteChatState: any;
+    clearAllChatsState: () => void;
+    isScrolledUp: boolean;
+    scrollToBottom: () => void;
+    messagesEndRef: React.RefObject<HTMLDivElement>;
+    handleScroll: any;
+    config: any;
+    children: ReactNode;
+}) {
+    const { toast } = useToast();
+
+    const {
+        sendMessage: sendStreamMessage,
         isProcessing,
-        processingStage,
-        sendMessage: sendChatApiMessage,
-        handleContentUpdate
-    } = useChatMessages({
+    } = useChatWithStreaming({
         apiEndpoint,
         onUpdateChat: updateChat,
         onError: (error) => {
@@ -66,18 +153,7 @@ export function ChatProvider({
                 description: error.message || 'Failed to get AI response.',
                 duration: 3000,
             });
-        },
-        getLatestChat: (chatId) => chats.find(chat => chat.id === chatId)
-    });
-
-    const {
-        isScrolledUp,
-        messagesEndRef,
-        scrollAreaRef,
-        scrollToBottom,
-        handleScroll
-    } = useScrollBehavior({
-        isStreaming
+        }
     });
 
     // Send message
@@ -90,7 +166,7 @@ export function ChatProvider({
         }
 
         try {
-            await sendChatApiMessage(currentChatId, currentChat, content);
+            await sendStreamMessage(currentChatId, currentChat, content);
 
             // Focus input after message is sent
             setTimeout(() => {
@@ -106,8 +182,8 @@ export function ChatProvider({
         deleteChatState(chatId);
 
         toast({
-            title: 'Chat deleted',
-            description: 'The chat has been removed.',
+            title: 'Chat Deleted',
+            description: 'Chat history has been removed.',
             duration: 3000,
         });
     };
@@ -117,40 +193,19 @@ export function ChatProvider({
         clearAllChatsState();
 
         toast({
-            title: 'All chats cleared',
+            title: 'All Chats Cleared',
             description: 'Your chat history has been cleared.',
             duration: 3000,
         });
     };
 
-    // Add initial messages
-    useEffect(() => {
-        if (initialMessages && initialMessages.length > 0 && currentChat && currentChat.messages.length === 0) {
-            initialMessages.forEach((message: any) => {
-                handleContentUpdate(
-                    currentChatId as string,
-                    currentChat.messages,
-                    message.content,
-                    message.sender
-                );
-            });
-        }
-    }, [currentChatId, currentChat]);
-
     // Context value
     const contextValue = {
-        config: {
-            apiEndpoint,
-            appDefinition,
-            historyStorageKey,
-            enableHistory
-        },
+        config,
         chats,
         currentChatId,
         currentChat,
-        isStreaming,
         isProcessing,
-        processingStage,
         createNewChat,
         deleteChat,
         sendMessage,

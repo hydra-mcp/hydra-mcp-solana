@@ -10,8 +10,11 @@ import { Toaster } from '@/components/ui/toaster';
 import { ErrorHandler } from '@/components/ErrorHandler';
 import { IOSDesktop } from '@/pages/IOSDesktop';
 import { WalletFinder } from '@/pages/WalletFinder';
+import { StreamingProvider } from '@/lib/streaming/StreamingContext';
+import { useToast } from '@/hooks/use-toast';
 
 function App() {
+  // 在组件级别需要使用useToast，所以将其封装在内部组件中
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -22,29 +25,38 @@ function App() {
           {/* Global API error handler */}
           <ErrorHandler />
 
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-
-            {/* Protected Routes */}
-            <Route element={<ProtectedRoute />}>
-              {/* AppLayout Routes */}
-              <Route element={<AppLayout />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/chat" element={<ChatPage isModal={false} />} />
-              </Route>
-
-              {/* iOS Layout Routes - These don't use the AppLayout */}
-              <Route path="/ios-desktop" element={<IOSDesktop />} />
-              <Route path="/wallet-finder" element={<WalletFinder isModal={false} />} />
-            </Route>
-
-            {/* Fallback Route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <AppContent />
         </AppWindowProvider>
       </AuthProvider>
     </BrowserRouter>
+  );
+}
+
+// 内部组件，可以使用hooks
+function AppContent() {
+  const { toast } = useToast();
+
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Protected Routes */}
+      <Route element={<ProtectedRoute />}>
+        {/* AppLayout Routes */}
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/chat" element={<ChatPage isModal={false} />} />
+        </Route>
+
+        {/* iOS Layout Routes - These don't use the AppLayout */}
+        <Route path="/ios-desktop" element={<IOSDesktop />} />
+        <Route path="/wallet-finder" element={<WalletFinder isModal={false} />} />
+      </Route>
+
+      {/* Fallback Route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
