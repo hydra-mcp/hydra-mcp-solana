@@ -1,9 +1,12 @@
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Button } from '@/components/ui/button';
+import { Copy, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MarkdownRendererProps {
@@ -12,30 +15,64 @@ interface MarkdownRendererProps {
 }
 
 export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
+    const [copiedBlockIndex, setCopiedBlockIndex] = useState<number | null>(null);
+
+    const handleCopyCode = (code: string, blockIndex: number) => {
+        navigator.clipboard.writeText(code)
+            .then(() => {
+                setCopiedBlockIndex(blockIndex);
+                setTimeout(() => setCopiedBlockIndex(null), 2000);
+            })
+            .catch(err => {
+                console.error('Failed to copy text:', err);
+            });
+    };
+
     return (
         <div className={cn("prose dark:prose-invert max-w-none", className)}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw, rehypeSanitize]}
                 components={{
-                    code({ className, children, ...props }) {
+                    code({ node, className, children, ...props }) {
                         const match = /language-(\w+)/.exec(className || '');
-                        const isCodeBlock = match && String(children).includes('\n');
+                        const codeContent = String(children).replace(/\n$/, '');
+                        const codeBlockIndex = content.indexOf(codeContent);
 
-                        return isCodeBlock ? (
-                            <SyntaxHighlighter
-                                style={atomDark}
-                                language={match[1]}
-                                PreTag="div"
-                                className="rounded-md my-2"
-                                {...props}
-                            >
-                                {String(children).replace(/\n$/, '')}
-                            </SyntaxHighlighter>
-                        ) : (
-                            <code className={cn("bg-muted px-1.5 py-0.5 rounded-md text-sm", className)} {...props}>
-                                {children}
-                            </code>
+                        if (!match) {
+                            return (
+                                <code className={className} {...props}>{children}</code>
+                            );
+                        }
+
+                        return (
+                            <div className="relative group">
+                                <div className="absolute right-2 top-2 z-10">
+                                    <Button
+                                        variant="secondary"
+                                        size="icon"
+                                        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                        onClick={() => handleCopyCode(codeContent, codeBlockIndex)}
+                                    >
+                                        {copiedBlockIndex === codeBlockIndex ? (
+                                            <Check className="h-3.5 w-3.5" />
+                                        ) : (
+                                            <Copy className="h-3.5 w-3.5" />
+                                        )}
+                                        <span className="sr-only">Copy code</span>
+                                    </Button>
+                                </div>
+
+                                <SyntaxHighlighter
+                                    style={vscDarkPlus as any}
+                                    language={match[1]}
+                                    PreTag="div"
+                                    wrapLines={true}
+                                    {...props}
+                                >
+                                    {codeContent}
+                                </SyntaxHighlighter>
+                            </div>
                         );
                     },
                     // Customize other markdown elements

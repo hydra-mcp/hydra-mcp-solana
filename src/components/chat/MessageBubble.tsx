@@ -1,9 +1,8 @@
+import React from 'react';
 import { cn, copyToClipboard } from "@/lib/utils";
-import { Bot, Loader2, User, Copy, Check } from "lucide-react";
+import { Bot, Loader2, User, Copy, Check, Info } from "lucide-react";
 import { Message } from "@/types/chat";
-import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { MarkdownRenderer } from '@/components/chat/MarkdownRenderer';
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -11,10 +10,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 interface MessageBubbleProps {
     message: Message;
     isStreaming?: boolean;
+    className?: string;
 }
 
-export const MessageBubble = ({ message, isStreaming }: MessageBubbleProps) => {
+export function MessageBubble({ message, isStreaming, className }: MessageBubbleProps) {
     const isUser = message.sender === "user";
+    const isSystem = message.sender === "system";
     const [copied, setCopied] = useState(false);
     const [copiedCodeBlockIndex, setCopiedCodeBlockIndex] = useState<number | null>(null);
 
@@ -36,133 +37,65 @@ export const MessageBubble = ({ message, isStreaming }: MessageBubbleProps) => {
         }
     }, []);
 
+    // System message style
+    if (isSystem) {
+        return (
+            <div className={cn(
+                "flex items-center p-3 rounded-md bg-muted/50 border border-muted mb-4 w-full",
+                className
+            )}>
+                <Info className="h-5 w-5 text-blue-500 mr-2 flex-shrink-0" />
+                <div className="text-sm text-muted-foreground">{message.content}</div>
+            </div>
+        );
+    }
+
+    // User message and AI message
     return (
-        <div
-            className={cn(
-                "flex w-full gap-2 sm:gap-3 p-2 sm:p-4",
-                isUser ? "justify-end" : "justify-start"
-            )}
-        >
+        <div className={cn(
+            "flex mb-4 w-full",
+            isUser ? "justify-end" : "justify-start",
+            className
+        )}>
+            {/* Message icon (non-user message) */}
             {!isUser && (
-                <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 select-none items-center justify-center rounded-md border bg-background shadow">
-                    <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center mr-2 flex-shrink-0">
+                    <Bot className="h-4 w-4 text-primary-foreground" />
                 </div>
             )}
-            <div
-                className={cn(
-                    "flex max-w-[90%] sm:max-w-[85%] flex-col gap-1 sm:gap-2 rounded-lg px-3 sm:px-4 py-2 text-sm group relative",
-                    isUser
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
-                )}
-            >
-                <div className="prose prose-sm dark:prose-invert break-words max-w-none">
-                    {isUser ? (
-                        message.content
-                    ) : (
-                        <ReactMarkdown
-                            components={{
-                                code({ className, children, ...props }) {
-                                    const match = /language-(\w+)/.exec(className || '');
-                                    const codeContent = String(children).replace(/\n$/, '');
-                                    const codeBlockIndex = message.content.indexOf(codeContent);
 
-                                    return match ? (
-                                        <div className="relative group/code">
-                                            <div className="absolute -top-1 right-1 opacity-0 group-hover/code:opacity-100 transition-opacity z-10">
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                variant="secondary"
-                                                                size="icon"
-                                                                className="h-7 w-7"
-                                                                onClick={() => handleCopyCode(codeContent, codeBlockIndex)}
-                                                            >
-                                                                {copiedCodeBlockIndex === codeBlockIndex ? (
-                                                                    <Check className="h-3.5 w-3.5" />
-                                                                ) : (
-                                                                    <Copy className="h-3.5 w-3.5" />
-                                                                )}
-                                                                <span className="sr-only">Copy code</span>
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="top">
-                                                            {copiedCodeBlockIndex === codeBlockIndex ? "Copied!" : "Copy code"}
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            </div>
-                                            <SyntaxHighlighter
-                                                style={vscDarkPlus as any}
-                                                language={match[1]}
-                                                PreTag="div"
-                                                {...props}
-                                            >
-                                                {codeContent}
-                                            </SyntaxHighlighter>
-                                        </div>
-                                    ) : (
-                                        <code className={className} {...props}>
-                                            {children}
-                                        </code>
-                                    );
-                                }
-                            }}
-                        >
-                            {message.content}
-                        </ReactMarkdown>
+            {/* Message content */}
+            <div className={cn(
+                "rounded-xl p-3 max-w-[80%]",
+                isUser
+                    ? "bg-primary text-primary-foreground rounded-tr-none"
+                    : "bg-muted text-muted-foreground rounded-tl-none"
+            )}>
+                {isUser ? (
+                    <div className="whitespace-pre-wrap break-words">{message.content}</div>
+                ) : (
+                    <MarkdownRenderer content={message.content} className="prose-sm max-w-none" />
+                )}
+
+                {/* Message time */}
+                <div className={cn(
+                    "text-xs mt-1 text-right opacity-70",
+                    isUser ? "text-primary-foreground" : "text-muted-foreground"
+                )}>
+                    {isStreaming && !isUser ? (
+                        "Thinking..."
+                    ) : (
+                        new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     )}
                 </div>
-                <div className="flex items-center justify-between gap-1 text-[10px] sm:text-xs opacity-70">
-                    <div className="flex items-center gap-1">
-                        {isUser ? (
-                            <User className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        ) : isStreaming ? (
-                            <Loader2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 animate-spin" />
-                        ) : (
-                            <Bot className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        )}
-                        <span>
-                            {isStreaming && !isUser ? (
-                                "Thinking..."
-                            ) : (
-                                new Date(message.createdAt).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                })
-                            )}
-                        </span>
-                    </div>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={handleCopy}
-                                >
-                                    {copied ? (
-                                        <Check className="h-3 w-3" />
-                                    ) : (
-                                        <Copy className="h-3 w-3" />
-                                    )}
-                                    <span className="sr-only">Copy message</span>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                                {copied ? "Copied!" : "Copy message"}
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </div>
             </div>
+
+            {/* User avatar (user message) */}
             {isUser && (
-                <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 select-none items-center justify-center rounded-md border bg-background shadow">
-                    <User className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
+                <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center ml-2 flex-shrink-0">
+                    <User className="h-4 w-4 text-secondary-foreground" />
                 </div>
             )}
         </div>
     );
-}; 
+} 

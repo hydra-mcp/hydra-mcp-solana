@@ -19,7 +19,7 @@ interface NonceResponse {
     expires_in: number;
 }
 
-// 更新全局Window接口定义以包含Phantom类型
+// Update global Window interface definition to include Phantom type
 declare global {
     interface Window {
         phantom?: {
@@ -134,18 +134,18 @@ export function PhantomLoginForm({ isActive }: PhantomLoginFormProps) {
             setConnectionStep('verifying');
 
             // Step 4: Verify signature and login
-            // 处理签名并转换为Base64
+            // Process signature and convert to Base64
             let base64Signature = '';
 
-            // 由于 Phantom 钱包的 signMessage 返回的格式可能不确定
-            // 我们需要安全地处理各种可能的类型
+            // Since the format of the signature returned by Phantom wallet may be uncertain
+            // We need to handle various possible types safely
             try {
-                // 如果签名已经是 Base64 字符串
+                // If the signature is already a Base64 string
                 if (typeof signature === 'string') {
                     base64Signature = signature;
                 } else {
-                    // 将签名转换为 Base64 格式
-                    // 在 TypeScript 中，需要使用数组展开语法来处理二进制数据
+                    // Convert signature to Base64 format
+                    // In TypeScript, we need to use array expansion syntax to handle binary data
                     const arrayData = Array.from(new Uint8Array(signature as any));
                     base64Signature = btoa(String.fromCharCode(...arrayData));
                 }
@@ -208,7 +208,7 @@ export function PhantomLoginForm({ isActive }: PhantomLoginFormProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
         >
-            {/* 背景动画效果 */}
+            {/* Background animation effect */}
             <motion.div
                 className="absolute inset-0 overflow-hidden pointer-events-none"
                 initial={{ opacity: 0 }}

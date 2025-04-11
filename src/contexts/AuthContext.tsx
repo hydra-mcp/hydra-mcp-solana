@@ -222,9 +222,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // 添加重定向到登录页面的函数
+    // Add a function to redirect to the login page
     const redirectToLogin = () => {
-        // 使用 window.location.href 进行重定向，确保清除当前页面状态
+        // Use window.location.href to redirect, ensuring current page state is cleared
         window.location.href = '/login';
     };
 
@@ -239,7 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setLastUserFetch(0);
 
-        // 在登出时重定向到登录页面
+        // Redirect to login page when logging out
         redirectToLogin();
     };
 

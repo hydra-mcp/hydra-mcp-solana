@@ -1,35 +1,35 @@
-# 钱包登录签名（Wallet Login Signature）对接文档
+# Wallet Login Signature (Wallet Login Signature) Integration Documentation
 
-## 概述
+## Overview
 
-钱包登录是基于区块链钱包的去中心化身份验证方式，用户通过对特定消息进行签名来证明钱包的所有权，无需传统的用户名和密码。
+Wallet login is a decentralized identity verification method based on blockchain wallets, where users prove ownership of their wallets by signing a specific message, without traditional username and password authentication.
 
-## 签名流程
+## Signature Process
 
-前端应该按照以下步骤获取签名参数：
+The frontend should follow these steps to obtain the signature parameters:
 
-1. **获取随机消息（Nonce）**
-   - 调用后端 API 获取一个随机消息，该消息通常包含时间戳和随机字符串
-   - 接口：`GET /api/auth/nonce?wallet_address={wallet_address}`
+1. **Get Random Message (Nonce)**
+   - Call the backend API to get a random message, which usually includes a timestamp and a random string
+   - Interface: `GET /api/auth/nonce?wallet_address={wallet_address}`
 
-2. **使用钱包签名消息**
-   - 通过钱包提供的签名方法对消息进行签名
-   - 针对不同的钱包和链有不同的实现方式
+2. **Sign Message with Wallet**
+   - Use the signature method provided by the wallet to sign the message
+   - Different implementations for different wallets and chains
 
-3. **提交签名进行验证**
-   - 将钱包地址和签名提交到登录接口
-   - 接口：`POST /api/auth/wallet-login`
+3. **Submit Signature for Verification**
+   - Submit the wallet address and signature to the login interface
+   - Interface: `POST /api/auth/wallet-login`
 
-## 实现示例
+## Implementation Example
 
-### 1. 以太坊钱包（使用 MetaMask 或其他 Web3 钱包）
+### 1. Ethereum Wallet (Using MetaMask or other Web3 wallets)
 
 ```javascript
-// 1. 连接钱包
+// 1. Connect wallet
 async function connectWallet() {
   if (window.ethereum) {
     try {
-      // 请求账户访问
+      // Request account access
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       return accounts[0];
     } catch (error) {
@@ -41,14 +41,14 @@ async function connectWallet() {
   }
 }
 
-// 2. 获取服务器随机消息
+// 2. Get server random message
 async function getNonce(walletAddress) {
   const response = await fetch(`https://api.your-service.com/api/auth/nonce?wallet_address=${walletAddress}`);
   const data = await response.json();
-  return data.nonce; // 假设返回格式为 { nonce: "消息内容..." }
+  return data.nonce; // Assuming the return format is { nonce: "message content..." }
 }
 
-// 3. 签名消息
+// 3. Sign message
 async function signMessage(walletAddress, message) {
   try {
     const signature = await window.ethereum.request({
@@ -62,19 +62,19 @@ async function signMessage(walletAddress, message) {
   }
 }
 
-// 4. 登录流程
+// 4. Login process
 async function walletLogin() {
   try {
-    // 连接钱包获取地址
+    // Connect wallet to get address
     const walletAddress = await connectWallet();
     
-    // 获取随机消息
+    // Get random message
     const nonce = await getNonce(walletAddress);
     
-    // 签名消息
+    // Sign message
     const signature = await signMessage(walletAddress, nonce);
     
-    // 提交登录请求
+    // Submit login request
     const response = await fetch('https://api.your-service.com/api/auth/wallet-login', {
       method: 'POST',
       headers: {
@@ -86,14 +86,14 @@ async function walletLogin() {
       })
     });
     
-    // 处理登录响应
+    // Process login response
     const loginResult = await response.json();
     if (loginResult.success) {
-      // 保存 token
+      // Save token
       localStorage.setItem('access_token', loginResult.access_token);
-      // 登录成功，重定向或更新状态
+      // Login successful, redirect or update status
     } else {
-      // 登录失败处理
+      // Login failed processing
     }
   } catch (error) {
     console.error("Wallet login failed:", error);
@@ -101,13 +101,13 @@ async function walletLogin() {
 }
 ```
 
-### 2. Solana 钱包实现
+### 2. Solana Wallet Implementation
 
 ```javascript
-// 使用 Solana 钱包 (例如 Phantom)
+// Use Solana wallet (e.g. Phantom)
 import { Connection, PublicKey } from '@solana/web3.js';
 
-// 1. 连接 Solana 钱包
+// 1. Connect Solana wallet
 async function connectSolanaWallet() {
   if (!window.solana || !window.solana.isPhantom) {
     throw new Error("Please install Phantom wallet");
@@ -122,14 +122,14 @@ async function connectSolanaWallet() {
   }
 }
 
-// 2. 获取服务器随机消息
+// 2. Get server random message
 async function getNonce(walletAddress) {
   const response = await fetch(`https://api.your-service.com/api/auth/nonce?wallet_address=${walletAddress}`);
   const data = await response.json();
   return data.nonce;
 }
 
-// 3. 签名消息
+// 3. Sign message
 async function signMessageSolana(message) {
   try {
     const encodedMessage = new TextEncoder().encode(message);
@@ -141,17 +141,17 @@ async function signMessageSolana(message) {
   }
 }
 
-// 4. 登录流程
+// 4. Login process
 async function solanaWalletLogin() {
   try {
     const walletAddress = await connectSolanaWallet();
     const nonce = await getNonce(walletAddress);
     const signature = await signMessageSolana(nonce);
     
-    // Base64 编码签名
+    // Base64 encode signature
     const base64Signature = btoa(String.fromCharCode(...new Uint8Array(signature)));
     
-    // 提交登录请求
+    // Submit login request
     const response = await fetch('https://api.your-service.com/api/auth/wallet-login', {
       method: 'POST',
       headers: {
@@ -164,38 +164,38 @@ async function solanaWalletLogin() {
     });
     
     const loginResult = await response.json();
-    // 处理登录结果...
+    // Process login result...
   } catch (error) {
     console.error("Solana wallet login failed:", error);
   }
 }
 ```
 
-## 安全注意事项
+## Security Considerations
 
-1. **消息格式建议**
-   - 消息中应包含时间戳，避免重放攻击
-   - 消息可以包含特定用途说明，例如："Login to HYDRA_AI at 2023-10-01T12:34:56Z"
-   - 可以包含服务名称，避免跨站签名攻击
+1. **Message Format Suggestions**
+   - The message should include a timestamp to avoid replay attacks
+   - The message can include specific purpose instructions, such as: "Login to HYDRA_AI at 2023-10-01T12:34:56Z"
+   - It can include service names to avoid cross-site signature attacks
 
-2. **签名验证**
-   - 后端需要验证签名的有效性和时效性
-   - 同一个 nonce 只能使用一次
+2. **Signature Verification**
+   - The backend needs to verify the validity and expiration time of the signature
+   - The same nonce can only be used once
 
-3. **用户体验**
-   - 为用户显示待签名的具体内容，增加透明度
-   - 提供签名失败的明确错误提示
+3. **User Experience**
+   - Display the specific content to be signed to the user to increase transparency
+   - Provide clear error prompts for failed signature verification
 
-## 后端 API 规范
+## Backend API Specification
 
-### 1. 获取 Nonce
+### 1. Get Nonce
 
-**请求:**
+**Request:**
 ```
 GET /api/auth/nonce?wallet_address={wallet_address}
 ```
 
-**响应:**
+**Response:**
 ```json
 {
   "success": true,
@@ -204,9 +204,9 @@ GET /api/auth/nonce?wallet_address={wallet_address}
 }
 ```
 
-### 2. 钱包登录
+### 2. Wallet Login
 
-**请求:**
+**Request:**
 ```
 POST /api/auth/wallet-login
 Content-Type: application/json
@@ -217,7 +217,7 @@ Content-Type: application/json
 }
 ```
 
-**响应:**
+**Response:**
 ```json
 {
   "success": true,
@@ -234,18 +234,18 @@ Content-Type: application/json
 }
 ```
 
-## 常见问题与解决方案
+## Common Issues and Solutions
 
-1. **签名失败**
-   - 检查钱包是否正确连接
-   - 确认用户未拒绝签名请求
-   - 验证消息格式是否正确
+1. **Signature failed**
+   - Check if the wallet is correctly connected
+   - Confirm that the user did not reject the signature request
+   - Verify the message format is correct
 
-2. **验证失败**
-   - 检查签名方法是否与钱包和链匹配
-   - 确保 nonce 未过期且未被使用过
-   - 验证钱包地址格式
+2. **Verification failed**
+   - Check if the signature method matches the wallet and chain
+   - Ensure the nonce is not expired and not used
+   - Verify the wallet address format
 
-3. **跨浏览器/设备登录**
-   - 实现刷新令牌机制
-   - 考虑多设备会话管理
+3. **Cross-browser/device login**
+   - Implement refresh token mechanism
+   - Consider multi-device session management

@@ -62,7 +62,7 @@ export async function apiRequest<T>(
 
     // Handle 401 error - token expired
     if (response.status === 401) {
-      // 需要获取body中的detail
+      // Need to get the detail from the body
       const errorBody = await response.json().catch(() => ({}));
       const errorMessage = errorBody.detail ||
         errorBody.error ||
@@ -101,7 +101,7 @@ export async function apiRequest<T>(
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user_info');
 
-        // 如果已经是登录页面，则不重定向
+        // If already on the login page, do not redirect
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
@@ -152,7 +152,7 @@ export async function apiRequest<T>(
   } catch (error) {
     console.error('API request error:', error);
 
-    // 检查是否是认证错误，如果是则重定向到登录页面
+    // Check if it is an authentication error, if so redirect to the login page
     if (error instanceof Error &&
       (error.message.includes('Authentication failed') ||
         error.message.includes('Token refresh failed')) && window.location.pathname !== '/login') {
@@ -233,7 +233,7 @@ export async function sendChatMessage(message: string, chatHistory: Message[], o
 }
 
 // Stream message request implemented using SSE.ts
-async function sendStreamMessage(
+export async function sendStreamMessage(
   url: string,
   message: string,
   chatHistory: Message[],
@@ -542,14 +542,14 @@ async function sendStreamMessage(
 
 export async function sendMessage(url: string, message: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
   try {
-    // 构建完整URL
+    // Build full URL
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
     const fullUrl = `${baseUrl}${url}`;
 
-    // 获取访问令牌
+    // Get access token
     const token = getAccessToken();
 
-    // 构建请求头
+    // Build request headers
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -558,36 +558,36 @@ export async function sendMessage(url: string, message: string, chatHistory: Mes
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // 构建消息体，仅包含当前消息
+    // Build message body, only include current message
     const payload = {
       messages: chatHistory.map(msg => ({ role: msg.sender === 'user' ? 'user' : 'assistant', content: msg.content })),
       stream: false
     };
 
-    // 发送请求
+    // Send request
     const response = await fetch(fullUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify(payload)
     });
 
-    // 处理错误响应
+    // Handle error response
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.message || errorData.error || `请求失败，状态码：${response.status}`;
+      const errorMessage = errorData.message || errorData.error || `Request failed, status code: ${response.status}`;
 
-      // 触发全局API错误事件
+      // Trigger global API error event
       triggerApiError(errorMessage, response.status, fullUrl);
 
       throw new Error(errorMessage);
     }
 
-    // 解析并返回响应
+    // Parse and return response
     const data = await response.json();
     onChunk && onChunk(data.choices[0].message.content);
     return data as OpenAIResponse;
   } catch (error) {
-    console.error("发送消息错误:", error);
+    console.error("Send message error:", error);
     throw error;
   }
 }

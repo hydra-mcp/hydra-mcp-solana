@@ -159,7 +159,10 @@ export interface AppDefinition {
     component: ReactNode;
     defaultSize: { width: number; height: number };
     defaultPosition?: { x: number; y: number };
+    description?: string;
 }
+
+const defaultSize = { width: 800, height: 600 };
 
 // Create a registry of all available apps
 export const appRegistry: Record<string, AppDefinition> = {
@@ -173,7 +176,8 @@ export const appRegistry: Record<string, AppDefinition> = {
                 <WalletFinderComponent />
             </Suspense>
         ),
-        defaultSize: { width: 800, height: 600 }
+        defaultSize,
+        description: 'Find your wallet'
     },
     settings: {
         id: 'settings',
@@ -181,7 +185,8 @@ export const appRegistry: Record<string, AppDefinition> = {
         title: 'Settings',
         icon: <SettingsIcon />,
         component: <SettingsApp />,
-        defaultSize: { width: 700, height: 500 }
+        defaultSize,
+        description: 'Change your settings'
     },
     messages: {
         id: 'messages',
@@ -193,7 +198,8 @@ export const appRegistry: Record<string, AppDefinition> = {
                 <ChatComponent />
             </Suspense>
         ),
-        defaultSize: { width: 900, height: 700 }
+        defaultSize,
+        description: 'Chat with your friends'
     },
     photos: {
         id: 'photos',
@@ -201,7 +207,8 @@ export const appRegistry: Record<string, AppDefinition> = {
         title: 'Photos',
         icon: <PhotosIcon />,
         component: <PhotosApp />,
-        defaultSize: { width: 900, height: 700 }
+        defaultSize,
+        description: 'View your photos'
     },
     home: {
         id: 'home',
@@ -217,7 +224,8 @@ export const appRegistry: Record<string, AppDefinition> = {
                 </p>
             </div>
         ),
-        defaultSize: { width: 800, height: 600 }
+        defaultSize,
+        description: 'Home'
     },
     search: {
         id: 'search',
@@ -240,7 +248,8 @@ export const appRegistry: Record<string, AppDefinition> = {
                 </div>
             </div>
         ),
-        defaultSize: { width: 600, height: 500 }
+        defaultSize,
+        description: 'Search for files or apps'
     },
     calendar: {
         id: 'calendar',
@@ -264,7 +273,8 @@ export const appRegistry: Record<string, AppDefinition> = {
                 </div>
             </div>
         ),
-        defaultSize: { width: 800, height: 600 }
+        defaultSize,
+        description: 'View your calendar'
     },
     mail: {
         id: 'mail',
@@ -290,7 +300,8 @@ export const appRegistry: Record<string, AppDefinition> = {
                 </div>
             </div>
         ),
-        defaultSize: { width: 850, height: 650 }
+        defaultSize,
+        description: 'Check your email'
     }
 };
 
