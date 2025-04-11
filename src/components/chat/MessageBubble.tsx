@@ -18,6 +18,7 @@ export function MessageBubble({ message, isStreaming, className }: MessageBubble
     const isSystem = message.sender === "system";
     const [copied, setCopied] = useState(false);
     const [copiedCodeBlockIndex, setCopiedCodeBlockIndex] = useState<number | null>(null);
+    const [renderKey] = useState(() => Math.random().toString(36).substring(7));
 
     // Copy the entire message content
     const handleCopy = async () => {
@@ -60,7 +61,11 @@ export function MessageBubble({ message, isStreaming, className }: MessageBubble
             {/* Message icon (non-user message) */}
             {!isUser && (
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center mr-2 flex-shrink-0">
-                    <Bot className="h-4 w-4 text-primary-foreground" />
+                    {isStreaming ? (
+                        <Loader2 className="h-4 w-4 text-primary-foreground animate-spin" />
+                    ) : (
+                        <Bot className="h-4 w-4 text-primary-foreground" />
+                    )}
                 </div>
             )}
 
@@ -74,7 +79,19 @@ export function MessageBubble({ message, isStreaming, className }: MessageBubble
                 {isUser ? (
                     <div className="whitespace-pre-wrap break-words">{message.content}</div>
                 ) : (
-                    <MarkdownRenderer content={message.content} className="prose-sm max-w-none" />
+                    <>
+                        {isStreaming && message.content === '' ? (
+                            <div className="flex items-center space-x-2">
+                                <span className="text-muted-foreground animate-pulse">AI is thinking...</span>
+                            </div>
+                        ) : (
+                            <MarkdownRenderer
+                                key={`md-${message.id}-${isStreaming ? Date.now() : renderKey}`}
+                                content={message.content}
+                                className="prose-sm max-w-none"
+                            />
+                        )}
+                    </>
                 )}
 
                 {/* Message time */}
@@ -83,7 +100,7 @@ export function MessageBubble({ message, isStreaming, className }: MessageBubble
                     isUser ? "text-primary-foreground" : "text-muted-foreground"
                 )}>
                     {isStreaming && !isUser ? (
-                        "Thinking..."
+                        <span className="animate-pulse">Thinking...</span>
                     ) : (
                         new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     )}

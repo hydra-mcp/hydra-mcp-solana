@@ -66,7 +66,8 @@ export function ChatProvider({
                 description: error.message || 'Failed to get AI response.',
                 duration: 3000,
             });
-        }
+        },
+        getLatestChat: (chatId) => chats.find(chat => chat.id === chatId)
     });
 
     const {

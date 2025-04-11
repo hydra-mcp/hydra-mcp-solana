@@ -9,12 +9,14 @@ interface MessageInputProps {
     className?: string;
     placeholder?: string;
     autoFocus?: boolean;
+    disabled?: boolean;
 }
 
 export function MessageInput({
     className,
     placeholder = "Type your message...",
-    autoFocus = false
+    autoFocus = false,
+    disabled: externalDisabled
 }: MessageInputProps) {
     const {
         inputRef,
@@ -25,7 +27,7 @@ export function MessageInput({
     } = useChatContext();
 
     const [input, setInput] = React.useState('');
-    const isDisabled = !currentChatId || isStreaming || isProcessing || !input.trim();
+    const isDisabled = !currentChatId || isStreaming || isProcessing || !input.trim() || externalDisabled;
 
     const handleSend = async () => {
         if (isDisabled) return;

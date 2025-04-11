@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Message, ProcessingStage } from '@/types/chat';
+import { useState, useRef } from 'react';
+import { Message, ProcessingStage, Chat } from '@/types/chat';
 import { uuid } from '@/lib/utils';
 import { sendChatMessage, sendStreamMessage } from '@/lib/api';
 
@@ -7,16 +7,18 @@ interface UseChatMessagesOptions {
     apiEndpoint?: string;
     onUpdateChat: (chatId: string, updates: any) => void;
     onError?: (error: Error) => void;
+    getLatestChat?: (chatId: string) => Chat | undefined;
 }
 
 export function useChatMessages(options: UseChatMessagesOptions) {
-    const { apiEndpoint, onUpdateChat, onError } = options;
+    const { apiEndpoint, onUpdateChat, onError, getLatestChat } = options;
 
     const [isStreaming, setIsStreaming] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [streamingContent, setStreamingContent] = useState('');
     const [processingStage, setProcessingStage] = useState<ProcessingStage[]>([]);
     const [streamMessageId, setStreamMessageId] = useState<string>(uuid());
+    const hasReceivedContentRef = useRef(false);
 
     // Handle sending messages
     const sendMessage = async (chatId: string, currentChat: any, content: string) => {
@@ -53,13 +55,12 @@ export function useChatMessages(options: UseChatMessagesOptions) {
         // Start streaming
         setIsStreaming(true);
         setStreamingContent('');
+        hasReceivedContentRef.current = false;
         setProcessingStage([{
             message: 'AI is processing your request...',
             content: '',
             status: 0
         }]);
-
-        let hasReceivedContent = false;
 
         try {
             // Send message to API
@@ -68,11 +69,11 @@ export function useChatMessages(options: UseChatMessagesOptions) {
                 content.trim(),
                 updatedMessages,
                 (chunk) => {
-                    handleStreamData(chunk, chatId, updatedMessages, aiMessage, hasReceivedContent);
+                    handleStreamData(chunk, chatId, updatedMessages, aiMessage);
                 }
             );
 
-            if (!hasReceivedContent) {
+            if (!hasReceivedContentRef.current) {
                 handleContentUpdate(chatId, updatedMessages, "No response from server.", "ai");
             }
 
@@ -102,7 +103,7 @@ export function useChatMessages(options: UseChatMessagesOptions) {
     };
 
     // Handle stream data
-    const handleStreamData = (chunk: string, chatId: string, messages: Message[], aiMessage: Message, hasReceivedContent: boolean) => {
+    const handleStreamData = (chunk: string, chatId: string, messages: Message[], aiMessage: Message) => {
         try {
             const jsonData = JSON.parse(chunk);
 
@@ -129,18 +130,29 @@ export function useChatMessages(options: UseChatMessagesOptions) {
                 return;
             }
 
+            // Use latest messages for streaming updates if available
+            let latestMessages = messages;
+
+            // Try to get the most recent messages if possible
+            if (getLatestChat) {
+                const latestChat = getLatestChat(chatId);
+                if (latestChat && latestChat.messages) {
+                    latestMessages = latestChat.messages;
+                }
+            }
+
             switch (jsonData.type) {
                 case 'content':
                     if (jsonData.content) {
-                        handleContentUpdate(chatId, messages, jsonData.content, 'ai');
-                        hasReceivedContent = true;
+                        handleContentUpdate(chatId, latestMessages, jsonData.content, 'ai');
+                        hasReceivedContentRef.current = true;
                     }
                     break;
 
                 case 'error':
                     console.error("Error from API:", jsonData.error);
                     onUpdateChat(chatId, {
-                        messages: [...messages, {
+                        messages: [...latestMessages, {
                             ...aiMessage,
                             content: `Error: ${jsonData.error?.message || 'An unknown error occurred'}`,
                         }],
@@ -155,16 +167,26 @@ export function useChatMessages(options: UseChatMessagesOptions) {
                     if (jsonData.choices && jsonData.choices[0]?.delta?.content) {
                         const content = jsonData.choices[0].delta.content;
                         if (content) {
-                            handleContentUpdate(chatId, messages, content, 'ai');
-                            hasReceivedContent = true;
+                            handleContentUpdate(chatId, latestMessages, content, 'ai');
+                            hasReceivedContentRef.current = true;
                         }
                     }
             }
         } catch (e) {
             // If parsing fails, try using the original chunk
+            let latestMessages = messages;
+
+            // Try to get the most recent messages if possible
+            if (getLatestChat) {
+                const latestChat = getLatestChat(chatId);
+                if (latestChat && latestChat.messages) {
+                    latestMessages = latestChat.messages;
+                }
+            }
+
             if (typeof chunk === 'string' && chunk.trim()) {
-                handleContentUpdate(chatId, messages, chunk, 'ai');
-                hasReceivedContent = true;
+                handleContentUpdate(chatId, latestMessages, chunk, 'ai');
+                hasReceivedContentRef.current = true;
             }
         }
     };
@@ -176,28 +198,48 @@ export function useChatMessages(options: UseChatMessagesOptions) {
         setStreamingContent(prev => {
             const newContent = prev + content;
 
-            if (messages.length > 0) {
-                const lastMessage = messages[messages.length - 1];
+            // 获取最新的消息
+            let currentMessages = [...messages];
 
+            if (currentMessages.length > 0) {
+                const lastMessageIndex = currentMessages.length - 1;
+                const lastMessage = currentMessages[lastMessageIndex];
+
+                // 判断是否是同一个发送者
                 if (lastMessage.sender === sender) {
+                    // 创建新的消息对象，保证引用变化触发更新
+                    const updatedMessage = {
+                        ...lastMessage,
+                        content: lastMessage.content + content,
+                        id: sender === 'ai' ? streamMessageId : lastMessage.id,
+                    };
+
+                    // 更新消息列表
+                    currentMessages = [
+                        ...currentMessages.slice(0, lastMessageIndex),
+                        updatedMessage
+                    ];
+
+                    // 更新聊天记录
                     onUpdateChat(chatId, {
-                        messages: [...messages.slice(0, -1), {
-                            ...lastMessage,
-                            content: lastMessage.content + content,
-                            id: sender === 'ai' ? streamMessageId : lastMessage.id,
-                        }],
+                        messages: currentMessages,
                     });
                 } else {
+                    // 添加新消息
+                    const newMessage = {
+                        id: sender === 'ai' ? streamMessageId : uuid(),
+                        content: content,
+                        sender: sender,
+                        createdAt: new Date().toLocaleString(),
+                    };
+
+                    // 更新聊天记录
                     onUpdateChat(chatId, {
-                        messages: [...messages, {
-                            id: sender === 'ai' ? streamMessageId : uuid(),
-                            content: content,
-                            sender: sender,
-                            createdAt: new Date().toLocaleString(),
-                        }],
+                        messages: [...currentMessages, newMessage],
                     });
                 }
             } else {
+                // 没有消息，添加第一条消息
                 onUpdateChat(chatId, {
                     messages: [{
                         id: sender === 'ai' ? streamMessageId : uuid(),
@@ -208,6 +250,7 @@ export function useChatMessages(options: UseChatMessagesOptions) {
                 });
             }
 
+            // 返回累积的内容
             return newContent;
         });
     };
@@ -220,3 +263,4 @@ export function useChatMessages(options: UseChatMessagesOptions) {
         handleContentUpdate
     };
 }
+
