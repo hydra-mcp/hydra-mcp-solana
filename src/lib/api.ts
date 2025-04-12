@@ -16,7 +16,7 @@ const MOCK_RESPONSES = [
 ];
 
 // Local storage keys
-const STORAGE_KEY = 'chatApp_chats';
+const STORAGE_KEY_PREFIX = 'chatApp';
 
 // API base URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
@@ -482,7 +482,22 @@ export async function sendMessage(message: string): Promise<OpenAIResponse> {
 // Chat history management functions
 export function saveChats(chats: Chat[]): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(chats));
+    // Group chats by app ID
+    const chatsByApp: Record<string, Chat[]> = {};
+
+    chats.forEach(chat => {
+      const appId = chat.appId || 'global';
+      if (!chatsByApp[appId]) {
+        chatsByApp[appId] = [];
+      }
+      chatsByApp[appId].push(chat);
+    });
+
+    // Store each app's chat history separately
+    Object.entries(chatsByApp).forEach(([appId, appChats]) => {
+      const storageKey = `${STORAGE_KEY_PREFIX}_${appId}`;
+      localStorage.setItem(storageKey, JSON.stringify(appChats));
+    });
   } catch (error) {
     console.error('Error saving chats to localStorage:', error);
   }
@@ -490,25 +505,91 @@ export function saveChats(chats: Chat[]): void {
 
 export function loadChats(): Chat[] {
   try {
-    const storedChats = localStorage.getItem(STORAGE_KEY);
-    if (storedChats) {
-      // Parse the stored data
-      const chats: Chat[] = JSON.parse(storedChats);
-      return chats;
+    const allChats: Chat[] = [];
+
+    // Find all localStorage keys that start with STORAGE_KEY_PREFIX
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(`${STORAGE_KEY_PREFIX}_`)) {
+        const storedChats = localStorage.getItem(key);
+        if (storedChats) {
+          // Parse stored data
+          const chats: Chat[] = JSON.parse(storedChats);
+          allChats.push(...chats);
+        }
+      }
     }
+
+    // Sort by update time, latest first
+    return allChats.sort((a, b) => {
+      const dateA = new Date(a.updatedAt || 0).getTime();
+      const dateB = new Date(b.updatedAt || 0).getTime();
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error('Error loading chats from localStorage:', error);
   }
   return [];
 }
 
+export function loadAppChats(appId: string): Chat[] {
+  try {
+    if (!appId) return [];
+
+    const storageKey = `${STORAGE_KEY_PREFIX}_${appId}`;
+    const storedChats = localStorage.getItem(storageKey);
+
+    if (storedChats) {
+      // Parse stored data
+      const chats: Chat[] = JSON.parse(storedChats);
+
+      // Sort by update time, latest first
+      return chats.sort((a, b) => {
+        const dateA = new Date(a.updatedAt || 0).getTime();
+        const dateB = new Date(b.updatedAt || 0).getTime();
+        return dateB - dateA;
+      });
+    }
+  } catch (error) {
+    console.error(`Error loading chats for app ${appId}:`, error);
+  }
+  return [];
+}
+
 export function deleteChat(chatId: string): Chat[] {
-  const chats = loadChats();
-  const updatedChats = chats.filter(chat => chat.id !== chatId);
-  saveChats(updatedChats);
-  return updatedChats;
+  // Find the app that contains the the aphat contains the chatId
+  const allChats = loadChats();
+  const chatToDelete = allChats.find(chat => chat.id === chatId);
+
+  if (!chatToDelete) return allChats;
+
+  const appId = chatToDelete.appId || 'global';
+  const storageKey = `${STORAGE_KEY_PREFIX}_${appId}`;
+  const appChats = loadAppChats(appId);
+
+  // Remove the chat from the app's chat list
+  const updatedAppChats = appChats.filter(chat => chat.id !== chatId);
+
+  // Update storage
+  localStorage.setItem(storageKey, JSON.stringify(updatedAppChats));
+
+  // Return the updated chat history
+  return allChats.filter(chat => chat.id !== chatId);
 }
 
 export function clearAllChats(): void {
-  saveChats([]);
+  // Find all localStorage keys that start with STORAGE_KEY_PREFIX and delete them
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(`${STORAGE_KEY_PREFIX}_`)) {
+      localStorage.removeItem(key);
+    }
+  }
+}
+
+export function clearAppChats(appId: string): void {
+  if (!appId) return;
+
+  const storageKey = `${STORAGE_KEY_PREFIX}_${appId}`;
+  localStorage.removeItem(storageKey);
 }

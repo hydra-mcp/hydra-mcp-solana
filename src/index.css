@@ -71,6 +71,90 @@
   .container {
     @apply mx-auto max-w-7xl px-4 md:px-6;
   }
+<<<<<<< HEAD
+=======
+
+  .animate-blink {
+    animation: blink 1s infinite;
+  }
+
+  .animate-gradient {
+    animation: gradient-shift 8s ease infinite;
+    background-size: 200% 200%;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-bounce-slow {
+    animation: bounce-slow 2s infinite;
+  }
+
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px -5px rgba(var(--primary-rgb), 0.2);
+  }
+
+  /* Custom scrollbar styles */
+  .thin-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .thin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .thin-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(59, 130, 246, 0.3);
+    border-radius: 10px;
+  }
+
+  .thin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(59, 130, 246, 0.5);
+  }
+
+  .dark .thin-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(96, 165, 250, 0.3);
+  }
+
+  .dark .thin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(96, 165, 250, 0.5);
+  }
+
+  /* Gaussian blur background effect */
+  .glassmorphism {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  }
+
+  .dark .glassmorphism {
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
+  .text-shadow-white {
+    text-shadow: 0 0 2px #fff, 0 0 4px #fff, 0 0 6px #fff, 0 0 10px #0e65ff, 0 0 20px #0e65ff;
+  }
+
+  .text-shadow-blue {
+    text-shadow: 0 0 2px #4BB4F8, 0 0 4px #4BB4F8, 0 0 6px #4BB4F8, 0 0 10px #0e65ff, 0 0 20px #0e65ff;
+  }
+>>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
 }
 
 @keyframes slide-up {

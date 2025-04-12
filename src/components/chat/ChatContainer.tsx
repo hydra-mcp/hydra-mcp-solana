@@ -4,12 +4,20 @@ import { memo, useEffect, useState } from "react";
 import { Bot, MessageSquarePlus, ArrowRight, Info, CheckCircle, Loader2, BrainCircuit, Sparkles, Zap, Stars, Lightbulb, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+<<<<<<< HEAD
 
 export interface ProcessingStage {
     content: string;
     message: string;
     // 0: start 1: done 2: failed
     status: number;
+=======
+interface ChatContainerProps {
+    currentChat: Chat | null;
+    onNewChat: () => void;
+    transformY?: string;
+    paddingTop?: string;
+>>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
 }
 
 interface ChatContainerProps {
@@ -25,9 +33,16 @@ export const ChatContainer = memo(({
     isStreaming,
     messagesEndRef,
     onNewChat,
+<<<<<<< HEAD
     processingStage
 }: ChatContainerProps) => {
     const [, setForceUpdate] = useState(0);
+=======
+    transformY = 'translateY(0)',
+    paddingTop = '4rem'
+}: ChatContainerProps) {
+    const { isLoadingChats } = useChatContext();
+>>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
 
     useEffect(() => {
         if (isStreaming && currentChat?.messages.length) {
@@ -96,12 +111,42 @@ export const ChatContainer = memo(({
         );
     }
 
+<<<<<<< HEAD
     return (
         <div className="flex h-full flex-col">
             <div className="flex-1 space-y-4 p-4">
                 {currentChat.messages.map((message, index) => (
                     <MessageBubble
                         key={`${message.id}-${isStreaming && index === currentChat.messages.length - 1 ? Date.now() : 'static'}`}
+=======
+    // Show empty state when there is no chat history
+    if (!currentChat || currentChat.messages.length === 0) {
+        return <EmptyChatState onNewChat={onNewChat} />;
+    }
+
+    // Convert regular messages to standard display format, but filter out system messages
+    const messages = currentChat.messages
+        .filter(msg => msg.sender !== 'system')
+        .map(msg => ({
+            id: msg.id,
+            content: msg.content,
+            sender: msg.sender as 'user' | 'ai' | 'system',
+            status: 'completed',
+            createdAt: msg.createdAt
+        } as StreamingMessage));
+
+    if (messages.length === 0) {
+        return <EmptyChatState onNewChat={onNewChat} />;
+    }
+
+    return (
+        <div className="py-16 space-y-4" style={{ transform: transformY, transition: 'all 0.3s ease-in-out', paddingTop: paddingTop }}>
+            <div className="space-y-6">
+                {/* Chat message list */}
+                {messages.map((message) => (
+                    <StreamingMessageBubble
+                        key={message.id}
+>>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
                         message={message}
                         isStreaming={isStreaming && index === currentChat.messages.length - 1 && message.sender === 'ai'}
                     />

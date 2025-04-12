@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Send, ChevronDown, Sparkles, Loader2, Info, CheckCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -10,12 +11,19 @@ import { Chat, Message } from '@/types/chat';
 import { sendStreamMessage, saveChats, loadChats, deleteChat, clearAllChats } from '@/lib/api';
 import { ChatContainer, ProcessingStage } from '@/components/chat/ChatContainer';
 import { useOutletContext } from 'react-router-dom';
+=======
+import React from 'react';
+import { ChatProvider } from '@/components/chat/ChatProvider';
+import { ChatInterface } from '@/components/chat/ChatInterface';
+import { appRegistry } from '@/components/ios/appConfig';
+>>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
 
 interface SidebarContext {
     isSidebarOpen: boolean;
     toggleSidebar: () => void;
 }
 
+<<<<<<< HEAD
 export function ChatPage() {
     const { isSidebarOpen, toggleSidebar } = useOutletContext<SidebarContext>();
     const [chats, setChats] = useState<Chat[]>([]);
@@ -586,5 +594,31 @@ export function ChatPage() {
                 </div>
             </footer>
         </>
+=======
+export function ChatPage({
+    isModal = true,
+    apiEndpoint = '/mcp/chat/completions',
+    appId = 'messages',
+    showScrollToBottom = true
+}: ChatPageProps) {
+    // Get application definition, use the definition in appRegistry directly
+    const app = appRegistry[appId];
+
+    return (
+        <ChatProvider
+            apiEndpoint={apiEndpoint}
+            appDefinition={app}
+            options={{
+                enableHistory: true,
+                historyStorageKey: `chat-history-${appId}`
+            }}
+        >
+            <ChatInterface
+                modalMode={isModal}
+                sidebarEnabled={true}
+                showScrollToBottom={showScrollToBottom}
+            />
+        </ChatProvider>
+>>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
     );
 } 

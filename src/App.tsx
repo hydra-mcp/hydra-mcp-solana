@@ -149,4 +149,34 @@ function App() {
   );
 }
 
+<<<<<<< HEAD
+=======
+function AppContent() {
+  const { toast } = useToast();
+
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Protected Routes */}
+      <Route element={<ProtectedRoute />}>
+        {/* AppLayout Routes */}
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/chat" element={<ChatPage isModal={true} />} />
+        </Route>
+
+        {/* iOS Layout Routes - These don't use the AppLayout */}
+        <Route path="/ios-desktop" element={<IOSDesktop />} />
+        <Route path="/wallet-finder" element={<WalletFinder isModal={true} />} />
+      </Route>
+
+      {/* Fallback Route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+>>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
 export default App;
