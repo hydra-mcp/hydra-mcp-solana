@@ -27,16 +27,10 @@ export function MessageInput({
         scrollToBottom
     } = useChatContext();
 
-    // 使用流式消息状态，添加安全处理
     const [isLocalStreaming, setIsLocalStreaming] = React.useState(false);
     let streamingState = { isStreaming: isLocalStreaming };
 
-    try {
-        streamingState = useStreaming();
-    } catch (error) {
-        // 如果不在StreamingProvider中，使用本地状态
-        console.warn('MessageInput: 未在StreamingProvider上下文中，使用默认流状态');
-    }
+    streamingState = useStreaming();
 
     const { isStreaming } = streamingState;
 
@@ -49,10 +43,8 @@ export function MessageInput({
         const message = input.trim();
         setInput('');
 
-        // 发送消息
-        await sendMessage(message);
+        sendMessage(message);
 
-        // 在发送消息后滚动到底部
         setTimeout(() => {
             scrollToBottom();
         }, 100);
@@ -96,7 +88,7 @@ export function MessageInput({
                 ) : (
                     <Send className="h-4 w-4" />
                 )}
-                <span className="ml-2 hidden sm:inline-block">发送</span>
+                <span className="ml-2 hidden sm:inline-block">Send</span>
             </Button>
         </div>
     );

@@ -14,7 +14,6 @@ import { StreamingProvider } from '@/lib/streaming/StreamingContext';
 import { useToast } from '@/hooks/use-toast';
 
 function App() {
-  // 在组件级别需要使用useToast，所以将其封装在内部组件中
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -32,7 +31,6 @@ function App() {
   );
 }
 
-// 内部组件，可以使用hooks
 function AppContent() {
   const { toast } = useToast();
 

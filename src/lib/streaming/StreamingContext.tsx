@@ -46,8 +46,6 @@ export function StreamingProvider({
     const [isStreaming, setIsStreaming] = useState(false);
     const [currentSessionId] = useState(sessionId);
 
-    console.log(`[StreamProvider] Using session ID: ${currentSessionId}`);
-
     // Start a streaming message
     const startStream = useCallback((initialMessage?: Partial<StreamingMessage>): string => {
         const messageId = initialMessage?.id || crypto.randomUUID();

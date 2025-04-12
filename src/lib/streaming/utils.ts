@@ -1,13 +1,13 @@
 /**
- * 流式通信工具函数
+ * Streaming communication utility functions
  */
 
 /**
- * 格式化日期时间
- * 将ISO格式日期字符串转换为更友好的显示格式
+ * Format date time
+ * Convert ISO format date string to a more friendly display format
  * 
- * @param dateStr ISO格式日期字符串
- * @returns 格式化后的字符串
+ * @param dateStr ISO format date string
+ * @returns Formatted string
  */
 export function formatTime(dateStr: string): string {
     if (!dateStr) return '';
@@ -15,43 +15,43 @@ export function formatTime(dateStr: string): string {
     try {
         const date = new Date(dateStr);
 
-        // 判断是否是今天
+        // Check if it's today
         const today = new Date();
         const isToday = date.getDate() === today.getDate() &&
             date.getMonth() === today.getMonth() &&
             date.getFullYear() === today.getFullYear();
 
         if (isToday) {
-            // 如果是今天，显示时间
+            // If it's today, display time
             return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         } else {
-            // 否则显示日期和时间
+            // Otherwise, display date and time
             return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) +
                 ' ' +
                 date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
     } catch (error) {
-        console.error('日期格式化错误:', error);
+        console.error('Date formatting error:', error);
         return dateStr;
     }
 }
 
 /**
- * 生成唯一标识符
+ * Generate unique identifier
  * 
- * @returns 唯一ID字符串
+ * @returns Unique ID string
  */
 export function nanoid(): string {
     return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
 
 /**
- * 节流函数
- * 限制函数的执行频率
+ * Throttle function
+ * Limit the execution frequency of the function
  * 
- * @param fn 要节流的函数
- * @param delay 延迟时间（毫秒）
- * @returns 节流后的函数
+ * @param fn Function to throttle
+ * @param delay Delay time (milliseconds)
+ * @returns Throttled function
  */
 export function throttle<T extends (...args: any[]) => any>(
     fn: T,
@@ -68,12 +68,12 @@ export function throttle<T extends (...args: any[]) => any>(
 }
 
 /**
- * 截断文本
- * 将过长的文本截断，并添加省略号
+ * Truncate text
+ * Truncate the text and add ellipsis
  * 
- * @param text 要截断的文本
- * @param maxLength 最大长度
- * @returns 截断后的文本
+ * @param text Text to truncate
+ * @param maxLength Maximum length
+ * @returns Truncated text
  */
 export function truncateText(text: string, maxLength: number): string {
     if (!text || text.length <= maxLength) return text;
@@ -81,12 +81,12 @@ export function truncateText(text: string, maxLength: number): string {
 }
 
 /**
- * 深度合并对象
- * 将两个对象深度合并
+ * Deep merge objects
+ * Merge two objects deeply
  * 
- * @param target 目标对象
- * @param source 源对象
- * @returns 合并后的对象
+ * @param target Target object
+ * @param source Source object
+ * @returns Merged object
  */
 export function deepMerge<T>(target: T, source: Partial<T>): T {
     const output = { ...target };
@@ -109,14 +109,14 @@ export function deepMerge<T>(target: T, source: Partial<T>): T {
 }
 
 /**
- * 检查值是否为对象
+ * Check if the value is an object
  */
 function isObject(item: any): item is Record<string, any> {
     return item && typeof item === 'object' && !Array.isArray(item);
 }
 
 /**
- * 解析事件流数据
+ * Parse event stream data
  */
 export function parseEventStreamData(data: string): { event: string; data: string } | null {
     if (!data || data.trim() === '') return null;

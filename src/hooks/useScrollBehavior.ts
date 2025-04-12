@@ -3,22 +3,22 @@ import { useStreaming } from '@/lib/streaming/StreamingContext';
 import { throttle } from '@/lib/utils';
 
 interface UseScrollBehaviorOptions {
-    // 提供一个可选的isStreaming参数，以便在StreamingProvider不可用时使用
+    // Provide an optional isStreaming parameter, so it can be used when StreamingProvider is not available
     defaultIsStreaming?: boolean;
 }
 
 export function useScrollBehavior(options: UseScrollBehaviorOptions = {}) {
     const { defaultIsStreaming = false } = options;
 
-    // 尝试从流式上下文中获取状态，如果不可用则使用默认值
+    // Try to get the status from the streaming context, if not available use the default value
     const [localIsStreaming, setLocalIsStreaming] = useState(defaultIsStreaming);
 
-    // 安全地使用useStreaming，如果不在Provider中则使用默认值
+    // Safely use useStreaming, if not in Provider use the default value
     let streamingContext;
     try {
         streamingContext = useStreaming();
     } catch (error) {
-        // 如果useStreaming抛出错误，我们将使用本地状态
+        // If useStreaming throws an error, we will use the local state
         streamingContext = { isStreaming: localIsStreaming };
     }
 
@@ -29,70 +29,71 @@ export function useScrollBehavior(options: UseScrollBehaviorOptions = {}) {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-    // 检查是否滚动到底部的函数
+    // Function to check if scrolling is at the bottom
     const checkScrollPosition = useCallback((target: HTMLDivElement) => {
-        // 如果滚动元素不存在，直接返回
+        // If the scroll element does not exist, return immediately
         if (!target) return;
 
-        // 当滚动到底部的剩余距离小于50px时认为已滚动到底部
+        // When the remaining distance to the bottom is less than 50px, consider it scrolled to the bottom
         const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 50;
 
-        // 只在状态需要改变时更新
+        // Only update the state when it needs to change
         if (isScrolledUp === isAtBottom) {
             setIsScrolledUp(!isAtBottom);
         }
 
-        // 检测用户主动滚动
+        // Detect user initiated scroll
         const isUserInitiatedScroll = !isAutoScrollingRef.current;
         isAutoScrollingRef.current = false;
 
-        // 只有当用户向上滚动时才标记为手动滚动，并且是用户主动滚动
+        // Only mark as manual scrolling when the user scrolls up and it is user initiated
         if (!isAtBottom && isUserInitiatedScroll) {
             setIsManualScrolling(true);
 
-            // 手动滚动标志不再自动重置，除非明确调用scrollToBottom
-            // 或者发送新消息时
+            // Manual scrolling flag is not reset automatically unless explicitly called scrollToBottom
+            // or when a new message is sent
         } else if (isAtBottom) {
-            // 只有当滚动到底部时，才考虑重置手动滚动标志
+            // Only consider resetting the manual scrolling flag when scrolling to the bottom
             setIsManualScrolling(false);
         }
     }, [isScrolledUp]);
 
-    // 标记自动滚动状态的引用
+    // Reference to mark the auto scrolling state
     const isAutoScrollingRef = useRef(false);
 
-    // 滚动到底部
+    // Scroll to bottom
     const scrollToBottom = () => {
+        console.log('scrollToBottom');
         isAutoScrollingRef.current = true;
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         setIsScrolledUp(false);
         setIsManualScrolling(false);
     };
 
-    // 使用throttle优化滚动处理，减少到150ms
+    // Use throttle to optimize scrolling, reduce to 150ms
     const throttledCheck = useCallback(
         throttle((target: HTMLDivElement) => checkScrollPosition(target), 150),
         [checkScrollPosition]
     );
 
-    // 处理滚动事件
+    // Handle scroll events
     const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
         const target = event.target as HTMLDivElement;
-        // 优先进行原始滚动事件，然后再异步检查滚动位置
+        // Prioritize the original scroll event, then check the scroll position asynchronously
         setTimeout(() => throttledCheck(target), 0);
-        return true; // 确保事件继续传播
+        return true; // Ensure the event continues to propagate
     }, [throttledCheck]);
 
-    // 手动检查滚动位置的函数，可在需要时调用
+    // Function to manually check the scroll position, can be called when needed
     const checkScrollState = useCallback(() => {
         if (scrollAreaRef.current) {
             checkScrollPosition(scrollAreaRef.current);
         }
     }, [checkScrollPosition]);
 
-    // 初始加载和内容变化时检查滚动状态
+    // Check scroll state when initially loaded and when content changes
     useEffect(() => {
-        // 使用requestAnimationFrame确保DOM已完全渲染
+        // Use requestAnimationFrame to ensure the DOM is fully rendered
         const timerId = requestAnimationFrame(() => {
             checkScrollState();
         });
@@ -100,18 +101,18 @@ export function useScrollBehavior(options: UseScrollBehaviorOptions = {}) {
         return () => cancelAnimationFrame(timerId);
     }, [checkScrollState]);
 
-    // 跟踪上一次isStreaming状态的ref
+    // Reference to track the previous isStreaming state
     const prevIsStreamingRef = useRef(isStreaming);
 
-    // 自动滚动效果
+    // Auto scroll effect
     useEffect(() => {
-        // 检测流式传输状态变化
+        // Detect streaming status changes
         const isStreamingStart = isStreaming && !prevIsStreamingRef.current;
         prevIsStreamingRef.current = isStreaming;
 
-        // 在流式传输开始或用户未手动滚动时自动滚动
+        // Auto scroll when streaming starts or user did not manually scroll
         if (isStreamingStart || (!isManualScrolling && !isStreaming)) {
-            // 使用setTimeout确保DOM已更新
+            // Use setTimeout to ensure the DOM is updated
             setTimeout(() => {
                 const shouldSmoothScroll = !isStreaming;
                 messagesEndRef.current?.scrollIntoView({
@@ -121,13 +122,6 @@ export function useScrollBehavior(options: UseScrollBehaviorOptions = {}) {
             }, 100);
         }
     }, [isStreaming, isManualScrolling, messagesEndRef]);
-
-    // 清理定时器
-    useEffect(() => {
-        return () => {
-            // 清理逻辑
-        };
-    }, []);
 
     return {
         isScrolledUp,

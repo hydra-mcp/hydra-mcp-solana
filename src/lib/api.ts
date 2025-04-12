@@ -254,17 +254,17 @@ export async function sendStreamMessage(
       content: msg.content
     }));
 
-    // 使用新的SSE客户端发送请求
+    // Use the new SSE client to send the request
     const result = await sendChatStream(
       url,
       messages,
-      // 处理数据块，转换为字符串传递给原始onChunk回调
+      // Process data blocks, convert to string and pass to the original onChunk callback
       (chunk: ChunkType) => {
         onChunk(JSON.stringify(chunk));
       }
     );
 
-    // 返回兼容的响应格式
+    // Return compatible response format
     return {
       id: result?.id || Date.now().toString(),
       choices: [

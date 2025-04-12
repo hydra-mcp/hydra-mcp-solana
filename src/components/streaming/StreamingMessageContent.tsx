@@ -12,7 +12,7 @@ interface StreamingMessageContentProps {
 }
 
 export function StreamingMessageContent({ message, className }: StreamingMessageContentProps) {
-    // 处理空内容
+    // Handle empty content
     if (!message.content && message.status === 'pending') {
         return (
             <div className="flex items-center justify-center py-4">
@@ -21,7 +21,7 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
         );
     }
 
-    // 处理错误状态
+    // Handle error status
     if (message.status === 'error') {
         return (
             <div className="text-red-500">
@@ -30,7 +30,7 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
         );
     }
 
-    // 处理流式文本（可能是Markdown）
+    // Handle streaming text (possibly Markdown)
     return (
         <div className={cn('prose dark:prose-invert', className)}>
             <ReactMarkdown
@@ -67,7 +67,7 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
                 {message.content}
             </ReactMarkdown>
 
-            {/* 流式状态指示器 */}
+            {/* Streaming status indicator */}
             {message.status === 'streaming' && (
                 <div className="w-2 h-4 bg-primary animate-blink inline-block ml-0.5" />
             )}

@@ -1,11 +1,11 @@
 /**
- * SSE客户端 - 使用SSE.ts提供的基础方法发送SSE请求
+ * SSE Client - Use the basic methods provided by SSE.ts to send SSE requests
  */
 
 import { SSE } from '@/lib/sse';
 
 /**
- * 定义SSE事件类型
+ * Define SSE event type
  */
 export interface SSEEvent extends CustomEvent {
     data?: string;
@@ -13,7 +13,7 @@ export interface SSEEvent extends CustomEvent {
 }
 
 /**
- * 处理返回的数据块类型
+ * Process the returned data block type
  */
 export type ChunkType =
     | { type: 'content', content: string }
@@ -23,10 +23,55 @@ export type ChunkType =
     | { type: 'auth_refresh', message: string };
 
 /**
- * 发送SSE请求并处理响应
- * @param url 请求URL
- * @param payload 请求负载
- * @param callbacks 回调函数
+ * Get access token from localStorage
+ */
+function getAccessTokenFromStorage(): string | null {
+    return localStorage.getItem('access_token');
+}
+
+/**
+ * Simplified token refresh implementation
+ */
+async function refreshTokenFromStorage(): Promise<boolean> {
+    try {
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (!refreshToken) {
+            throw new Error('No refresh token available');
+        }
+
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+        const response = await fetch(`${baseUrl}/auth/refresh`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Token refresh failed');
+        }
+
+        const data = await response.json();
+
+        // Update stored tokens
+        localStorage.setItem('access_token', data.access_token);
+        if (data.refresh_token) {
+            localStorage.setItem('refresh_token', data.refresh_token);
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Token refresh error:', error);
+        return false;
+    }
+}
+
+/**
+ * Send SSE request and process response
+ * @param url Request URL
+ * @param payload Request payload
+ * @param callbacks Callback functions
  * @returns Promise<void>
  */
 export async function sendSSERequest<T>(
@@ -40,20 +85,20 @@ export async function sendSSERequest<T>(
 ): Promise<T> {
     return new Promise((resolve, reject) => {
         try {
-            // 准备请求头
+            // Prepare request headers
             const headers: Record<string, string> = {
                 'Content-Type': 'application/json',
             };
 
-            // 获取访问令牌（如果有）
-            const token = localStorage.getItem('access_token');
+            // Get access token (if any)
+            const token = getAccessTokenFromStorage();
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            console.log('[SSEClient] 创建SSE连接:', url);
+            console.log('[SSEClient] Creating SSE connection:', url);
 
-            // 创建SSE连接
+            // Create SSE connection
             const source = new SSE(url, {
                 headers,
                 method: 'POST',
@@ -61,21 +106,85 @@ export async function sendSSERequest<T>(
                 withCredentials: true
             });
 
-            // 处理连接打开事件
+            // Handle connection open event
             source.addEventListener('open', function (e) {
-                console.log('[SSEClient] SSE连接已打开:', e);
+                console.log('[SSEClient] SSE connection opened:', e);
             });
 
-            // 处理错误事件
+            // Handle error event
             source.addEventListener('error', function (e) {
                 const event = e as SSEEvent;
                 const errorData = event.data || '';
                 const errorStatus = event.responseCode || 0;
-                const errorMessage = `SSE连接错误: ${errorData || '未知错误'}`;
+                const errorMessage = `SSE connection error: ${errorData || 'Unknown error'}`;
 
-                console.error('[SSEClient] 错误:', errorMessage, errorStatus);
+                console.error('[SSEClient] Error:', errorMessage, errorStatus);
 
-                // 发送错误回调
+                // Handle 401 error - token expired
+                if (errorStatus === 401) {
+                    console.log('[SSEClient] Attempting to refresh token...');
+
+                    // Notify client that token is being refreshed
+                    callbacks.onChunk({
+                        type: 'auth_refresh',
+                        message: 'Refreshing authentication info...'
+                    });
+
+                    // Close current connection
+                    source.close();
+
+                    // Attempt to refresh token and retry
+                    refreshTokenFromStorage()
+                        .then((success) => {
+                            if (!success) {
+                                throw new Error('Token refresh failed');
+                            }
+
+                            console.log('[SSEClient] Refreshed token, retrying request');
+
+                            // Retry request with new token
+                            const newToken = getAccessTokenFromStorage();
+                            if (!newToken) {
+                                throw new Error('Token refresh failed');
+                            }
+
+                            return sendSSERequest<T>(url, payload, callbacks);
+                        })
+                        .then(resolve)
+                        .catch((refreshError) => {
+                            console.error('[SSEClient] Token refresh failed:', refreshError);
+
+                            // Send authentication failed error
+                            callbacks.onChunk({
+                                type: 'error',
+                                error: {
+                                    message: 'Authentication expired, please login again',
+                                    type: 'auth_error',
+                                    status: 401
+                                }
+                            });
+
+                            // Clear tokens and possibly redirect to login page
+                            localStorage.removeItem('access_token');
+                            localStorage.removeItem('refresh_token');
+                            localStorage.removeItem('user_info');
+
+                            // If not on login page, consider redirecting
+                            if (window.location.pathname !== '/login') {
+                                window.location.href = '/login';
+                            }
+
+                            if (callbacks.onError) {
+                                callbacks.onError(new Error('Authentication expired, please login again'));
+                            }
+
+                            reject(new Error('Authentication expired, please login again'));
+                        });
+
+                    return;
+                }
+
+                // Send error callback (non-401 error)
                 callbacks.onChunk({
                     type: 'error',
                     error: {
@@ -85,10 +194,10 @@ export async function sendSSERequest<T>(
                     }
                 });
 
-                // 关闭连接
+                // Close connection
                 source.close();
 
-                // 调用错误回调
+                // Call error callback
                 if (callbacks.onError) {
                     callbacks.onError(new Error(errorMessage));
                 }
@@ -96,7 +205,7 @@ export async function sendSSERequest<T>(
                 reject(new Error(errorMessage));
             });
 
-            // 处理阶段事件
+            // Handle stage event
             source.addEventListener('stage', function (e) {
                 const event = e as SSEEvent;
                 const data = event.data || '';
@@ -107,7 +216,7 @@ export async function sendSSERequest<T>(
                     const stageStatus = jsonData.status || 0;
                     const messageContent = jsonData.choices?.[0]?.delta?.content || jsonData.message || '';
 
-                    // 发送阶段更新
+                    // Send stage update
                     callbacks.onChunk({
                         type: 'stage',
                         stage: {
@@ -117,8 +226,8 @@ export async function sendSSERequest<T>(
                         }
                     });
                 } catch (error) {
-                    console.warn('[SSEClient] 解析阶段事件失败:', error, data);
-                    // 尝试直接使用数据
+                    console.warn('[SSEClient] Failed to parse stage event:', error, data);
+                    // Try to use data directly
                     callbacks.onChunk({
                         type: 'stage',
                         stage: {
@@ -130,7 +239,7 @@ export async function sendSSERequest<T>(
                 }
             });
 
-            // 处理内容事件
+            // Handle content event
             source.addEventListener('content', function (e) {
                 const event = e as SSEEvent;
                 const data = event.data || '';
@@ -146,8 +255,8 @@ export async function sendSSERequest<T>(
                         });
                     }
                 } catch (error) {
-                    console.warn('[SSEClient] 解析内容事件失败:', error, data);
-                    // 尝试直接使用数据
+                    console.warn('[SSEClient] Failed to parse content event:', error, data);
+                    // Try to use data directly
                     callbacks.onChunk({
                         type: 'content',
                         content: typeof data === 'string' ? data : ''
@@ -155,12 +264,12 @@ export async function sendSSERequest<T>(
                 }
             });
 
-            // 处理消息事件（默认事件）
+            // Handle message event (default event)
             source.addEventListener('message', function (e) {
                 const event = e as SSEEvent;
                 const data = event.data || '';
 
-                // 如果是[DONE]消息，处理完成
+                // If it's a [DONE] message, handle completion
                 if (data === '[DONE]') {
                     callbacks.onChunk({ type: 'done' });
                     source.close();
@@ -179,10 +288,10 @@ export async function sendSSERequest<T>(
                 try {
                     const jsonData = JSON.parse(data);
 
-                    // 检查是否有明确的类型字段
+                    // Check if there is a clear type field
                     if (jsonData.type) {
                         if (jsonData.type === 'error') {
-                            // 错误消息
+                            // Error message
                             callbacks.onChunk({
                                 type: 'error',
                                 error: jsonData.error || { message: 'Unknown error' }
@@ -190,7 +299,7 @@ export async function sendSSERequest<T>(
                             return;
                         }
 
-                        // 其他类型的消息直接传递
+                        // Other type messages are passed directly
                         if (jsonData.type === 'content' && jsonData.content) {
                             callbacks.onChunk({
                                 type: 'content',
@@ -200,7 +309,7 @@ export async function sendSSERequest<T>(
                         }
                     }
 
-                    // 检查是否有内容更新
+                    // Check if there is content update
                     if (jsonData.choices && jsonData.choices[0]?.delta?.content) {
                         const content = jsonData.choices[0].delta.content;
                         if (content) {
@@ -210,7 +319,7 @@ export async function sendSSERequest<T>(
                             });
                         }
                     } else {
-                        // 尝试自动推断类型
+                        // Try to automatically infer type
                         if (jsonData.content) {
                             callbacks.onChunk({
                                 type: 'content',
@@ -224,8 +333,8 @@ export async function sendSSERequest<T>(
                         }
                     }
                 } catch (error) {
-                    console.warn('[SSEClient] 解析消息事件失败:', error, data);
-                    // 非JSON消息，直接传递原始数据
+                    console.warn('[SSEClient] Failed to parse message event:', error, data);
+                    // Non-JSON message, pass original data directly
                     if (typeof data === 'string' && data.trim() !== '') {
                         callbacks.onChunk({
                             type: 'content',
@@ -235,7 +344,7 @@ export async function sendSSERequest<T>(
                 }
             });
 
-            // 处理完成事件
+            // Handle completion event
             source.addEventListener('done', function () {
                 source.close();
                 callbacks.onChunk({ type: 'done' });
@@ -250,14 +359,14 @@ export async function sendSSERequest<T>(
                 } as unknown as T);
             });
 
-            // 启动SSE连接
+            // Start SSE connection
             source.stream();
 
         } catch (error) {
-            console.error('[SSEClient] 初始化SSE连接错误:', error);
+            console.error('[SSEClient] Failed to initialize SSE connection:', error);
             const errorMessage = error instanceof Error ? error.message : String(error);
 
-            // 发送错误回调
+            // Send error callback
             callbacks.onChunk({
                 type: 'error',
                 error: {
@@ -266,7 +375,7 @@ export async function sendSSERequest<T>(
                 }
             });
 
-            // 调用错误回调
+            // Call error callback
             if (callbacks.onError) {
                 callbacks.onError(error instanceof Error ? error : new Error(errorMessage));
             }
@@ -277,10 +386,10 @@ export async function sendSSERequest<T>(
 }
 
 /**
- * 使用SSE发送聊天消息
- * @param url API端点
- * @param messages 消息列表
- * @param onChunk 数据块回调
+ * Send chat message using SSE
+ * @param url API endpoint
+ * @param messages Message list
+ * @param onChunk Data block callback
  * @returns Promise
  */
 export async function sendChatStream(
@@ -296,11 +405,11 @@ export async function sendChatStream(
         stream: true
     };
 
-    console.log('[sendChatStream] 发送聊天请求:', { url: fullUrl, messagesCount: messages.length });
+    console.log('[sendChatStream] Sending chat request:', { url: fullUrl, messagesCount: messages.length });
 
     return sendSSERequest(fullUrl, payload, {
         onChunk,
-        onComplete: () => console.log('[SSEClient] 聊天流完成'),
-        onError: (error) => console.error('[SSEClient] 聊天流错误:', error)
+        onComplete: () => console.log('[SSEClient] Chat stream completed'),
+        onError: (error) => console.error('[SSEClient] Chat stream error:', error)
     });
 } 

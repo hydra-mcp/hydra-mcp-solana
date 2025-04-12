@@ -7,7 +7,7 @@ interface ChatPageProps {
     isModal?: boolean;
     apiEndpoint?: string;
     appId?: string;
-    showScrollToBottom?: boolean; // 控制是否显示聊天界面中的"滚动到底部"按钮
+    showScrollToBottom?: boolean;
 }
 
 export function ChatPage({

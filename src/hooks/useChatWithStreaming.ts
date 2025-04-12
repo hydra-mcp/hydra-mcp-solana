@@ -23,6 +23,7 @@ export function useChatWithStreaming({
 }: UseChatWithStreamingOptions) {
     // States
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isRefreshingAuth, setIsRefreshingAuth] = useState(false);
     // Content cache for fallback
     const messageContentRef = useRef<{ [key: string]: string }>({});
     // Stage cache for storing stages when StreamingContext is not available
@@ -50,6 +51,7 @@ export function useChatWithStreaming({
         if (!content.trim() || !chatId || isProcessing) return;
 
         setIsProcessing(true);
+        setIsRefreshingAuth(false);
         const aiMessageId = crypto.randomUUID();
 
         // Reset content cache for this message
@@ -86,7 +88,7 @@ export function useChatWithStreaming({
                 title: updatedMessages.length === 1 ? content.slice(0, 30) : currentChat?.title,
             });
 
-            console.log(`[sendMessage] Starting stream processing, chatId: ${chatId}, messageId: ${aiMessageId}`);
+            // console.log(`[sendMessage] Starting stream processing, chatId: ${chatId}, messageId: ${aiMessageId}`);
 
             // Start streaming if context is available
             if (streamingContext) {
@@ -117,8 +119,34 @@ export function useChatWithStreaming({
                         streamingContext.processChunk(chunk, aiMessageId);
                     }
 
+                    // auth_refresh type
+                    if (chunk.type === 'auth_refresh') {
+                        setIsRefreshingAuth(true);
+
+                        // refresh auth info in message
+                        const aiMessageIndex = currentMessages.findIndex(m => m.id === aiMessageId);
+                        if (aiMessageIndex >= 0) {
+                            const updatedMessagesList = [...currentMessages];
+                            updatedMessagesList[aiMessageIndex] = {
+                                ...updatedMessagesList[aiMessageIndex],
+                                content: 'Refreshing auth info, please wait...'
+                            };
+
+                            currentMessages = updatedMessagesList;
+
+                            onUpdateChat(chatId, {
+                                messages: updatedMessagesList
+                            });
+                        }
+
+                        console.log(`[streamUpdate] Refreshing auth: ${chunk.message}`);
+                        return;
+                    }
+
                     // Also handle content updates directly for unified UX
                     if (chunk.type === 'content' && chunk.content) {
+                        setIsRefreshingAuth(false);
+
                         // Accumulate content in cache
                         messageContentRef.current[aiMessageId] += chunk.content;
 
@@ -140,7 +168,7 @@ export function useChatWithStreaming({
                                 messages: updatedMessagesList
                             });
 
-                            console.log(`[streamUpdate] Updated message content, length: ${messageContentRef.current[aiMessageId].length} chars`);
+                            // console.log(`[streamUpdate] Updated message content, length: ${messageContentRef.current[aiMessageId].length} chars`);
                         } else {
                             console.warn(`[streamUpdate] Message not found: ${aiMessageId}`);
                         }
@@ -191,6 +219,8 @@ export function useChatWithStreaming({
                             console.log(`[streamUpdate] Updated stage data: ${stageData.message || stageData.content}`);
                         }
                     } else if (chunk.type === 'error' && chunk.error) {
+                        setIsRefreshingAuth(false);
+
                         // Handle error
                         const errorMessage = `Error: ${chunk.error.message}`;
                         messageContentRef.current[aiMessageId] = errorMessage;
@@ -220,7 +250,7 @@ export function useChatWithStreaming({
             );
 
             // Stream complete
-            console.log(`[streamEnd] Final message content length: ${messageContentRef.current[aiMessageId]?.length || 0} chars`);
+            // console.log(`[streamEnd] Final message content length: ${messageContentRef.current[aiMessageId]?.length || 0} chars`);
 
             // End streaming in context if available
             if (streamingContext) {
@@ -229,6 +259,7 @@ export function useChatWithStreaming({
 
             // Cleanup
             setIsProcessing(false);
+            setIsRefreshingAuth(false);
             delete messageContentRef.current[aiMessageId];
 
         } catch (error) {
@@ -240,6 +271,7 @@ export function useChatWithStreaming({
             }
 
             setIsProcessing(false);
+            setIsRefreshingAuth(false);
             delete messageContentRef.current[aiMessageId];
 
             if (onError) {
@@ -251,6 +283,7 @@ export function useChatWithStreaming({
     return {
         sendMessage,
         isProcessing,
+        isRefreshingAuth,
         sessionId: streamingContext?.sessionId || 'default'
     };
 } 

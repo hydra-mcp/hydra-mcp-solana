@@ -31,7 +31,7 @@ export function CodeBlock({
 
     return (
         <div className={cn('relative my-4 rounded-md bg-muted overflow-hidden', className)}>
-            {/* 文件名和语言标签 */}
+            {/* File name and language label */}
             {(fileName || language) && (
                 <div className="flex items-center justify-between px-4 py-1.5 bg-muted-foreground/10 text-sm text-muted-foreground">
                     <div className="font-medium">
@@ -49,7 +49,7 @@ export function CodeBlock({
                 </div>
             )}
 
-            {/* 代码内容 */}
+            {/* Code content */}
             <div className="p-4 overflow-auto">
                 <pre className="text-sm font-mono">
                     <code>
@@ -73,7 +73,7 @@ export function CodeBlock({
                 </pre>
             </div>
 
-            {/* 复制按钮 - 仅在没有文件名/语言标签时显示 */}
+            {/* Copy button - only show when there is no file name/language label */}
             {!fileName && !language && (
                 <button
                     onClick={handleCopy}

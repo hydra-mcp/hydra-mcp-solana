@@ -11,7 +11,7 @@ export function uuid() {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 
-// 添加throttle函数用于限制函数调用频率
+// Add throttle function to limit function call frequency
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
   limit: number
@@ -24,7 +24,7 @@ export function throttle<T extends (...args: any[]) => any>(
     const now = Date.now();
     lastArgs = args;
 
-    // 如果距离上次调用的时间超过了限制，立即执行
+    // If the time since the last call exceeds the limit, execute immediately
     if (now - lastCall >= limit) {
       lastCall = now;
       if (timeoutId) {
@@ -34,7 +34,7 @@ export function throttle<T extends (...args: any[]) => any>(
       return func(...args);
     }
 
-    // 否则，等待剩余时间后执行最新的参数
+    // Otherwise, wait for the remaining time and execute the latest parameters
     if (!timeoutId) {
       timeoutId = setTimeout(() => {
         if (lastArgs) {
@@ -46,7 +46,7 @@ export function throttle<T extends (...args: any[]) => any>(
       }, limit - (now - lastCall));
     }
 
-    // 对于没有立即执行的情况，返回一个空值
+    // For the case that it does not execute immediately, return an empty value
     return undefined as unknown as ReturnType<T>;
   };
 }

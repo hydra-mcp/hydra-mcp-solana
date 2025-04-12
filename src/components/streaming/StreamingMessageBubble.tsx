@@ -22,7 +22,7 @@ export function StreamingMessageBubble({ message, className, isStreaming: extern
         ? externalStreaming
         : message.status === 'streaming' || message.status === 'pending';
 
-    // 处理复制
+    // Handle copy
     const handleCopy = async () => {
         try {
             await navigator.clipboard.writeText(message.content);
@@ -33,7 +33,7 @@ export function StreamingMessageBubble({ message, className, isStreaming: extern
         }
     };
 
-    // 显示系统消息
+    // Show system message
     if (isSystem) {
         return (
             <div
@@ -49,7 +49,7 @@ export function StreamingMessageBubble({ message, className, isStreaming: extern
         );
     }
 
-    // 用户和AI消息
+    // User and AI messages
     return (
         <div
             className={cn(
@@ -59,7 +59,7 @@ export function StreamingMessageBubble({ message, className, isStreaming: extern
             )}
             data-message-id={message.id}
         >
-            {/* AI头像 */}
+            {/* AI avatar */}
             {!isUser && (
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center mr-2 flex-shrink-0">
                     {isStreaming ? (
@@ -70,26 +70,26 @@ export function StreamingMessageBubble({ message, className, isStreaming: extern
                 </div>
             )}
 
-            {/* 消息内容 */}
+            {/* Message content */}
             <div className={cn(
                 "rounded-xl p-3 max-w-[80%]",
                 isUser
                     ? "bg-primary text-primary-foreground rounded-tr-none"
                     : "bg-muted text-muted-foreground rounded-tl-none"
             )}>
-                {/* 根据发送者不同处理内容 */}
+                {/* Handle content based on sender */}
                 {isUser ? (
                     <div className="whitespace-pre-wrap break-words">{message.content}</div>
                 ) : (
                     <StreamingMessageContent message={message} className="prose-sm max-w-none" />
                 )}
 
-                {/* 时间和操作按钮 */}
+                {/* Time and action buttons */}
                 <div className={cn(
                     "text-xs mt-1 text-right opacity-70 flex items-center justify-end gap-2",
                     isUser ? "text-primary-foreground" : "text-muted-foreground"
                 )}>
-                    {/* 复制按钮 - 仅非用户且非流式状态显示 */}
+                    {/* Copy button - only show for non-user and non-streaming state */}
                     {!isUser && !isStreaming && message.content && (
                         <Button
                             variant="ghost"
@@ -106,7 +106,7 @@ export function StreamingMessageBubble({ message, className, isStreaming: extern
                         </Button>
                     )}
 
-                    {/* 状态和时间 */}
+                    {/* Status and time */}
                     {isStreaming && !isUser ? (
                         <span className="animate-pulse">Thinking...</span>
                     ) : (
@@ -115,7 +115,7 @@ export function StreamingMessageBubble({ message, className, isStreaming: extern
                 </div>
             </div>
 
-            {/* 用户头像 */}
+            {/* User avatar */}
             {isUser && (
                 <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center ml-2 flex-shrink-0">
                     <User className="h-4 w-4 text-secondary-foreground" />

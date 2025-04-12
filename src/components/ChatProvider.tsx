@@ -36,7 +36,7 @@ export function ChatProvider({
     // Initial system message
     const initialSystemMessage = appDefinition?.description;
 
-    // 获取应用ID
+    // Get app ID
     const appId = appDefinition?.id;
 
     // Use custom hooks
@@ -50,10 +50,9 @@ export function ChatProvider({
         deleteChat: deleteChatState,
         clearAllChats: clearAllChatsState
     } = useChatState({
-        historyStorageKey,
         enableHistory,
         initialSystemMessage,
-        appId, // 传递应用ID
+        appId,
     });
 
     const {
@@ -68,7 +67,7 @@ export function ChatProvider({
     });
 
     // Generate a unique session ID for this provider instance
-    const sessionId = `${apiEndpoint}-${historyStorageKey}`;
+    const sessionId = `${appId}-${historyStorageKey}`;
 
     return (
         <StreamingProvider

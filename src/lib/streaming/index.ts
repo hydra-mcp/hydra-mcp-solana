@@ -1,9 +1,9 @@
 /**
- * 流式API通信模块导出
+ * Streaming API communication module export
  */
 
-// 导出streamingApi中的所有功能
+// Export all functions from streamingApi
 export * from './streamingApi';
 
-// 导出sseClient中的所有功能
+// Export all functions from sseClient
 export * from './sseClient'; 

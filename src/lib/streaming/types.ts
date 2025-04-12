@@ -1,9 +1,9 @@
 /**
- * 流式消息处理类型定义
+ * Streaming message processing type definition
  */
 
 /**
- * 流式消息对象
+ * Streaming message object
  */
 export interface StreamingMessage {
     id: string;
@@ -16,7 +16,7 @@ export interface StreamingMessage {
 }
 
 /**
- * 处理阶段信息
+ * Processing stage information
  */
 export interface StreamingStage {
     id: string;
@@ -27,7 +27,7 @@ export interface StreamingStage {
 }
 
 /**
- * 流式管理器选项
+ * Streaming manager options
  */
 export interface StreamingOptions {
     onMessageUpdate?: (message: StreamingMessage) => void;
@@ -38,7 +38,7 @@ export interface StreamingOptions {
 }
 
 /**
- * 消息块数据结构
+ * Message chunk data structure
  */
 export interface MessageChunk {
     type: 'content' | 'stage' | 'error' | 'done';

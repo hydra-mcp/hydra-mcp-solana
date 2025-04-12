@@ -18,8 +18,8 @@ export interface Chat {
   messages: Message[];
   createdAt: string;
   updatedAt: string;
-  appId?: string; // 添加appId字段，关联应用ID
-  metadata?: Record<string, any>; // Metadata for additional chat information like stages
+  appId?: string;
+  metadata?: Record<string, any>;
 }
 
 // Processing stage
@@ -43,7 +43,7 @@ export interface ChatResponse extends ApiResponse {
 }
 
 /**
- * OpenAI响应格式
+ * OpenAI response format
  */
 export interface OpenAIResponse {
   id: string;

@@ -17,7 +17,6 @@ export function ChatContainer({
     onNewChat,
     transformY = 'translateY(0)'
 }: ChatContainerProps) {
-    // 获取加载状态
     const { isLoadingChats } = useChatContext();
 
     // Get streaming context if available
@@ -30,24 +29,23 @@ export function ChatContainer({
         console.log('StreamingProvider not available, using chat metadata for stages');
     }
 
-    // 显示加载状态
     if (isLoadingChats) {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center">
                     <div className="w-8 h-8 border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent rounded-full animate-spin"></div>
-                    <p className="mt-4 text-gray-500 dark:text-gray-400">加载聊天历史...</p>
+                    <p className="mt-4 text-gray-500 dark:text-gray-400">Loading chat history...</p>
                 </div>
             </div>
         );
     }
 
-    // 无聊天历史时显示空状态
+    // Show empty state when there is no chat history
     if (!currentChat || currentChat.messages.length === 0) {
         return <EmptyChatState onNewChat={onNewChat} />;
     }
 
-    // 将常规消息转换为标准显示格式
+    // Convert regular messages to standard display format
     const messages = currentChat.messages.map(msg => ({
         id: msg.id,
         content: msg.content,
@@ -59,7 +57,7 @@ export function ChatContainer({
     return (
         <div className="py-16 space-y-4" style={{ transform: transformY, transition: 'transform 0.3s ease-in-out' }}>
             <div className="space-y-6">
-                {/* 聊天消息列表 */}
+                {/* Chat message list */}
                 {messages.map((message) => (
                     <StreamingMessageBubble
                         key={message.id}
@@ -68,7 +66,7 @@ export function ChatContainer({
                     />
                 ))}
 
-                {/* 消息结束标记移动到ChatInterface组件 */}
+                {/* Message end marker moved to ChatInterface component */}
             </div>
         </div>
     );

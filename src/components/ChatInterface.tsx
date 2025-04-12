@@ -26,27 +26,18 @@ export function ChatInterface({
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
 
-    // 使用流式消息上下文，添加错误处理
     const [isLocalStreaming, setIsLocalStreaming] = useState(false);
     let streamingState = { isStreaming: isLocalStreaming, stages: [] };
 
-    try {
-        streamingState = useStreaming();
-    } catch (error) {
-        // 如果不在StreamingProvider中，使用本地状态
-        console.warn('ChatInterface: 未在StreamingProvider上下文中，使用默认流状态');
-    }
-
+    streamingState = useStreaming();
     const { isStreaming, stages = [] } = streamingState;
 
-    // 过滤有效的stages
     const validStages = stages.filter(stage =>
         (stage.message && stage.message.trim() !== '') ||
         (stage.content && stage.content.trim() !== '')
     );
     const hasValidStages = validStages.length > 0;
 
-    // 计算Stage显示状态
     const showStage = isStreaming && hasValidStages;
     const stageRef = useRef<HTMLDivElement>(null);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -63,7 +54,6 @@ export function ChatInterface({
         checkScrollState
     } = useChatContext();
 
-    // 使用requestAnimationFrame优化滚动状态检查，取代setTimeout
     useEffect(() => {
         if (!currentChat?.messages) return;
 
@@ -100,7 +90,6 @@ export function ChatInterface({
         }
     }, [modalMode, inputRef]);
 
-    // 根据 validStages 的长度，设置 paddingBottom，4个 stage -> py-48, 3个 stage -> py-40, 2个 stage -> py-32, 1个 stage -> py-24, 0个 stage -> py-0
     const [transformY, setTransformY] = useState('translateY(0)');
     useEffect(() => {
         const transformY = showStage ? validStages.length * 2 + 2 : 0;
@@ -115,7 +104,7 @@ export function ChatInterface({
                 className
             )}
         >
-            {/* 侧边栏 - 非模态模式下显示 */}
+            {/* Sidebar - show in non-modal mode */}
             {!modalMode && sidebarEnabled && (
                 <ChatSidebar
                     isSidebarOpen={isSidebarOpen}
@@ -123,7 +112,7 @@ export function ChatInterface({
                 />
             )}
 
-            {/* 主聊天区域 */}
+            {/* Main chat area */}
             <main className={cn(
                 'relative z-20',
                 modalMode ? 'flex flex-col h-full pb-2' : 'min-h-screen pt-14 pb-2',
@@ -134,26 +123,26 @@ export function ChatInterface({
                     modalMode ? 'h-full flex flex-col' : 'container mx-auto h-full py-4',
                     'transition-all duration-300'
                 )}>
-                    {/* 应用描述 */}
+                    {/* App description */}
                     {config.appDefinition?.description && (
                         <div className="mb-4 mt-4 mx-4 p-3 rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 flex items-center gap-3">
                             <Info className="h-5 w-5 text-blue-500 flex-shrink-0" />
                             <div className="flex-1">
                                 <div className="text-sm text-blue-700 dark:text-blue-300">
-                                    <span className="font-medium">{config.appDefinition.title || "关于"}: </span>
+                                    <span className="font-medium">{config.appDefinition.title}: </span>
                                     {config.appDefinition.description}
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Message area - 添加CSS硬件加速和优化滚动性能的类 */}
+                    {/* Message area - add CSS hardware acceleration and optimize scrolling performance */}
                     <ScrollArea
                         ref={scrollAreaRef}
                         className={cn(
                             "scroll-area",
                             "rounded-lg border bg-background/5 shadow-inner flex-1 overflow-auto",
-                            "will-change-scroll transform-gpu", // 添加CSS硬件加速
+                            "will-change-scroll transform-gpu",
                             modalMode
                                 ? config.appDefinition?.description
                                     ? "h-[calc(100%-8rem)]"
@@ -171,7 +160,7 @@ export function ChatInterface({
                                 transformY={transformY}
                             />
 
-                            {/* 消息结束引用 - 放在Stage后面 */}
+                            {/* Message end reference - put after Stage */}
                             <div ref={messagesEndRef} className="h-4" />
                         </div>
                     </ScrollArea>
@@ -212,7 +201,7 @@ export function ChatInterface({
                 </div>
             </main>
 
-            {/* 输入区域 */}
+            {/* Input area */}
             <footer className={cn(
                 "border-t bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-lg z-40",
                 "fixed bottom-0 z-20",
@@ -223,7 +212,7 @@ export function ChatInterface({
                     <div className="px-4">
                         <MessageInput
                             autoFocus={modalMode}
-                            placeholder="输入您的消息..."
+                            placeholder="Type your message..."
                             disabled={isStreaming}
                             className="max-h-[80px]"
                         />
