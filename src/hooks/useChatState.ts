@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Chat } from '@/types/chat';
 import { uuid } from '@/lib/utils';
-import { saveChats, loadChats } from '@/lib/api';
+import { saveChats, loadChats, loadAppChats, clearAppChats } from '@/lib/api';
 
 interface UseChatStateOptions {
     enableHistory?: boolean;
@@ -48,17 +48,8 @@ export function useChatState(options: UseChatStateOptions = {}) {
             createdAt: new Date().toLocaleString(),
             updatedAt: new Date().toLocaleString(),
             appId,
+            metadata: initialSystemMessage ? { systemMessage: initialSystemMessage } : undefined
         };
-
-        // If there is an initial system message, add it to the new chat
-        if (initialSystemMessage) {
-            newChat.messages.push({
-                id: uuid(),
-                content: initialSystemMessage,
-                sender: 'system',
-                createdAt: new Date().toLocaleString(),
-            });
-        }
 
         setChats(prev => [newChat, ...prev]);
         setCurrentChatId(newChat.id);
@@ -101,6 +92,11 @@ export function useChatState(options: UseChatStateOptions = {}) {
         if (appId) {
             setChats(prev => prev.filter(chat => chat.appId !== appId));
             setCurrentChatId(null);
+
+            // Use the new clearAppChats function to clear the storage for that app
+            if (enableHistory) {
+                clearAppChats(appId);
+            }
         } else {
             setChats([]);
             setCurrentChatId(null);
@@ -114,16 +110,20 @@ export function useChatState(options: UseChatStateOptions = {}) {
             setIsLoadingChats(true);
             try {
                 if (enableHistory) {
-                    const savedChats = loadChats();
+                    // Load different ranges of chats based on whether appId is specified
+                    const savedChats = appId
+                        ? loadAppChats(appId)
+                        : loadChats();
+
                     if (savedChats.length > 0) {
                         setChats(savedChats);
 
-                        // If appId is specified, select the first matching chat
+                        // For specific apps, only select the chat history for that app
                         if (appId) {
                             const appChat = savedChats.find(chat => chat.appId === appId);
                             setCurrentChatId(appChat ? appChat.id : null);
 
-                            // If there is no chat for the app, create a new one
+                            // If the app has no chat history, create a new one
                             if (!appChat) {
                                 setTimeout(() => createNewChat(), 0);
                             }

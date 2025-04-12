@@ -10,12 +10,14 @@ interface ChatContainerProps {
     currentChat: Chat | null;
     onNewChat: () => void;
     transformY?: string;
+    paddingTop?: string;
 }
 
 export function ChatContainer({
     currentChat,
     onNewChat,
-    transformY = 'translateY(0)'
+    transformY = 'translateY(0)',
+    paddingTop = '4rem'
 }: ChatContainerProps) {
     const { isLoadingChats } = useChatContext();
 
@@ -45,17 +47,23 @@ export function ChatContainer({
         return <EmptyChatState onNewChat={onNewChat} />;
     }
 
-    // Convert regular messages to standard display format
-    const messages = currentChat.messages.map(msg => ({
-        id: msg.id,
-        content: msg.content,
-        sender: msg.sender as 'user' | 'ai' | 'system',
-        status: 'completed',
-        createdAt: msg.createdAt
-    } as StreamingMessage));
+    // Convert regular messages to standard display format, but filter out system messages
+    const messages = currentChat.messages
+        .filter(msg => msg.sender !== 'system')
+        .map(msg => ({
+            id: msg.id,
+            content: msg.content,
+            sender: msg.sender as 'user' | 'ai' | 'system',
+            status: 'completed',
+            createdAt: msg.createdAt
+        } as StreamingMessage));
+
+    if (messages.length === 0) {
+        return <EmptyChatState onNewChat={onNewChat} />;
+    }
 
     return (
-        <div className="py-16 space-y-4" style={{ transform: transformY, transition: 'transform 0.3s ease-in-out' }}>
+        <div className="py-16 space-y-4" style={{ transform: transformY, transition: 'all 0.3s ease-in-out', paddingTop: paddingTop }}>
             <div className="space-y-6">
                 {/* Chat message list */}
                 {messages.map((message) => (

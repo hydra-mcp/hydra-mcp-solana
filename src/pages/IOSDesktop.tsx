@@ -7,7 +7,8 @@ import { IOSIcon } from '@/components/ios/IOSIcon';
 import { IOSDock } from '@/components/ios/IOSDock';
 import { IOSStatusBar } from '@/components/ios/IOSStatusBar';
 import { WindowManager } from '@/components/ios/WindowManager';
-import { createAppWindow, appRegistry } from '@/components/ios/AppRegistry';
+import { createAppWindow } from '@/components/ios/AppRegistry';
+import { appRegistry } from '@/components/ios/appConfig';
 import { useAppWindow } from '@/contexts/AppWindowContext';
 
 // Context menu component

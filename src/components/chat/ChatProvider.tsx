@@ -39,6 +39,11 @@ export function ChatProvider({
     // Get app ID
     const appId = appDefinition?.id;
 
+    // ensure each app has a unique storage key
+    const appSpecificStorageKey = appId
+        ? `${historyStorageKey}-${appId}`
+        : historyStorageKey;
+
     // Use custom hooks
     const {
         chats,
@@ -48,7 +53,8 @@ export function ChatProvider({
         createNewChat,
         updateChat,
         deleteChat: deleteChatState,
-        clearAllChats: clearAllChatsState
+        clearAllChats: clearAllChatsState,
+        setCurrentChatId
     } = useChatState({
         enableHistory,
         initialSystemMessage,
@@ -67,7 +73,7 @@ export function ChatProvider({
     });
 
     // Generate a unique session ID for this provider instance
-    const sessionId = `${appId}-${historyStorageKey}`;
+    const sessionId = `${appId || 'global'}-${appSpecificStorageKey}`;
 
     return (
         <StreamingProvider
@@ -92,6 +98,7 @@ export function ChatProvider({
                 createNewChat={createNewChat}
                 deleteChatState={deleteChatState}
                 clearAllChatsState={clearAllChatsState}
+                setCurrentChatId={setCurrentChatId}
                 isScrolledUp={isScrolledUp}
                 scrollToBottom={scrollToBottom}
                 messagesEndRef={messagesEndRef}
@@ -122,6 +129,7 @@ function StreamingAwareChat({
     createNewChat,
     deleteChatState,
     clearAllChatsState,
+    setCurrentChatId,
     isScrolledUp,
     scrollToBottom,
     messagesEndRef,
@@ -140,6 +148,7 @@ function StreamingAwareChat({
     createNewChat: () => void;
     deleteChatState: any;
     clearAllChatsState: () => void;
+    setCurrentChatId: (chatId: string) => void;
     isScrolledUp: boolean;
     scrollToBottom: () => void;
     messagesEndRef: React.RefObject<HTMLDivElement>;
@@ -178,6 +187,7 @@ function StreamingAwareChat({
         try {
             await sendStreamMessage(currentChatId, currentChat, content);
 
+            // Note: Title update is now handled in useChatWithStreaming
             // Focus input after message is sent
             setTimeout(() => {
                 inputRef.current?.focus();
@@ -191,11 +201,11 @@ function StreamingAwareChat({
     const deleteChat = (chatId: string) => {
         deleteChatState(chatId);
 
-        toast({
-            title: 'Chat Deleted',
-            description: 'Chat history has been removed.',
-            duration: 3000,
-        });
+        // toast({
+        //     title: 'Chat Deleted',
+        //     description: 'Chat history has been removed.',
+        //     duration: 3000,
+        // });
     };
 
     // Clear all chats
@@ -226,7 +236,13 @@ function StreamingAwareChat({
         inputRef,
         messagesEndRef,
         handleScroll,
-        checkScrollState
+        checkScrollState,
+        setCurrentChatId: (chatId: string) => {
+            if (chatId && chats.some(chat => chat.id === chatId)) {
+                updateChat(chatId, {});
+                setCurrentChatId(chatId);
+            }
+        }
     };
 
     return (

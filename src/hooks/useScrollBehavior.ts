@@ -63,7 +63,6 @@ export function useScrollBehavior(options: UseScrollBehaviorOptions = {}) {
 
     // Scroll to bottom
     const scrollToBottom = () => {
-        console.log('scrollToBottom');
         isAutoScrollingRef.current = true;
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         setIsScrolledUp(false);

@@ -44,12 +44,12 @@ function AppContent() {
         {/* AppLayout Routes */}
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/chat" element={<ChatPage isModal={false} />} />
+          <Route path="/chat" element={<ChatPage isModal={true} />} />
         </Route>
 
         {/* iOS Layout Routes - These don't use the AppLayout */}
         <Route path="/ios-desktop" element={<IOSDesktop />} />
-        <Route path="/wallet-finder" element={<WalletFinder isModal={false} />} />
+        <Route path="/wallet-finder" element={<WalletFinder isModal={true} />} />
       </Route>
 
       {/* Fallback Route */}

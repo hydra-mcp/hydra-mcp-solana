@@ -15,39 +15,19 @@ export function uuid() {
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
   limit: number
-): (...args: Parameters<T>) => ReturnType<T> {
-  let lastCall = 0;
-  let lastArgs: Parameters<T> | null = null;
-  let timeoutId: NodeJS.Timeout | null = null;
+): (...args: Parameters<T>) => ReturnType<T> | undefined {
+  let inThrottle = false;
+  let lastResult: ReturnType<T> | undefined;
 
-  return (...args: Parameters<T>): ReturnType<T> => {
-    const now = Date.now();
-    lastArgs = args;
-
-    // If the time since the last call exceeds the limit, execute immediately
-    if (now - lastCall >= limit) {
-      lastCall = now;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-      return func(...args);
+  return function (this: any, ...args: Parameters<T>): ReturnType<T> | undefined {
+    if (!inThrottle) {
+      inThrottle = true;
+      lastResult = func.apply(this, args);
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
     }
-
-    // Otherwise, wait for the remaining time and execute the latest parameters
-    if (!timeoutId) {
-      timeoutId = setTimeout(() => {
-        if (lastArgs) {
-          lastCall = Date.now();
-          func(...lastArgs);
-          lastArgs = null;
-          timeoutId = null;
-        }
-      }, limit - (now - lastCall));
-    }
-
-    // For the case that it does not execute immediately, return an empty value
-    return undefined as unknown as ReturnType<T>;
+    return lastResult;
   };
 }
 
@@ -83,4 +63,43 @@ export async function copyToClipboard(text: string, showToast = true) {
 
     return false;
   }
+}
+
+/**
+ * Generate a chat title based on the first user message
+ * @param message The first user message content
+ * @returns A concise title for the chat
+ */
+export function generateChatTitle(message: string): string {
+  if (!message || typeof message !== 'string') {
+    return 'New Chat';
+  }
+
+  // Trim and limit length
+  let title = message.trim();
+
+  // Remove any markdown syntax
+  title = title.replace(/[`*_~>#]/g, '');
+
+  // If message is too long, take the first 30 characters and add ellipsis
+  if (title.length > 30) {
+    // Try to cut at a word boundary
+    const truncated = title.substring(0, 30).trim();
+    const lastSpaceIndex = truncated.lastIndexOf(' ');
+
+    if (lastSpaceIndex > 20) {
+      // If there's a space after 20 chars, cut at that space
+      title = truncated.substring(0, lastSpaceIndex) + '...';
+    } else {
+      // Otherwise just cut at 30 chars
+      title = truncated + '...';
+    }
+  }
+
+  // Capitalize first letter
+  if (title.length > 0) {
+    title = title.charAt(0).toUpperCase() + title.slice(1);
+  }
+
+  return title;
 }

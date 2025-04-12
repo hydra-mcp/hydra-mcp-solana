@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Bot, User, Copy, Check, Info, Loader2 } from 'lucide-react';
+import { Bot, User, Copy, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StreamingMessage } from '@/lib/streaming/types';
 import { StreamingMessageContent } from '@/components/streaming/StreamingMessageContent';
@@ -15,7 +15,10 @@ interface StreamingMessageBubbleProps {
 export function StreamingMessageBubble({ message, className, isStreaming: externalStreaming }: StreamingMessageBubbleProps) {
     const [copied, setCopied] = useState(false);
     const isUser = message.sender === 'user';
-    const isSystem = message.sender === 'system';
+
+    if (message.sender === 'system') {
+        return null;
+    }
 
     // Use external streaming state if provided, otherwise use message status
     const isStreaming = externalStreaming !== undefined
@@ -32,22 +35,6 @@ export function StreamingMessageBubble({ message, className, isStreaming: extern
             console.error('Failed to copy:', e);
         }
     };
-
-    // Show system message
-    if (isSystem) {
-        return (
-            <div
-                className={cn(
-                    "flex items-center p-3 rounded-md bg-muted/50 border border-muted mb-4 w-full",
-                    className
-                )}
-                data-message-id={message.id}
-            >
-                <Info className="h-5 w-5 text-blue-500 mr-2 flex-shrink-0" />
-                <div className="text-sm text-muted-foreground">{message.content}</div>
-            </div>
-        );
-    }
 
     // User and AI messages
     return (

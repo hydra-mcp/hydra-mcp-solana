@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Info } from 'lucide-react';
+import { ChevronDown, Info, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useChatContext } from '@/context/ChatContext';
-import { ChatSidebar } from '@/components/ChatSidebar';
-import { MessageInput } from '@/components/MessageInput';
+import { ChatSidebar } from '@/components/chat/ChatSidebar';
+import { MessageInput } from '@/components/chat/MessageInput';
 import { ChatContainer } from '@/components/chat/ChatContainer';
 import { useStreaming } from '@/lib/streaming/StreamingContext';
 import { StageDisplay } from '@/components/streaming/StageDisplay';
+import { useTheme } from '@/hooks/use-theme';
 
 interface ChatInterfaceProps {
     modalMode?: boolean;
@@ -23,8 +24,9 @@ export function ChatInterface({
     className,
     showScrollToBottom = true
 }: ChatInterfaceProps) {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
+    const { isDarkMode } = useTheme();
 
     const [isLocalStreaming, setIsLocalStreaming] = useState(false);
     let streamingState = { isStreaming: isLocalStreaming, stages: [] };
@@ -67,13 +69,62 @@ export function ChatInterface({
     // Window click event, keep input focus (modal mode)
     const handleWindowClick = (e: React.MouseEvent) => {
         const scrollAreaElement = document.querySelector('.scroll-area');
+        const sidebarElement = document.querySelector('.chat-sidebar');
         const target = e.target as HTMLElement;
         const isScrollAreaClick = scrollAreaElement?.contains(target);
+        const isSidebarClick = sidebarElement?.contains(target);
+        const isSidebarToggleClick = (target as HTMLElement).closest('[aria-label="Open sidebar"], [aria-label="Close sidebar"]');
+
+        // Close sidebar when clicking outside of it (but not on the toggle button)
+        if (sidebarEnabled && isSidebarOpen && !isSidebarClick && !isSidebarToggleClick) {
+            setIsSidebarOpen(false);
+        }
 
         if (modalMode && !isScrollAreaClick) {
             inputRef.current?.focus();
         }
     };
+
+    // Global click handler to close sidebar
+    useEffect(() => {
+        if (!sidebarEnabled) return;
+
+        const handleGlobalClick = (e: MouseEvent) => {
+            const sidebarElement = document.querySelector('.chat-sidebar');
+            const target = e.target as HTMLElement;
+            const isSidebarClick = sidebarElement?.contains(target);
+            const isSidebarToggleClick = (target as HTMLElement).closest('[aria-label="Open sidebar"], [aria-label="Close sidebar"]');
+
+            if (isSidebarOpen && !isSidebarClick && !isSidebarToggleClick) {
+                setIsSidebarOpen(false);
+            }
+        };
+
+        // Add event listener
+        document.addEventListener('mousedown', handleGlobalClick);
+
+        // Cleanup
+        return () => {
+            document.removeEventListener('mousedown', handleGlobalClick);
+        };
+    }, [isSidebarOpen, sidebarEnabled, setIsSidebarOpen]);
+
+    // Auto close sidebar when resizing to mobile view
+    useEffect(() => {
+        if (!sidebarEnabled) return;
+
+        const handleResize = () => {
+            // Close sidebar on smaller screens automatically
+            if (window.innerWidth < 1024 && isSidebarOpen) {
+                setIsSidebarOpen(false);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [isSidebarOpen, sidebarEnabled, setIsSidebarOpen]);
 
     // Auto focus input in modal mode
     useEffect(() => {
@@ -91,9 +142,11 @@ export function ChatInterface({
     }, [modalMode, inputRef]);
 
     const [transformY, setTransformY] = useState('translateY(0)');
+    const [paddingTop, setPaddingTop] = useState('4rem');
     useEffect(() => {
-        const transformY = showStage ? validStages.length * 2 + 2 : 0;
-        setTransformY(`translateY(-${transformY}rem)`);
+        const transform = showStage ? validStages.length * 2 + 2 : 0;
+        setTransformY(`translateY(-${transform}rem)`);
+        setPaddingTop(`${transform}rem`);
     }, [validStages]);
 
     return (
@@ -104,11 +157,12 @@ export function ChatInterface({
                 className
             )}
         >
-            {/* Sidebar - show in non-modal mode */}
-            {!modalMode && sidebarEnabled && (
+            {/* Sidebar - show when enabled and toggled */}
+            {sidebarEnabled && (
                 <ChatSidebar
                     isSidebarOpen={isSidebarOpen}
                     toggleSidebar={toggleSidebar}
+                    className="chat-sidebar"
                 />
             )}
 
@@ -117,15 +171,38 @@ export function ChatInterface({
                 'relative z-20',
                 modalMode ? 'flex flex-col h-full pb-2' : 'min-h-screen pt-14 pb-2',
                 !modalMode && sidebarEnabled && isSidebarOpen ? 'lg:pl-72' : '',
-                'transition-all duration-300'
+                'transition-all duration-300 will-change-auto'
             )}>
                 <div className={cn(
                     modalMode ? 'h-full flex flex-col' : 'container mx-auto h-full py-4',
                     'transition-all duration-300'
                 )}>
+                    {/* Sidebar Toggle Button */}
+                    {sidebarEnabled && modalMode && (
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={toggleSidebar}
+                            className={cn(
+                                "fixed top-16 left-6 z-30 rounded-full shadow-md transition-all duration-300 hover:scale-105",
+                                "backdrop-blur-sm border",
+                                isDarkMode
+                                    ? "hover:bg-blue-500/15 border-blue-800/30 text-blue-300 bg-gray-800/80"
+                                    : "hover:bg-blue-500/15 border-blue-300/50 text-blue-600 bg-white/80"
+                            )}
+                            style={{ marginTop: '-8px' }}
+                            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+                        >
+                            <Menu className={cn(
+                                "h-4 w-4",
+                                isDarkMode ? "text-blue-300" : "text-blue-600",
+                                isSidebarOpen ? "" : "animate-pulse"
+                            )} />
+                        </Button>
+                    )}
                     {/* App description */}
                     {config.appDefinition?.description && (
-                        <div className="mb-4 mt-4 mx-4 p-3 rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 flex items-center gap-3">
+                        <div className="mb-4 mt-4 mx-4 p-3 pl-12 rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 flex items-center gap-3 overflow-hidden">
                             <Info className="h-5 w-5 text-blue-500 flex-shrink-0" />
                             <div className="flex-1">
                                 <div className="text-sm text-blue-700 dark:text-blue-300">
@@ -158,6 +235,7 @@ export function ChatInterface({
                                 currentChat={currentChat}
                                 onNewChat={createNewChat}
                                 transformY={transformY}
+                                paddingTop={paddingTop}
                             />
 
                             {/* Message end reference - put after Stage */}
@@ -190,6 +268,9 @@ export function ChatInterface({
                             size="icon"
                             className={cn(
                                 "z-50 fixed rounded-full shadow-lg transition-transform hover:scale-110 animate-bounce-slow",
+                                isDarkMode
+                                    ? "bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-700/30"
+                                    : "bg-blue-100 hover:bg-blue-200 text-blue-600 border border-blue-200",
                                 modalMode ? "bottom-24 right-6" : "bottom-24 right-6",
                                 !modalMode && sidebarEnabled && isSidebarOpen ? "lg:right-6" : "right-6"
                             )}

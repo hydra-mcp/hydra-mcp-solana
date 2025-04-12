@@ -24,6 +24,7 @@ export interface ChatContextType {
     deleteChat: (chatId: string) => void;
     sendMessage: (content: string) => Promise<void>;
     clearAllChats: () => void;
+    setCurrentChatId: (chatId: string) => void;
 
     // Interface related status
     isScrolledUp: boolean;

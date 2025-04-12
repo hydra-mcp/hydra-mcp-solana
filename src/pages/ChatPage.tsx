@@ -1,7 +1,7 @@
 import React from 'react';
-import { ChatProvider } from '@/components/ChatProvider';
-import { ChatInterface } from '@/components/ChatInterface';
-import { appRegistry } from '@/components/ios/AppRegistry';
+import { ChatProvider } from '@/components/chat/ChatProvider';
+import { ChatInterface } from '@/components/chat/ChatInterface';
+import { appRegistry } from '@/components/ios/appConfig';
 
 interface ChatPageProps {
     isModal?: boolean;
@@ -11,7 +11,7 @@ interface ChatPageProps {
 }
 
 export function ChatPage({
-    isModal = false,
+    isModal = true,
     apiEndpoint = '/mcp/chat/completions',
     appId = 'messages',
     showScrollToBottom = true
@@ -30,7 +30,7 @@ export function ChatPage({
         >
             <ChatInterface
                 modalMode={isModal}
-                sidebarEnabled={!isModal}
+                sidebarEnabled={true}
                 showScrollToBottom={showScrollToBottom}
             />
         </ChatProvider>

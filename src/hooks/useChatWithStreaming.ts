@@ -3,6 +3,7 @@ import { Message, Chat } from '@/types/chat';
 import { useStreaming } from '@/lib/streaming/StreamingContext';
 import { sendChatStream, ChunkType } from '@/lib/streaming/sseClient';
 import { StreamingMessage, MessageChunk } from '@/lib/streaming/types';
+import { generateChatTitle } from '@/lib/utils';
 
 /**
  * Streaming chat hook configuration
@@ -82,10 +83,19 @@ export function useChatWithStreaming({
             // Update chat history with user message
             const updatedMessages = [...(currentChat?.messages || []), userMessage];
 
+            // Check if we need to update the title (first user message)
+            let updatedTitle = currentChat?.title;
+
+            // Generate title if this is the first user message and title is the default
+            if (updatedMessages.length === 1 && (!currentChat?.title || currentChat.title === 'New Chat')) {
+                // Import from utils to avoid circular dependencies
+                updatedTitle = generateChatTitle(content);
+            }
+
             // First update: add user message and AI message placeholder
             onUpdateChat(chatId, {
                 messages: [...updatedMessages, aiMessage],
-                title: updatedMessages.length === 1 ? content.slice(0, 30) : currentChat?.title,
+                title: updatedTitle,
             });
 
             // console.log(`[sendMessage] Starting stream processing, chatId: ${chatId}, messageId: ${aiMessageId}`);
