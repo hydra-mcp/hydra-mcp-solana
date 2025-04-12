@@ -10,8 +10,9 @@ import { Toaster } from '@/components/ui/toaster';
 import { ErrorHandler } from '@/components/ErrorHandler';
 import { IOSDesktop } from '@/pages/IOSDesktop';
 import { WalletFinder } from '@/pages/WalletFinder';
-import { StreamingProvider } from '@/lib/streaming/StreamingContext';
 import { useToast } from '@/hooks/use-toast';
+import { CaSignal } from '@/pages/CaSignal';
+import { SmartWallet } from './pages/SmartWallet';
 
 function App() {
   return (
@@ -44,7 +45,9 @@ function AppContent() {
         {/* AppLayout Routes */}
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/chat" element={<ChatPage isModal={true} />} />
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/ca-signal" element={<CaSignal />} />
+          <Route path="/smart-wallet" element={<SmartWallet />} />
         </Route>
 
         {/* iOS Layout Routes - These don't use the AppLayout */}

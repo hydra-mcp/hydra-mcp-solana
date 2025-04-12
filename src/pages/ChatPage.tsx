@@ -16,13 +16,16 @@ export function ChatPage({
     appId = 'messages',
     showScrollToBottom = true
 }: ChatPageProps) {
-    // Get application definition, use the definition in appRegistry directly
+    // 获取应用定义
     const app = appRegistry[appId];
+
+    // 如果找不到应用，使用默认消息应用
+    const appDefinition = app || appRegistry['messages'];
 
     return (
         <ChatProvider
             apiEndpoint={apiEndpoint}
-            appDefinition={app}
+            appDefinition={appDefinition}
             options={{
                 enableHistory: true,
                 historyStorageKey: `chat-history-${appId}`

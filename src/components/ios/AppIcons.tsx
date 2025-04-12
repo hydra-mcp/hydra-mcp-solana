@@ -1,4 +1,4 @@
-import { Wallet, MessageSquare, Settings, Image, Home, Search, Calendar, Mail } from 'lucide-react';
+import { Wallet, MessageSquare, Settings, Image, Home, Search, Calendar, Mail, BarChart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -185,4 +185,65 @@ export const MailIcon = ({ className, count = 9 }: { className?: string, count?:
             }
         />
     );
-}; 
+};
+
+// CA Signal icon
+export const CASignalIcon = ({ className }: { className?: string }) => {
+    return (
+        <AppIconBase
+            color="#4f46e5"
+            secondaryColor="#6366f1"
+            className={className}
+            icon={
+                <motion.div
+                    className="relative"
+                    initial={{ opacity: 0.5 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
+                >
+                    <div className="flex flex-col items-center justify-center">
+                        <div className="flex h-6 items-end space-x-1">
+                            <div className="w-1 h-1 bg-white rounded-sm"></div>
+                            <div className="w-1 h-2 bg-white rounded-sm"></div>
+                            <div className="w-1 h-3 bg-white rounded-sm"></div>
+                            <div className="w-1 h-4 bg-white rounded-sm"></div>
+                        </div>
+                    </div>
+                </motion.div>
+            }
+        />
+    );
+};
+
+export const SmartWalletIcon = ({ className }: { className?: string }) => {
+    return (
+        <AppIconBase
+            color="#10b981"
+            secondaryColor="#34d399"
+            className={className}
+            icon={
+                <Wallet className="w-9 h-9 text-white" />
+            }
+        />
+    );
+};
+
+export const DeepSearchIcon = ({ className }: { className?: string }) => {
+    return (
+        <AppIconBase
+            color="#3b82f6"
+            secondaryColor="#60a5fa"
+            className={className}
+            icon={
+                <div className="relative">
+                    <Search className="w-9 h-9 text-white" />
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    </div>
+                </div>
+            }
+        />
+    );
+};
+
+

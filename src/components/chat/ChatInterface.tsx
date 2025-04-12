@@ -291,12 +291,20 @@ export function ChatInterface({
             )}>
                 <div className="container mx-auto py-2.5 sm:py-3">
                     <div className="px-4">
-                        <MessageInput
-                            autoFocus={modalMode}
-                            placeholder="Type your message..."
-                            disabled={isStreaming}
-                            className="max-h-[80px]"
-                        />
+                        {config.appDefinition?.status !== 'coming_soon' ? (
+                            <MessageInput
+                                autoFocus={modalMode}
+                                placeholder="Type your message..."
+                                disabled={isStreaming}
+                                className="max-h-[80px]"
+                            />
+                        ) : (
+                            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 rounded-md text-center">
+                                <p className="text-amber-700 dark:text-amber-400 font-medium">
+                                    Coming soon, stay tuned！
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </footer>
