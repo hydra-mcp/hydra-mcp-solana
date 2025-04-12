@@ -39,21 +39,69 @@ export const WalletFinderIcon = ({ className }: { className?: string }) => {
             className={className}
             icon={
                 <div className="flex flex-col items-center justify-center">
-                    <Wallet className="w-7 h-7 text-white" />
                     <motion.div
-                        className="text-[9px] text-white font-bold mt-0.5"
+                        initial={{ scale: 1 }}
                         animate={{
-                            y: [0, -1, 0, 1, 0],
-                            opacity: [1, 0.9, 1, 0.9, 1]
+                            scale: [1, 1.05, 1],
+                            y: [0, -1, 0]
                         }}
                         transition={{
                             duration: 2,
                             repeat: Infinity,
-                            repeatType: "loop"
+                            repeatType: "loop",
+                            ease: "easeInOut"
                         }}
                     >
-                        AI
+                        <Wallet className="w-7 h-7 text-white" />
                     </motion.div>
+                    <div className="relative">
+                        <motion.div
+                            className="text-[9px] text-white font-bold mt-0.5"
+                            animate={{
+                                opacity: [1, 0.8, 1]
+                            }}
+                            transition={{
+                                duration: 1.5,
+                                repeat: Infinity,
+                                repeatType: "loop"
+                            }}
+                        >
+                            AI
+                        </motion.div>
+                        <motion.div
+                            className="absolute -right-3 -top-1"
+                            animate={{
+                                opacity: [0, 0.7, 0],
+                                x: [0, 5, 10],
+                                y: [-2, -5, -8]
+                            }}
+                            transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                repeatType: "loop",
+                                ease: "easeOut"
+                            }}
+                        >
+                            <div className="w-1 h-1 bg-white rounded-full" />
+                        </motion.div>
+                        <motion.div
+                            className="absolute -left-3 -top-1"
+                            animate={{
+                                opacity: [0, 0.7, 0],
+                                x: [0, -5, -10],
+                                y: [-2, -5, -8]
+                            }}
+                            transition={{
+                                duration: 2,
+                                delay: 0.5,
+                                repeat: Infinity,
+                                repeatType: "loop",
+                                ease: "easeOut"
+                            }}
+                        >
+                            <div className="w-1 h-1 bg-white rounded-full" />
+                        </motion.div>
+                    </div>
                 </div>
             }
         />
@@ -121,7 +169,7 @@ export const PhotosIcon = ({ className }: { className?: string }) => {
 export const HomeIcon = ({ className }: { className?: string }) => {
     return (
         <AppIconBase
-            color="#8b5cf6"
+            color="#8df4f2"
             secondaryColor="#a78bfa"
             className={className}
             icon={
@@ -222,7 +270,68 @@ export const SmartWalletIcon = ({ className }: { className?: string }) => {
             secondaryColor="#34d399"
             className={className}
             icon={
-                <Wallet className="w-9 h-9 text-white" />
+                <div className="relative">
+                    <motion.div
+                        initial={{ y: 0 }}
+                        animate={{ y: [-2, 2, -2] }}
+                        transition={{
+                            duration: 4,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                    >
+                        <Wallet className="w-9 h-9 text-white" />
+                    </motion.div>
+
+                    {/* 钱币动画效果 */}
+                    <motion.div
+                        className="absolute top-1 right-1"
+                        initial={{ opacity: 0, scale: 0.5, x: -5, y: 10 }}
+                        animate={{
+                            opacity: [0, 1, 0],
+                            scale: [0.5, 1, 0.5],
+                            x: [-5, 5, 15],
+                            y: [10, 0, -10]
+                        }}
+                        transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            repeatDelay: 1
+                        }}
+                    >
+                        <div className="w-2 h-2 bg-yellow-300 rounded-full shadow-glow-sm" />
+                    </motion.div>
+
+                    {/* 智能连接线效果 */}
+                    <motion.div
+                        className="absolute inset-0 flex items-center justify-center"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: [0, 0.7, 0] }}
+                        transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            repeatDelay: 1
+                        }}
+                    >
+                        <div className="w-12 h-12 rounded-full border-2 border-white/30 border-dashed" />
+                    </motion.div>
+
+                    {/* 智能钱包标识 */}
+                    {/* <motion.div
+                        className="absolute -bottom-1 -right-1 bg-white/20 backdrop-blur-sm px-1 rounded text-[8px] font-bold text-white"
+                        animate={{
+                            opacity: [0.7, 1, 0.7],
+                            scale: [0.95, 1, 0.95]
+                        }}
+                        transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                    >
+                        smart
+                    </motion.div> */}
+                </div>
             }
         />
     );
@@ -231,16 +340,37 @@ export const SmartWalletIcon = ({ className }: { className?: string }) => {
 export const DeepSearchIcon = ({ className }: { className?: string }) => {
     return (
         <AppIconBase
-            color="#3b82f6"
+            color="#5ed7ea"
             secondaryColor="#60a5fa"
             className={className}
             icon={
-                <div className="relative">
+                <motion.div
+                    className="relative"
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
+                >
                     <Search className="w-9 h-9 text-white" />
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    </div>
-                </div>
+                    <motion.div
+                        className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center"
+                        initial={{ opacity: 0.5 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
+                    >
+                        <motion.div
+                            className="w-2 h-2 bg-blue-500 rounded-full"
+                            animate={{
+                                scale: [1, 1.2, 1],
+                                opacity: [0.7, 1, 0.7]
+                            }}
+                            transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                            }}
+                        />
+                    </motion.div>
+                </motion.div>
             }
         />
     );
