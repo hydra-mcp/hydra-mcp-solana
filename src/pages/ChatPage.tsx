@@ -16,10 +16,10 @@ export function ChatPage({
     appId = 'messages',
     showScrollToBottom = true
 }: ChatPageProps) {
-    // 获取应用定义
+    // get application definition
     const app = appRegistry[appId];
 
-    // 如果找不到应用，使用默认消息应用
+    // if no app is found, use the default messages app
     const appDefinition = app || appRegistry['messages'];
 
     return (

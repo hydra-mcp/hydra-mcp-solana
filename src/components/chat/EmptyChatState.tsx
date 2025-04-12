@@ -7,7 +7,7 @@ interface EmptyChatStateProps {
     onNewChat: () => void;
 }
 
-// 定义默认模块
+// default modules
 const DEFAULT_MODULES = [
     {
         title: "Ask a question",
@@ -31,7 +31,7 @@ const DEFAULT_MODULES = [
     }
 ];
 
-// 背景颜色数组，用于模块渐变
+// background colors array, for module gradient
 const GRADIENT_COLORS = [
     'from-blue-500/10 to-indigo-500/10',
     'from-purple-500/10 to-pink-500/10',
@@ -45,16 +45,16 @@ export function EmptyChatState({ onNewChat }: EmptyChatStateProps) {
     const { config } = useChatContext();
     const appName = config.appDefinition?.title || 'Chat';
 
-    // 使用自定义文本，如果未提供则使用默认文本
+    // use custom texts, if not provided, use default texts
     const moduleTexts = config.appDefinition?.chatModuleTexts || {};
     const welcomeTitle = moduleTexts.welcomeTitle || `Welcome to ${appName}`;
     const welcomeDescription = moduleTexts.welcomeDescription ||
         (config.appDefinition?.description || "I'm your AI assistant. How can I help you today?");
 
-    // 使用配置的模块或默认模块
+    // use configured modules or default modules
     const modulesData = moduleTexts.modules || DEFAULT_MODULES;
 
-    // 为每个模块添加默认图标，如果未提供
+    // add default icon to each module, if not provided
     const modules = modulesData.map((module, index) => {
         return {
             ...module,
