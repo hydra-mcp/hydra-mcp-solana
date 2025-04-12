@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
+    "@phantom/wallet-sdk": "^0.1.1",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -46,6 +47,7 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
     "framer-motion": "^12.5.0",
+    "gill": "^0.8.2",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.446.0",
     "next-themes": "^0.3.0",

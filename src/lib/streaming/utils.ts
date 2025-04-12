@@ -81,34 +81,6 @@ export function truncateText(text: string, maxLength: number): string {
 }
 
 /**
- * Deep merge objects
- * Merge two objects deeply
- * 
- * @param target Target object
- * @param source Source object
- * @returns Merged object
- */
-export function deepMerge<T>(target: T, source: Partial<T>): T {
-    const output = { ...target };
-
-    if (isObject(target) && isObject(source)) {
-        Object.keys(source).forEach(key => {
-            if (isObject(source[key])) {
-                if (!(key in target)) {
-                    Object.assign(output, { [key]: source[key] });
-                } else {
-                    output[key] = deepMerge(target[key], source[key]);
-                }
-            } else {
-                Object.assign(output, { [key]: source[key] });
-            }
-        });
-    }
-
-    return output;
-}
-
-/**
  * Check if the value is an object
  */
 function isObject(item: any): item is Record<string, any> {
