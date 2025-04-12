@@ -7,12 +7,14 @@ interface ChatPageProps {
     isModal?: boolean;
     apiEndpoint?: string;
     appId?: string;
+    showScrollToBottom?: boolean; // 控制是否显示聊天界面中的"滚动到底部"按钮
 }
 
 export function ChatPage({
     isModal = false,
     apiEndpoint = '/mcp/chat/completions',
-    appId = 'messages'
+    appId = 'messages',
+    showScrollToBottom = true
 }: ChatPageProps) {
     // Get application definition, use the definition in appRegistry directly
     const app = appRegistry[appId];
@@ -29,6 +31,7 @@ export function ChatPage({
             <ChatInterface
                 modalMode={isModal}
                 sidebarEnabled={!isModal}
+                showScrollToBottom={showScrollToBottom}
             />
         </ChatProvider>
     );

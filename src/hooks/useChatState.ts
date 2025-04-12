@@ -7,6 +7,7 @@ interface UseChatStateOptions {
     historyStorageKey?: string;
     enableHistory?: boolean;
     initialSystemMessage?: string;
+    appId?: string;
 }
 
 export function useChatState(options: UseChatStateOptions = {}) {
@@ -14,19 +15,28 @@ export function useChatState(options: UseChatStateOptions = {}) {
         historyStorageKey = 'chat-history',
         enableHistory = true,
         initialSystemMessage,
+        appId,
     } = options;
 
     const [chats, setChats] = useState<Chat[]>([]);
     const [currentChatId, setCurrentChatId] = useState<string | null>(null);
     const [isLoadingChats, setIsLoadingChats] = useState(true);
 
+    // 获取当前应用的聊天列表
+    const appChats = appId
+        ? chats.filter(chat => chat.appId === appId)
+        : chats;
+
     // Current selected chat
     const currentChat = chats.find(chat => chat.id === currentChatId) || null;
 
     // Create a new chat
     const createNewChat = () => {
-        // Check if there is an empty chat, if so use it
-        const emptyChat = chats.find(chat => chat.messages.length === 0);
+        // 检查当前应用是否有空聊天，如果有则使用它
+        const emptyChat = appId
+            ? appChats.find(chat => chat.messages.length === 0)
+            : chats.find(chat => chat.messages.length === 0);
+
         if (emptyChat) {
             setCurrentChatId(emptyChat.id);
             return;
@@ -39,6 +49,7 @@ export function useChatState(options: UseChatStateOptions = {}) {
             messages: [],
             createdAt: new Date().toLocaleString(),
             updatedAt: new Date().toLocaleString(),
+            appId,
         };
 
         // If there is an initial system message, add it to the new chat
@@ -72,7 +83,11 @@ export function useChatState(options: UseChatStateOptions = {}) {
 
         // If the deleted chat is the current chat, select the next available chat
         if (chatId === currentChatId) {
-            const remainingChats = chats.filter(chat => chat.id !== chatId);
+            // 按应用筛选剩余聊天
+            const remainingChats = appId
+                ? chats.filter(chat => chat.id !== chatId && chat.appId === appId)
+                : chats.filter(chat => chat.id !== chatId);
+
             setCurrentChatId(remainingChats.length > 0 ? remainingChats[0].id : null);
 
             // If there are no chats left, create a new one
@@ -84,8 +99,14 @@ export function useChatState(options: UseChatStateOptions = {}) {
 
     // Clear all chats
     const clearAllChats = () => {
-        setChats([]);
-        setCurrentChatId(null);
+        // 如果指定了appId，只清除该应用的聊天
+        if (appId) {
+            setChats(prev => prev.filter(chat => chat.appId !== appId));
+            setCurrentChatId(null);
+        } else {
+            setChats([]);
+            setCurrentChatId(null);
+        }
         createNewChat();
     };
 
@@ -98,23 +119,35 @@ export function useChatState(options: UseChatStateOptions = {}) {
                     const savedChats = loadChats(historyStorageKey);
                     if (savedChats.length > 0) {
                         setChats(savedChats);
-                        setCurrentChatId(savedChats[0].id);
+
+                        // 如果有appId，选择第一个匹配的聊天
+                        if (appId) {
+                            const appChat = savedChats.find(chat => chat.appId === appId);
+                            setCurrentChatId(appChat ? appChat.id : null);
+
+                            // 如果没有该应用的聊天，创建一个新的
+                            if (!appChat) {
+                                setTimeout(() => createNewChat(), 0);
+                            }
+                        } else {
+                            setCurrentChatId(savedChats[0].id);
+                        }
                     } else {
-                        createNewChat();
+                        setTimeout(() => createNewChat(), 0);
                     }
                 } else {
-                    createNewChat();
+                    setTimeout(() => createNewChat(), 0);
                 }
             } catch (error) {
                 console.error('Error loading chats:', error);
-                createNewChat();
+                setTimeout(() => createNewChat(), 0);
             } finally {
                 setIsLoadingChats(false);
             }
         };
 
         loadInitialChats();
-    }, [historyStorageKey, enableHistory]);
+    }, [historyStorageKey, enableHistory, appId]);
 
     // Save chats to local storage
     useEffect(() => {
@@ -124,7 +157,7 @@ export function useChatState(options: UseChatStateOptions = {}) {
     }, [chats, historyStorageKey, enableHistory]);
 
     return {
-        chats,
+        chats: appId ? appChats : chats,
         setChats,
         currentChatId,
         setCurrentChatId,

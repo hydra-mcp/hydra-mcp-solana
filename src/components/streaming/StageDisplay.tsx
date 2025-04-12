@@ -27,7 +27,7 @@ export function StageDisplay({ stages, className }: StageDisplayProps) {
 
     return (
         <div className={cn(
-            "flex flex-col gap-2 text-xs rounded-md bg-primary/5 py-3 px-4 max-w-fit shadow-sm backdrop-blur-sm border border-primary/10",
+            "flex flex-col gap-2 text-xs py-3 px-4",
             className
         )}>
             <div className="text-primary font-medium mb-1.5 flex items-center gap-1.5">

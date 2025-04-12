@@ -36,6 +36,9 @@ export function ChatProvider({
     // Initial system message
     const initialSystemMessage = appDefinition?.description;
 
+    // 获取应用ID
+    const appId = appDefinition?.id;
+
     // Use custom hooks
     const {
         chats,
@@ -49,7 +52,8 @@ export function ChatProvider({
     } = useChatState({
         historyStorageKey,
         enableHistory,
-        initialSystemMessage
+        initialSystemMessage,
+        appId, // 传递应用ID
     });
 
     const {
@@ -57,7 +61,8 @@ export function ChatProvider({
         messagesEndRef,
         scrollAreaRef,
         scrollToBottom,
-        handleScroll
+        handleScroll,
+        checkScrollState
     } = useScrollBehavior({
         defaultIsStreaming: false
     });
@@ -92,6 +97,8 @@ export function ChatProvider({
                 scrollToBottom={scrollToBottom}
                 messagesEndRef={messagesEndRef}
                 handleScroll={handleScroll}
+                checkScrollState={checkScrollState}
+                isLoadingChats={isLoadingChats}
                 config={{
                     apiEndpoint,
                     appDefinition,
@@ -120,6 +127,8 @@ function StreamingAwareChat({
     scrollToBottom,
     messagesEndRef,
     handleScroll,
+    checkScrollState,
+    isLoadingChats,
     config,
     children
 }: {
@@ -136,6 +145,8 @@ function StreamingAwareChat({
     scrollToBottom: () => void;
     messagesEndRef: React.RefObject<HTMLDivElement>;
     handleScroll: any;
+    checkScrollState: () => void;
+    isLoadingChats: boolean;
     config: any;
     children: ReactNode;
 }) {
@@ -206,6 +217,7 @@ function StreamingAwareChat({
         currentChatId,
         currentChat,
         isProcessing,
+        isLoadingChats,
         createNewChat,
         deleteChat,
         sendMessage,
@@ -214,7 +226,8 @@ function StreamingAwareChat({
         scrollToBottom,
         inputRef,
         messagesEndRef,
-        handleScroll
+        handleScroll,
+        checkScrollState
     };
 
     return (

@@ -23,7 +23,8 @@ export function MessageInput({
         inputRef,
         sendMessage,
         isProcessing,
-        currentChatId
+        currentChatId,
+        scrollToBottom
     } = useChatContext();
 
     // 使用流式消息状态，添加安全处理
@@ -47,7 +48,14 @@ export function MessageInput({
 
         const message = input.trim();
         setInput('');
+
+        // 发送消息
         await sendMessage(message);
+
+        // 在发送消息后滚动到底部
+        setTimeout(() => {
+            scrollToBottom();
+        }, 100);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -68,7 +76,7 @@ export function MessageInput({
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 className={cn(
-                    "min-h-[40px] max-h-[120px] sm:max-h-[200px] flex-1 resize-none rounded-lg",
+                    "min-h-[40px] max-h-[80px] sm:max-h-[120px] flex-1 resize-none rounded-lg",
                     "border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/30",
                     "transition-shadow text-sm sm:text-base z-50"
                 )}

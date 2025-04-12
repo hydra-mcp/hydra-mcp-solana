@@ -17,6 +17,7 @@ export interface ChatContextType {
     currentChatId: string | null;
     currentChat: Chat | null;
     isProcessing: boolean;
+    isLoadingChats: boolean;
 
     // 聊天操作方法
     createNewChat: () => void;
@@ -30,6 +31,7 @@ export interface ChatContextType {
     inputRef: React.RefObject<HTMLTextAreaElement>;
     messagesEndRef: React.RefObject<HTMLDivElement>;
     handleScroll: (event: React.UIEvent<HTMLDivElement>) => void;
+    checkScrollState: () => void;
 }
 
 // 创建上下文

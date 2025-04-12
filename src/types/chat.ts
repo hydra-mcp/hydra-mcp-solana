@@ -18,6 +18,7 @@ export interface Chat {
   messages: Message[];
   createdAt: string;
   updatedAt: string;
+  appId?: string; // 添加appId字段，关联应用ID
   metadata?: Record<string, any>; // Metadata for additional chat information like stages
 }
 

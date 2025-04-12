@@ -66,6 +66,10 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" }
+        },
         blink: {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0" },
@@ -260,6 +264,7 @@ module.exports = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.3s ease-out",
         "bounce-slow": "bounce-slow 6s infinite",
         "pulse-slow": "pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "shimmer": "shimmer 1.5s infinite",
@@ -274,7 +279,7 @@ module.exports = {
         "neon-pulse": "neon-pulse 1.5s ease-in-out infinite",
         "gradient-shift": "gradient-shift 3s ease infinite",
         "light-sweep": "light-sweep 3s ease-in-out infinite",
-        "blink": "blink 1s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "blink": "blink 1s step-start infinite",
       },
       typography: {
         DEFAULT: {
