@@ -14,8 +14,12 @@ import { WalletFinder } from '@/pages/WalletFinder';
 import { useToast } from '@/hooks/use-toast';
 import { CaSignal } from '@/pages/CaSignal';
 import { SmartWallet } from './pages/SmartWallet';
+<<<<<<< HEAD
 import SolanaPaymentPage from './pages/SolanaPaymentPage';
 >>>>>>> fcc14ea (refactor: remove unused SolanaTransactionDemo route from App component to streamline routing)
+=======
+import { SolanaPaymentPage } from './pages/SolanaPaymentPage';
+>>>>>>> 39ec333 (feat: implement Solana recharge feature with wallet connection, transaction handling, and UI enhancements for better user experience)
 
 function App() {
   const [chats, setChats] = useState<Chat[]>([]);

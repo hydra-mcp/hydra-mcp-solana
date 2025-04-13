@@ -1,7 +1,22 @@
 import React, { ReactNode, lazy, Suspense } from 'react';
+<<<<<<< HEAD
 import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon } from './AppIcons';
 import { cn } from '@/lib/utils';
 import { Calendar, Settings, Sliders, Image, Mail, Home, Search } from 'lucide-react';
+=======
+import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, DeepSearchIcon, RechargeIcon } from './AppIcons';
+import { cn } from '@/lib/utils';
+import {
+    Calendar, Settings, Sliders, Image, Mail, Home, Search, SignalIcon,
+    HelpCircle, Info, Puzzle, Lightbulb, BarChart3, Users, DollarSign, CreditCard, Activity,
+    Code,
+    Bug,
+    BookOpen,
+    Zap,
+    Wallet,
+    Shield
+} from 'lucide-react';
+>>>>>>> 39ec333 (feat: implement Solana recharge feature with wallet connection, transaction handling, and UI enhancements for better user experience)
 import { useTheme } from '@/hooks/use-theme';
 
 // Common loading placeholder component
@@ -29,6 +44,14 @@ const ChatComponent = lazy(() => import('@/pages/ChatPage').then(module => ({
         // Load ChatPage component and set it to modal mode
         const { ChatPage } = module;
         return <ChatPage isModal={true} />;
+    }
+})));
+
+const SolRechargeComponent = lazy(() => import('@/pages/SolanaPaymentPage').then(module => ({
+    default: () => {
+        // Load SolanaPaymentPage component and set it to modal mode
+        const { SolanaPaymentPage } = module;
+        return <SolanaPaymentPage />;
     }
 })));
 
@@ -302,7 +325,93 @@ export const appRegistry: Record<string, AppDefinition> = {
                 </div>
             </div>
         ),
+<<<<<<< HEAD
         defaultSize: { width: '70%', height: '75%' },
         description: 'Check your email'
     }
+=======
+        defaultSize,
+        description: 'Based on the trading behavior of smart addresses on the chain, we will push project-related information.',
+        status: 'coming_soon',
+        chatModuleTexts: {
+            welcomeDescription: 'We will push the CA of relevant qualified projects in real time. Based on the trading behavior of smart addresses on the chain, we will push project-related information, such as: project CA, the number of smart addresses that have purchased the project, the average purchase amount of smart funds, market capitalization, number of holders, and other data, for users to reference whether to follow up and buy.',
+            modules: [
+                { title: 'Project CA', content: 'The CA of the project', icon: <CreditCard className="h-5 w-5" /> },
+                { title: 'Number of Smart Addresses', content: 'The number of smart addresses that have purchased the project', icon: <Users className="h-5 w-5" /> },
+                { title: 'Market Capitalization', content: 'The market capitalization of the project', icon: <BarChart3 className="h-5 w-5" /> },
+                { title: 'Number of Holders', content: 'The number of holders of the project', icon: <Activity className="h-5 w-5" /> }
+            ]
+        }
+    },
+    smartWallet: {
+        id: 'smart-wallet',
+        path: '/smart-wallet',
+        title: 'Smart Wallet',
+        icon: <SmartWalletIcon />,
+        component: (
+            <Suspense fallback={<LoadingPlaceholder />}>
+                <SmartWalletComponent />
+            </Suspense>
+        ),
+        defaultSize,
+        description: 'We will promptly push some smart addresses discovered on the chain to users, making it convenient for them to add these smart addresses to their monitoring system for future trading reference.',
+        status: 'coming_soon',
+        chatModuleTexts: {
+            welcomeDescription: 'We will promptly push some smart addresses discovered on the chain to users, making it convenient for them to add these smart addresses to their monitoring system for future trading reference.',
+            modules: [
+                { title: 'Smart Address', content: 'The smart address discovered on chain', icon: <CreditCard className="h-5 w-5" /> },
+                { title: 'Transaction History', content: 'Recent transaction records of the smart address', icon: <Activity className="h-5 w-5" /> },
+                { title: 'Portfolio Analysis', content: 'Current portfolio composition and performance', icon: <BarChart3 className="h-5 w-5" /> },
+                { title: 'Trading Strategy', content: 'Trading patterns and strategies analysis', icon: <Lightbulb className="h-5 w-5" /> }
+            ]
+        }
+    },
+    deepSearch: {
+        id: 'deep-search',
+        path: '/deep-search',
+        title: 'Deep Search',
+        icon: <DeepSearchIcon />,
+        component: (
+            <Suspense fallback={<LoadingPlaceholder />}>
+                <DeepSearchComponent />
+            </Suspense>
+        ),
+        defaultSize,
+        description: 'Advanced AI-powered code analysis and debugging tool for complex task execution and self-improvement.',
+        status: 'coming_soon',
+        chatModuleTexts: {
+            welcomeDescription: 'Our latest CODEACT feature testing window collects the HYDRA-CodeAct dataset for instruction tuning. The trained HYDRA-CodeAct can perform complex tasks and self-debug and improve.',
+            modules: [
+                { title: 'Code Analysis', content: 'Deep analysis of code structure and patterns', icon: <Code className="h-5 w-5" /> },
+                { title: 'Debugging Assistant', content: 'AI-powered debugging and error resolution', icon: <Bug className="h-5 w-5" /> },
+                { title: 'Performance Optimization', content: 'Code optimization and performance improvement suggestions', icon: <Zap className="h-5 w-5" /> },
+                { title: 'Learning Assistant', content: 'Interactive learning and improvement guidance', icon: <BookOpen className="h-5 w-5" /> }
+            ]
+        }
+    },
+    solRecharge: {
+        id: 'sol-recharge',
+        path: '/sol-recharge',
+        title: 'Recharge',
+        icon: <RechargeIcon />,
+        component: (
+            <Suspense fallback={<LoadingPlaceholder />}>
+                <SolRechargeComponent />
+            </Suspense>
+        ),
+        defaultSize,
+        description: 'Convenient SOL token recharge service with real-time transaction monitoring and secure wallet integration.',
+        status: 'online',
+        chatModuleTexts: {
+            welcomeDescription: 'Welcome to SOL Recharge service. We provide secure and efficient SOL token recharge with real-time transaction monitoring.',
+            modules: [
+                { title: 'Wallet Integration', content: 'Secure connection with Phantom wallet for seamless transactions', icon: <Wallet className="h-5 w-5" /> },
+                { title: 'Transaction History', content: 'View and track all your SOL recharge transactions', icon: <Activity className="h-5 w-5" /> },
+                { title: 'Balance Management', content: 'Monitor your SOL balance and transaction limits', icon: <BarChart3 className="h-5 w-5" /> },
+                { title: 'Security Features', content: 'Advanced security measures for safe transactions', icon: <Shield className="h-5 w-5" /> }
+            ]
+        }
+    },
+
+>>>>>>> 39ec333 (feat: implement Solana recharge feature with wallet connection, transaction handling, and UI enhancements for better user experience)
 }; 
