@@ -49,7 +49,7 @@ function AppContent() {
           {/* <Route path="/chat" element={<ChatPage />} /> */}
           {/* <Route path="/ca-signal" element={<CaSignal />} /> */}
           {/* <Route path="/smart-wallet" element={<SmartWallet />} /> */}
-          <Route path="/solana-payment" element={<SolanaPaymentPage />} />
+          <Route path="/payment" element={<SolanaPaymentPage />} />
         </Route>
 
         {/* iOS Layout Routes - These don't use the AppLayout */}

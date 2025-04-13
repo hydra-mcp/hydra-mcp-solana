@@ -34,15 +34,15 @@ export default function Home() {
                     <Card className="p-6 flex flex-col h-full border-purple-300 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30">
                         <div className="flex items-center mb-2">
                             <Wallet className="w-6 h-6 text-purple-500 mr-2" />
-                            <h2 className="text-2xl font-semibold">Solana Transaction</h2>
+                            <h2 className="text-2xl font-semibold">Solana Payment</h2>
                         </div>
                         <p className="text-gray-600 dark:text-gray-400 mb-4 flex-grow">
                             Test Phantom wallet integration with Solana blockchain. Connect your wallet, send SOL transactions, and view transaction details on Solana Explorer.
                         </p>
                         <div className="mt-auto">
-                            <Link to="/solana-payment">
+                            <Link to="/payment">
                                 <Button className="w-full bg-purple-500 hover:bg-purple-600">
-                                    Open Transaction Demo
+                                    Open Payment
                                 </Button>
                             </Link>
                         </div>
