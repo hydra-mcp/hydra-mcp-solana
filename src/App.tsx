@@ -7,6 +7,15 @@ import { ChatPage } from '@/pages/ChatPage';
 import Home from '@/pages/index';
 import { Toaster } from '@/components/ui/toaster';
 import { ErrorHandler } from '@/components/ErrorHandler';
+<<<<<<< HEAD
+=======
+import { IOSDesktop } from '@/pages/IOSDesktop';
+import { WalletFinder } from '@/pages/WalletFinder';
+import { useToast } from '@/hooks/use-toast';
+import { CaSignal } from '@/pages/CaSignal';
+import { SmartWallet } from './pages/SmartWallet';
+import SolanaPaymentPage from './pages/SolanaPaymentPage';
+>>>>>>> fcc14ea (refactor: remove unused SolanaTransactionDemo route from App component to streamline routing)
 
 function App() {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -164,7 +173,14 @@ function AppContent() {
         {/* AppLayout Routes */}
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
+<<<<<<< HEAD
           <Route path="/chat" element={<ChatPage isModal={true} />} />
+=======
+          {/* <Route path="/chat" element={<ChatPage />} /> */}
+          {/* <Route path="/ca-signal" element={<CaSignal />} /> */}
+          {/* <Route path="/smart-wallet" element={<SmartWallet />} /> */}
+          <Route path="/solana-payment" element={<SolanaPaymentPage />} />
+>>>>>>> fcc14ea (refactor: remove unused SolanaTransactionDemo route from App component to streamline routing)
         </Route>
 
         {/* iOS Layout Routes - These don't use the AppLayout */}
