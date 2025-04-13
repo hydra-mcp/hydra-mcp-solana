@@ -63,7 +63,7 @@ export function ChatContainer({
     }
 
     return (
-        <div className="py-16 space-y-4" style={{ transform: transformY, transition: 'all 0.3s ease-in-out', paddingTop: paddingTop }}>
+        <div className="py-16 space-y-4" style={{ transform: transformY, transition: 'transform 0.3s ease-in-out' }}>
             <div className="space-y-6">
                 {/* Chat message list */}
                 {messages.map((message) => (

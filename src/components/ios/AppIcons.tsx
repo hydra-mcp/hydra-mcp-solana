@@ -283,7 +283,7 @@ export const SmartWalletIcon = ({ className }: { className?: string }) => {
                         <Wallet className="w-9 h-9 text-white" />
                     </motion.div>
 
-                    {/* 钱币动画效果 */}
+                    {/* money animation effect */}
                     <motion.div
                         className="absolute top-1 right-1"
                         initial={{ opacity: 0, scale: 0.5, x: -5, y: 10 }}
@@ -302,7 +302,7 @@ export const SmartWalletIcon = ({ className }: { className?: string }) => {
                         <div className="w-2 h-2 bg-yellow-300 rounded-full shadow-glow-sm" />
                     </motion.div>
 
-                    {/* 智能连接线效果 */}
+                    {/* smart connection line effect */}
                     <motion.div
                         className="absolute inset-0 flex items-center justify-center"
                         initial={{ opacity: 0 }}
@@ -316,7 +316,7 @@ export const SmartWalletIcon = ({ className }: { className?: string }) => {
                         <div className="w-12 h-12 rounded-full border-2 border-white/30 border-dashed" />
                     </motion.div>
 
-                    {/* 智能钱包标识 */}
+                    {/* smart wallet identifier */}
                     {/* <motion.div
                         className="absolute -bottom-1 -right-1 bg-white/20 backdrop-blur-sm px-1 rounded text-[8px] font-bold text-white"
                         animate={{

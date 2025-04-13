@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiRequest } from '@/lib/api';
 import phamtomLogo from './phamtom.svg';
+import { VersionedTransaction } from '@solana/web3.js';
 
 interface PhantomLoginFormProps {
     isActive: boolean;
@@ -17,23 +18,6 @@ interface NonceResponse {
     success: boolean;
     nonce: string;
     expires_in: number;
-}
-
-// Update global Window interface definition to include Phantom type
-declare global {
-    interface Window {
-        phantom?: {
-            solana?: {
-                isPhantom: boolean;
-                connect: () => Promise<{ publicKey: { toString: () => string } }>;
-                signMessage: (message: Uint8Array, encoding: string) => Promise<{ signature: any }>;
-                disconnect: () => Promise<void>;
-                request: (params: any) => Promise<any>;
-                on: (event: string, callback: any) => void;
-                removeAllListeners: () => void;
-            };
-        };
-    }
 }
 
 export function PhantomLoginForm({ isActive }: PhantomLoginFormProps) {

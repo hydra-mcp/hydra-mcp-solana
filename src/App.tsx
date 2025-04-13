@@ -13,6 +13,8 @@ import { WalletFinder } from '@/pages/WalletFinder';
 import { useToast } from '@/hooks/use-toast';
 import { CaSignal } from '@/pages/CaSignal';
 import { SmartWallet } from './pages/SmartWallet';
+import SolanaTransactionDemo from './pages/SolanaTransactionDemo';
+import SolanaPaymentPage from './pages/SolanaPaymentPage';
 
 function App() {
   return (
@@ -45,14 +47,16 @@ function AppContent() {
         {/* AppLayout Routes */}
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/chat" element={<ChatPage />} />
-          <Route path="/ca-signal" element={<CaSignal />} />
-          <Route path="/smart-wallet" element={<SmartWallet />} />
+          {/* <Route path="/chat" element={<ChatPage />} /> */}
+          {/* <Route path="/ca-signal" element={<CaSignal />} /> */}
+          {/* <Route path="/smart-wallet" element={<SmartWallet />} /> */}
+          <Route path="/solana-transaction-demo" element={<SolanaTransactionDemo />} />
+          <Route path="/solana-payment" element={<SolanaPaymentPage />} />
         </Route>
 
         {/* iOS Layout Routes - These don't use the AppLayout */}
         <Route path="/ios-desktop" element={<IOSDesktop />} />
-        <Route path="/wallet-finder" element={<WalletFinder isModal={true} />} />
+        {/* <Route path="/wallet-finder" element={<WalletFinder isModal={true} />} /> */}
       </Route>
 
       {/* Fallback Route */}

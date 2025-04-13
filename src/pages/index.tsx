@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tablet } from 'lucide-react';
+import { Tablet, Wallet } from 'lucide-react';
 
 export default function Home() {
     return (
@@ -14,30 +14,6 @@ export default function Home() {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    <Card className="p-6 flex flex-col h-full">
-                        <h2 className="text-2xl font-semibold mb-2">Voice Call</h2>
-                        <p className="text-gray-600 mb-4 flex-grow">
-                            Experience voice call interactions with virtual assistants featuring multiple personas and customizable voice parameters.
-                        </p>
-                        <div className="mt-auto">
-                            <Link to="/voice">
-                                <Button className="w-full">Start Experience</Button>
-                            </Link>
-                        </div>
-                    </Card>
-
-                    <Card className="p-6 flex flex-col h-full">
-                        <h2 className="text-2xl font-semibold mb-2">Customization Demo</h2>
-                        <p className="text-gray-600 mb-4 flex-grow">
-                            Explore multiple assistant configurations, customize voice parameters, and learn about advanced features and options.
-                        </p>
-                        <div className="mt-auto">
-                            <Link to="/voice-demo">
-                                <Button className="w-full" variant="outline">View Demo</Button>
-                            </Link>
-                        </div>
-                    </Card>
-
                     <Card className="p-6 flex flex-col h-full border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
                         <div className="flex items-center mb-2">
                             <Tablet className="w-6 h-6 text-blue-500 mr-2" />
@@ -50,6 +26,23 @@ export default function Home() {
                             <Link to="/ios-desktop">
                                 <Button className="w-full bg-blue-500 hover:bg-blue-600">
                                     Enter iOS Experience
+                                </Button>
+                            </Link>
+                        </div>
+                    </Card>
+
+                    <Card className="p-6 flex flex-col h-full border-purple-300 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30">
+                        <div className="flex items-center mb-2">
+                            <Wallet className="w-6 h-6 text-purple-500 mr-2" />
+                            <h2 className="text-2xl font-semibold">Solana Transaction</h2>
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-400 mb-4 flex-grow">
+                            Test Phantom wallet integration with Solana blockchain. Connect your wallet, send SOL transactions, and view transaction details on Solana Explorer.
+                        </p>
+                        <div className="mt-auto">
+                            <Link to="/solana-payment">
+                                <Button className="w-full bg-purple-500 hover:bg-purple-600">
+                                    Open Transaction Demo
                                 </Button>
                             </Link>
                         </div>
