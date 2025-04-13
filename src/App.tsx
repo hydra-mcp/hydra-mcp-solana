@@ -13,7 +13,6 @@ import { WalletFinder } from '@/pages/WalletFinder';
 import { useToast } from '@/hooks/use-toast';
 import { CaSignal } from '@/pages/CaSignal';
 import { SmartWallet } from './pages/SmartWallet';
-import SolanaTransactionDemo from './pages/SolanaTransactionDemo';
 import SolanaPaymentPage from './pages/SolanaPaymentPage';
 
 function App() {
@@ -50,7 +49,6 @@ function AppContent() {
           {/* <Route path="/chat" element={<ChatPage />} /> */}
           {/* <Route path="/ca-signal" element={<CaSignal />} /> */}
           {/* <Route path="/smart-wallet" element={<SmartWallet />} /> */}
-          <Route path="/solana-transaction-demo" element={<SolanaTransactionDemo />} />
           <Route path="/solana-payment" element={<SolanaPaymentPage />} />
         </Route>
 
