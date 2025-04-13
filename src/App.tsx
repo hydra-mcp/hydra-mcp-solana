@@ -179,8 +179,12 @@ function AppContent() {
           {/* <Route path="/chat" element={<ChatPage />} /> */}
           {/* <Route path="/ca-signal" element={<CaSignal />} /> */}
           {/* <Route path="/smart-wallet" element={<SmartWallet />} /> */}
+<<<<<<< HEAD
           <Route path="/solana-payment" element={<SolanaPaymentPage />} />
 >>>>>>> fcc14ea (refactor: remove unused SolanaTransactionDemo route from App component to streamline routing)
+=======
+          <Route path="/payment" element={<SolanaPaymentPage />} />
+>>>>>>> a66dc54 (refactor: rename SolanaPayment route and update related links for consistency)
         </Route>
 
         {/* iOS Layout Routes - These don't use the AppLayout */}
