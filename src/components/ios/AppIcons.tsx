@@ -1,4 +1,4 @@
-import { Wallet, MessageSquare, Settings, Image, Home, Search, Calendar, Mail, BarChart } from 'lucide-react';
+import { Wallet, MessageSquare, Settings, Image, Home, Search, Calendar, Mail, BarChart, DollarSign, CreditCard, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -376,4 +376,81 @@ export const DeepSearchIcon = ({ className }: { className?: string }) => {
     );
 };
 
+export const RechargeIcon = ({ className }: { className?: string }) => {
+    return (
+        <AppIconBase
+            color="#F7931A"  // Bitcoin orange color
+            secondaryColor="#9945FF"  // Solana purple color
+            className={className}
+            icon={
+                <div className="relative">
+                    {/* Main Icon */}
+                    <motion.div
+                        initial={{ scale: 1 }}
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            repeatType: "loop",
+                            ease: "easeInOut"
+                        }}
+                    >
+                        <Zap className="w-9 h-9 text-white" />
+                    </motion.div>
 
+                    {/* Floating Solana */}
+                    <motion.div
+                        className="absolute -top-1 -left-2"
+                        animate={{
+                            y: [-5, -10, -5],
+                            x: [0, -3, 0]
+                        }}
+                        transition={{
+                            duration: 3,
+                            delay: 0.5,
+                            repeat: Infinity,
+                            repeatType: "loop",
+                            ease: "easeInOut"
+                        }}
+                    >
+                        <div className="w-5 h-5 bg-[#9945FF] rounded-full flex items-center justify-center text-white font-bold text-[10px]">
+                            S
+                        </div>
+                    </motion.div>
+
+                    {/* Recharge Effect Circle */}
+                    <motion.div
+                        className="absolute inset-0 flex items-center justify-center"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: [0, 0.7, 0] }}
+                        transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            repeatType: "loop"
+                        }}
+                    >
+                        <div className="w-12 h-12 rounded-full border-2 border-white/40 border-dashed" />
+                    </motion.div>
+
+                    {/* Incoming Coin Animation */}
+                    <motion.div
+                        className="absolute inset-x-0 bottom-0 flex justify-center"
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{
+                            y: [20, 0, 0],
+                            opacity: [0, 1, 0],
+                            scale: [0.5, 1, 0.8]
+                        }}
+                        transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            repeatDelay: 1
+                        }}
+                    >
+                        <DollarSign className="w-4 h-4 text-white/80" />
+                    </motion.div>
+                </div>
+            }
+        />
+    );
+};

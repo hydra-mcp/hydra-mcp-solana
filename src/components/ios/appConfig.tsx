@@ -1,5 +1,5 @@
 import React, { ReactNode, lazy, Suspense } from 'react';
-import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, DeepSearchIcon } from './AppIcons';
+import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, DeepSearchIcon, RechargeIcon } from './AppIcons';
 import { cn } from '@/lib/utils';
 import {
     Calendar, Settings, Sliders, Image, Mail, Home, Search, SignalIcon,
@@ -7,7 +7,9 @@ import {
     Code,
     Bug,
     BookOpen,
-    Zap
+    Zap,
+    Wallet,
+    Shield
 } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { CASignalIcon } from './AppIcons';
@@ -63,6 +65,14 @@ const DeepSearchComponent = lazy(() => import('@/pages/DeepSearch').then(module 
         // Load DeepSearch component and set it to modal mode
         const { DeepSearch } = module;
         return <DeepSearch />;
+    }
+})));
+
+const SolRechargeComponent = lazy(() => import('@/pages/SolanaPaymentPage').then(module => ({
+    default: () => {
+        // Load SolanaPaymentPage component and set it to modal mode
+        const { SolanaPaymentPage } = module;
+        return <SolanaPaymentPage />;
     }
 })));
 
@@ -430,6 +440,29 @@ export const appRegistry: Record<string, AppDefinition> = {
                 { title: 'Debugging Assistant', content: 'AI-powered debugging and error resolution', icon: <Bug className="h-5 w-5" /> },
                 { title: 'Performance Optimization', content: 'Code optimization and performance improvement suggestions', icon: <Zap className="h-5 w-5" /> },
                 { title: 'Learning Assistant', content: 'Interactive learning and improvement guidance', icon: <BookOpen className="h-5 w-5" /> }
+            ]
+        }
+    },
+    solRecharge: {
+        id: 'sol-recharge',
+        path: '/sol-recharge',
+        title: 'Recharge',
+        icon: <RechargeIcon />,
+        component: (
+            <Suspense fallback={<LoadingPlaceholder />}>
+                <SolRechargeComponent />
+            </Suspense>
+        ),
+        defaultSize,
+        description: 'Convenient SOL token recharge service with real-time transaction monitoring and secure wallet integration.',
+        status: 'online',
+        chatModuleTexts: {
+            welcomeDescription: 'Welcome to SOL Recharge service. We provide secure and efficient SOL token recharge with real-time transaction monitoring.',
+            modules: [
+                { title: 'Wallet Integration', content: 'Secure connection with Phantom wallet for seamless transactions', icon: <Wallet className="h-5 w-5" /> },
+                { title: 'Transaction History', content: 'View and track all your SOL recharge transactions', icon: <Activity className="h-5 w-5" /> },
+                { title: 'Balance Management', content: 'Monitor your SOL balance and transaction limits', icon: <BarChart3 className="h-5 w-5" /> },
+                { title: 'Security Features', content: 'Advanced security measures for safe transactions', icon: <Shield className="h-5 w-5" /> }
             ]
         }
     },

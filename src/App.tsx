@@ -13,7 +13,7 @@ import { WalletFinder } from '@/pages/WalletFinder';
 import { useToast } from '@/hooks/use-toast';
 import { CaSignal } from '@/pages/CaSignal';
 import { SmartWallet } from './pages/SmartWallet';
-import SolanaPaymentPage from './pages/SolanaPaymentPage';
+import { SolanaPaymentPage } from './pages/SolanaPaymentPage';
 
 function App() {
   return (

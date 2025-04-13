@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { processPayment } from '@/lib/solanaPaymentService';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Wallet, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 
@@ -38,31 +38,48 @@ export const SolanaPayment: React.FC<SolanaPaymentProps> = ({
             setSuccess(false);
             setPaymentAttempt(prev => prev + 1);
 
-            // use custom status handler function
+            // Use custom status processing function
             const updateStatus = (status: string) => {
                 setStatus(status);
 
-                // update progress bar based on status
+                // Update progress bar based on status
                 if (status.includes('Preparing to pay')) {
                     setProgress(10);
+                    setStatus('Preparing to pay...');
                 } else if (status.includes('Creating payment request')) {
                     setProgress(20);
+                    setStatus('Creating payment request...');
                 } else if (status.includes('Creating transaction')) {
                     setProgress(30);
+                    setStatus('Creating transaction...');
                 } else if (status.includes('Please confirm the transaction in your wallet')) {
                     setProgress(40);
+                    setStatus('Please confirm the transaction in your wallet...');
                 } else if (status.includes('Transaction sent')) {
                     setProgress(60);
+                    setStatus('Transaction sent, waiting for confirmation...');
                 } else if (status.includes('Verifying transaction')) {
-                    // extract verification progress
+                    // Extract verification progress
                     const match = status.match(/\((\d+)\/(\d+)\)/);
                     if (match && match.length === 3) {
                         const current = parseInt(match[1]);
                         const total = parseInt(match[2]);
-                        setProgress(60 + Math.floor((current / total) * 30));
+                        const progressValue = 60 + Math.floor((current / total) * 30);
+                        setProgress(progressValue);
+                        setStatus(`Verifying transaction (${current}/${total})...`);
                     }
                 } else if (status.includes('Payment successful')) {
                     setProgress(100);
+                    setStatus('Payment successful!');
+                } else {
+                    // If it's other English status, try to translate common information
+                    if (status.includes('failed')) {
+                        setStatus('Payment failed: ' + status.replace('Payment failed:', ''));
+                    } else if (status.includes('error')) {
+                        setStatus('Payment process error: ' + status.replace('Payment process error:', ''));
+                    } else {
+                        setStatus(status);
+                    }
                 }
             };
 
@@ -85,10 +102,21 @@ export const SolanaPayment: React.FC<SolanaPaymentProps> = ({
         }
     };
 
+    // Format SOL amount for display
+    const formatSol = (amount: number): string => {
+        return amount.toLocaleString(undefined, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 6
+        });
+    };
+
     return (
         <Card className="w-full max-w-md mx-auto">
             <CardHeader>
-                <CardTitle>Confirm payment</CardTitle>
+                <div className="flex items-center">
+                    <Wallet className="w-5 h-5 mr-2 text-blue-500" />
+                    <CardTitle>Confirm payment</CardTitle>
+                </div>
                 <CardDescription>{description}</CardDescription>
             </CardHeader>
 
@@ -102,13 +130,13 @@ export const SolanaPayment: React.FC<SolanaPaymentProps> = ({
                     )}
 
                     <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Product</span>
+                        <span className="text-sm font-medium">Project</span>
                         <span className="text-sm">{productName}</span>
                     </div>
 
                     <div className="flex justify-between items-center font-bold">
                         <span>Amount</span>
-                        <span className="text-xl">{amountSol} SOL</span>
+                        <span className="text-xl">{formatSol(amountSol)} SOL</span>
                     </div>
 
                     {isProcessing && (
@@ -119,6 +147,21 @@ export const SolanaPayment: React.FC<SolanaPaymentProps> = ({
                             </div>
                             <Progress value={progress} className="h-2" />
                             <p className="text-sm text-gray-500 mt-2">{status}</p>
+
+                            {/* Add payment step instructions */}
+                            {status.includes('Please confirm the transaction in your wallet') && (
+                                <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                    <div className="flex items-start">
+                                        <Info className="h-4 w-4 text-blue-500 mt-0.5 mr-2" />
+                                        <div>
+                                            <p className="text-sm font-medium text-blue-700">Please pay attention to wallet notifications</p>
+                                            <p className="text-xs text-blue-600 mt-1">
+                                                Phantom wallet will pop up a confirmation window, please click confirm to complete the transaction.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
