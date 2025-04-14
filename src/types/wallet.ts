@@ -2,7 +2,7 @@
 export interface UserWalletInfo {
     address: string;                 // Wallet address
     wallet_balance: number;          // Wallet SOL balance
-    recharged_sol_balance: number;   // Recharged account SOL balance
+    user_sol_balance: number;        // User SOL balance
     usdValue?: number;               // USD value (optional)
     lastUpdated?: number;            // Last update timestamp
 }
@@ -38,10 +38,47 @@ export interface RechargeHistory {
     };
 }
 
+// Consumption type enum
+export enum ConsumptionType {
+    CA_ANALYSIS = "CA_ANALYSIS", // CA analysis consumption
+    WALLET_FINDER = "WALLET_FINDER",     // Wallet finder consumption
+    PREMIUM_FEATURE = "PREMIUM_FEATURE" // Premium feature consumption
+}
+
+// Consumption status enum
+export enum ConsumptionStatus {
+    SUCCESS = "SUCCESS",      // Successful consumption
+    FAILED = "FAILED",        // Failed consumption
+    REFUNDED = "REFUNDED"     // Refunded consumption
+}
+
+// Consumption record
+export interface ConsumptionRecord {
+    id: string;               // Consumption record ID
+    amount: number;           // Consumption amount (SOL)
+    consumption_type: ConsumptionType; // Consumption type
+    status: ConsumptionStatus; // Consumption status
+    feature_id: string | null; // Feature/service ID
+    description: string | null; // Consumption description
+    quantity: number;         // Usage count/quantity
+    created_at: string;       // Creation time (ISO format)
+}
+
+// Consumption history
+export interface ConsumptionHistory {
+    data: ConsumptionRecord[]; // Consumption record list
+    meta: {
+        offset: number;       // Current offset
+        limit: number;        // Number of records per page
+        total: number;        // Total number of records
+        has_more: boolean;    // Whether there are more records
+    };
+}
+
 // Get wallet balance response
 export interface BalanceResponse {
     wallet_balance: number;          // Wallet SOL balance
-    recharged_sol_balance: number;   // Recharged SOL balance
+    user_sol_balance: number;        // User SOL balance
     usdValue?: number;               // USD value (optional)
     lastUpdated: number;             // Update timestamp
 }
