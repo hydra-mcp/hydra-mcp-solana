@@ -47,7 +47,7 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
                     <div>
                         <p className="font-medium">{message.content || 'Connection error'}</p>
                         <p className="text-sm text-red-400 mt-1">
-                            {errorStatus ? `Server returned error (${errorStatus})` : 'Cannot connect to the server, please check your network connection or try again later.'}
+                            {/* {errorStatus ? `Server returned error (${errorStatus})` : 'Cannot connect to the server, please check your network connection or try again later.'} */}
                         </p>
                     </div>
                 </div>
@@ -60,7 +60,7 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
                 <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                 <div>
                     <p>{message.content || 'Error occurred while generating response.'}</p>
-                    {errorStatus && <p className="text-sm text-red-400 mt-1">Error code: {errorStatus}</p>}
+                    {/* {errorStatus && <p className="text-sm text-red-400 mt-1">Error code: {errorStatus}</p>} */}
                 </div>
             </div>
         );
