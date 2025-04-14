@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { SolanaPayment } from '@/components/SolanaPayment';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, ArrowLeft, CheckCircle2, Wallet, History, ExternalLink, Zap } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle2, Wallet, History, ExternalLink, Zap, ShoppingCart } from 'lucide-react';
 import { WalletInfoCard, WalletInfoCardRef } from '@/components/WalletInfoCard';
 import { RechargeHistory } from '@/components/RechargeHistory';
+import { ConsumptionHistory } from '@/components/ConsumptionHistory';
 import { connectWallet, disconnectWallet, getCurrentWalletAddress } from '@/lib/walletService';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/PageHeader';
@@ -135,7 +136,7 @@ export const SolanaPaymentPage: React.FC = () => {
                     {/* Right: Recharge form/history */}
                     <div className="lg:col-span-2">
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                            <TabsList className="grid grid-cols-2 mb-6">
+                            <TabsList className="grid grid-cols-3 mb-6">
                                 <TabsTrigger value="recharge" className="flex items-center">
                                     <Wallet className="mr-2 h-4 w-4" />
                                     Recharge
@@ -143,6 +144,10 @@ export const SolanaPaymentPage: React.FC = () => {
                                 <TabsTrigger value="history" className="flex items-center">
                                     <History className="mr-2 h-4 w-4" />
                                     Recharge History
+                                </TabsTrigger>
+                                <TabsTrigger value="consumption" className="flex items-center">
+                                    <ShoppingCart className="mr-2 h-4 w-4" />
+                                    Consumption History
                                 </TabsTrigger>
                             </TabsList>
 
@@ -290,6 +295,10 @@ export const SolanaPaymentPage: React.FC = () => {
 
                             <TabsContent value="history">
                                 <RechargeHistory walletAddress={walletAddress || undefined} limit={10} />
+                            </TabsContent>
+
+                            <TabsContent value="consumption">
+                                <ConsumptionHistory walletAddress={walletAddress || undefined} limit={10} />
                             </TabsContent>
                         </Tabs>
                     </div>

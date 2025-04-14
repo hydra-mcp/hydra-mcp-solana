@@ -91,7 +91,7 @@ export const WalletInfoCard = forwardRef<WalletInfoCardRef, WalletInfoCardProps>
                     <div className="space-y-3">
                         <div className="space-y-1">
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-500">Wallet Address</span>
+                                <span className="text-sm text-gray-500">Connected Wallet Address</span>
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -134,9 +134,9 @@ export const WalletInfoCard = forwardRef<WalletInfoCardRef, WalletInfoCardProps>
                                 {/* Wallet balance card */}
                                 <ReusableBalanceCard
                                     icon={<Wallet />}
-                                    title="Wallet Balance"
-                                    balance={walletInfo.wallet_balance}
-                                    description="Available in your connected Solana wallet"
+                                    title="Account Balance"
+                                    balance={walletInfo.user_sol_balance}
+                                    description="Available Solana balance in your account"
                                     color="#F7931A"
                                 />
 
@@ -157,9 +157,9 @@ export const WalletInfoCard = forwardRef<WalletInfoCardRef, WalletInfoCardProps>
                                 {/* Recharged balance card */}
                                 <ReusableBalanceCard
                                     icon={<CreditCard />}
-                                    title="Account Balance"
-                                    balance={walletInfo.recharged_sol_balance}
-                                    description="Recharged SOL available in your account"
+                                    title="Wallet Balance"
+                                    balance={walletInfo.wallet_balance}
+                                    description="Available in your connected Solana wallet"
                                     color="#9945FF"
                                 />
                             </div>

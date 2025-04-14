@@ -1,6 +1,6 @@
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { apiRequest } from '@/lib/api';
-import { UserWalletInfo, BalanceResponse, RechargeHistory, RechargeOrder } from '@/types/wallet';
+import { UserWalletInfo, BalanceResponse, RechargeHistory, RechargeOrder, ConsumptionHistory, ConsumptionRecord, ConsumptionType } from '@/types/wallet';
 import { PhantomProvider, PhantomWindow } from '@/types/phantom';
 
 // Connect wallet
@@ -86,7 +86,7 @@ export const getWalletInfo = async (walletAddress?: string): Promise<UserWalletI
         return {
             address,
             wallet_balance: balanceData.wallet_balance,
-            recharged_sol_balance: balanceData.recharged_sol_balance,
+            user_sol_balance: balanceData.user_sol_balance,
             usdValue: balanceData.usdValue,
             lastUpdated: balanceData.lastUpdated
         };
@@ -97,7 +97,7 @@ export const getWalletInfo = async (walletAddress?: string): Promise<UserWalletI
         return {
             address,
             wallet_balance: 0,
-            recharged_sol_balance: 0,
+            user_sol_balance: 0,
             lastUpdated: Date.now()
         };
     }
@@ -132,6 +132,58 @@ export const getRechargeHistory = async (limit: number = 10, offset: number = 0)
         };
     } catch (error) {
         console.error("Failed to get recharge history:", error);
+
+        // If API is not available, return empty history
+        return {
+            data: [],
+            meta: {
+                offset,
+                limit,
+                total: 0,
+                has_more: false
+            }
+        };
+    }
+};
+
+// Get consumption history
+export const getConsumptionHistory = async (
+    limit: number = 10,
+    offset: number = 0,
+    consumptionType?: ConsumptionType
+): Promise<ConsumptionHistory> => {
+    const walletAddress = getCurrentWalletAddress();
+
+    if (!walletAddress) {
+        throw new Error("Wallet not connected");
+    }
+
+    try {
+        let url = `/web3/solana/consumption-history?offset=${offset}&limit=${limit}`;
+        if (consumptionType) {
+            url += `&consumption_type=${consumptionType}`;
+        }
+
+        const response = await apiRequest<{
+            success: boolean,
+            data: ConsumptionRecord[],
+            message: string,
+            meta: {
+                offset: number,
+                limit: number,
+                total: number,
+                has_more: boolean
+            }
+        }>(url, {
+            method: 'GET'
+        });
+
+        return {
+            data: response.data,
+            meta: response.meta
+        };
+    } catch (error) {
+        console.error("Failed to get consumption history:", error);
 
         // If API is not available, return empty history
         return {
