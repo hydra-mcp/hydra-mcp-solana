@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { createPhantom, Position } from "@phantom/wallet-sdk";
 import { createSolanaClient, LAMPORTS_PER_SOL, address } from "gill";
+import { PhantomProvider, PhantomWindow } from '@/types/phantom';
 
 // Component properties interface
 interface PhantomWalletProps {
@@ -145,7 +146,7 @@ export const PhantomWallet = ({
 
     // Check if the browser extension version of Phantom wallet is available
     const checkBrowserExtension = useCallback(() => {
-        const provider = window.phantom?.solana;
+        const provider = window.phantom?.solana as PhantomProvider | undefined;
         return !!(provider && provider.isPhantom);
     }, []);
 
@@ -208,9 +209,15 @@ export const PhantomWallet = ({
                         // Modify this part of the code to avoid using the non-existent isConnected method
                         // Use the getAccounts method directly to check if connected
                         try {
-                            const accounts = await window.phantom.solana.request({ method: "getAccounts" });
-                            if (accounts && accounts.length > 0 && isComponentMounted) {
-                                const publicKeyString = accounts[0].toString();
+                            const provider = window.phantom.solana as PhantomProvider;
+                            const accounts = await provider.request("connect", {});
+
+                            // Check if accounts is an array and has elements
+                            const accountsArray = Array.isArray(accounts) ? accounts :
+                                (accounts && typeof accounts === 'object' && 'publicKey' in accounts) ? [accounts.publicKey.toString()] : [];
+
+                            if (accountsArray.length > 0 && isComponentMounted) {
+                                const publicKeyString = accountsArray[0].toString();
                                 setPublicKey(publicKeyString);
                                 setIsConnected(true);
                                 console.log("Wallet connected:", publicKeyString);
@@ -260,7 +267,12 @@ export const PhantomWallet = ({
 
     // Listen for wallet account changes
     useEffect(() => {
-        const handleAccountsChanged = (accounts: string[]) => {
+        // Function to handle account changes
+        const handleAccountsChanged = (event: any) => {
+            // Check if event contains accounts information
+            const accounts = Array.isArray(event) ? event :
+                (event && typeof event === 'object' && 'accounts' in event) ? event.accounts : [];
+
             if (accounts.length === 0) {
                 // User disconnected
                 setIsConnected(false);
@@ -277,12 +289,15 @@ export const PhantomWallet = ({
 
         if (window.phantom?.solana) {
             // Listen for account change events
-            window.phantom.solana.on("accountsChanged", handleAccountsChanged);
+            const provider = window.phantom.solana as PhantomProvider;
+            // Use correct event type from PhantomEvent
+            provider.on("connect", handleAccountsChanged);
         }
 
         return () => {
             if (window.phantom?.solana) {
-                window.phantom.solana.removeAllListeners();
+                const provider = window.phantom.solana as PhantomProvider;
+                provider.removeAllListeners();
             }
         };
     }, [getSolBalance]);

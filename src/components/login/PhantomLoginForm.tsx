@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { apiRequest } from '@/lib/api';
 import phamtomLogo from './phamtom.svg';
 import { VersionedTransaction } from '@solana/web3.js';
+import { PhantomProvider, PhantomWindow } from '@/types/phantom';
 
 interface PhantomLoginFormProps {
     isActive: boolean;
@@ -33,7 +34,7 @@ export function PhantomLoginForm({ isActive }: PhantomLoginFormProps) {
 
     // Check if Phantom wallet is installed
     const checkForPhantomWallet = useCallback(() => {
-        if (window.phantom?.solana) {
+        if ((window as unknown as PhantomWindow).phantom?.solana) {
             setHasPhantomWallet(true);
             setError(null);
         } else {
@@ -71,8 +72,11 @@ export function PhantomLoginForm({ isActive }: PhantomLoginFormProps) {
             // Convert message to UTF-8 encoded byte array
             const encodedMessage = new TextEncoder().encode(message);
 
+            // Add type assertion
+            const provider = window.phantom.solana as PhantomProvider;
+
             // Request user to sign the message
-            const signedMessage = await window.phantom.solana.signMessage(encodedMessage, "utf8");
+            const signedMessage = await provider.signMessage(encodedMessage, "utf8");
 
             // Return the Base64 encoded signature
             return signedMessage.signature;
@@ -95,8 +99,10 @@ export function PhantomLoginForm({ isActive }: PhantomLoginFormProps) {
                 return;
             }
 
+            const provider = window.phantom.solana as PhantomProvider;
+
             // Step 1: Connect wallet and get public key
-            const resp = await window.phantom.solana.connect();
+            const resp = await provider.connect();
             const walletPublicKey = resp.publicKey.toString();
             setPublicKey(walletPublicKey);
 

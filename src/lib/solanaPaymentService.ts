@@ -6,6 +6,7 @@ import {
     LAMPORTS_PER_SOL
 } from '@solana/web3.js';
 import { apiRequest } from '@/lib/api';
+import { PhantomProvider, PhantomWindow } from '@/types/phantom';
 
 export interface PaymentRequest {
     amount_lamports: number;
@@ -48,12 +49,6 @@ export interface VerificationResult {
     message?: string;
     errors?: Record<string, string>;
 }
-
-// Phantom wallet type definition
-interface PhantomWallet {
-    publicKey: { toString(): string };
-}
-
 
 // create payment request
 export const createPaymentRequest = async (
@@ -115,12 +110,12 @@ export const processPayment = async (
         onStatusChange?.('Preparing to pay...');
 
         // 1. check if wallet is available
-        if (!window.phantom?.solana) {
+        if (!(window as unknown as PhantomWindow).phantom?.solana) {
             throw new Error('Phantom wallet not detected, please install Phantom wallet extension');
         }
 
         // 2. connect wallet
-        const provider = window.phantom.solana;
+        const provider = (window as unknown as PhantomWindow).phantom!.solana as PhantomProvider;
         const connection = await provider.connect();
         const publicKey = connection.publicKey;
         const payerWallet = publicKey.toString();
@@ -208,16 +203,3 @@ export const processPayment = async (
         throw error;
     }
 };
-
-// add type definition, let TypeScript recognize window.phantom
-declare global {
-    interface Window {
-        phantom?: {
-            solana?: {
-                connect: () => Promise<{ publicKey: { toString(): string } }>;
-                disconnect: () => Promise<void>;
-                signAndSendTransaction: (options: any) => Promise<{ signature: string }>;
-            };
-        };
-    }
-} 

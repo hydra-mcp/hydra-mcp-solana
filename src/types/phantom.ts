@@ -21,15 +21,7 @@ interface ConnectOpts {
 // Add Phantom wallet type declaration
 export interface PhantomProvider {
     isPhantom?: boolean;
-    // connect: () => Promise<{ publicKey: { toString: () => string } }>;
-    // disconnect: () => Promise<void>;
-    // signAndSendTransaction: (transaction: Transaction | VersionedTransaction) => Promise<{ signature: string }>;
-    // signTransaction: (transaction: Transaction) => Promise<Transaction>;
-    // signAllTransactions: (transactions: Transaction[]) => Promise<Transaction[]>;
-    // request: (params: any) => Promise<any>;
-    // on: (event: string, callback: any) => void;
-    // removeAllListeners: () => void;
-
+    removeAllListeners: () => void;
     publicKey: PublicKey | null;
     isConnected: boolean | null;
     signAndSendTransaction: (
@@ -47,13 +39,14 @@ export interface PhantomProvider {
     request: (method: PhantomRequestMethod, params: any) => Promise<unknown>;
 }
 
+// Export the Phantom type for window object
+export interface PhantomWindow {
+    phantom?: {
+        solana?: PhantomProvider;
+    };
+}
 
-
-// Declare global Window object contains phantom
-declare global {
-    interface Window {
-        phantom?: {
-            solana?: PhantomProvider;
-        };
-    }
+// Type guard to check if window has phantom
+export function hasPhantomWallet(window: any): window is Window & PhantomWindow {
+    return window.phantom && window.phantom.solana;
 }

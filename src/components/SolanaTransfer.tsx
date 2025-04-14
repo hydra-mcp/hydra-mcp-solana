@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 // import Phantom type definition
-import { PhantomProvider } from '@/types/phantom';
+import { PhantomProvider, PhantomWindow } from '@/types/phantom';
 
 type SolanaTransferProps = {
     walletAddress: string;
@@ -60,7 +60,7 @@ const SolanaTransfer = ({ walletAddress }: SolanaTransferProps) => {
             const { data } = await response.json();
 
             // use Phantom wallet to sign and send transaction
-            const provider = window.phantom?.solana;
+            const provider = (window as unknown as PhantomWindow).phantom?.solana as PhantomProvider;
             if (!provider) throw new Error('Phantom wallet not connected');
 
             // call request method correctly, according to PhantomProvider interface definition
