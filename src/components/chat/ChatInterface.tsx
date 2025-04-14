@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Info, Menu } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { ChevronDown, Info, Menu, RefreshCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -29,10 +29,20 @@ export function ChatInterface({
     const { isDarkMode } = useTheme();
 
     const [isLocalStreaming, setIsLocalStreaming] = useState(false);
-    let streamingState = { isStreaming: isLocalStreaming, stages: [] };
+    let streamingState = {
+        isStreaming: isLocalStreaming,
+        stages: [],
+        messages: [],
+        clearMessages: () => { }
+    };
 
-    streamingState = useStreaming();
-    const { isStreaming, stages = [] } = streamingState;
+    try {
+        streamingState = useStreaming();
+    } catch (error) {
+        console.log('StreamingProvider not available in this context');
+    }
+
+    const { isStreaming, stages = [], clearMessages, messages = [] } = streamingState;
 
     const validStages = stages.filter(stage =>
         (stage.message && stage.message.trim() !== '') ||
@@ -53,7 +63,9 @@ export function ChatInterface({
         config,
         messagesEndRef,
         handleScroll,
-        checkScrollState
+        checkScrollState,
+        sendMessage,
+        isProcessing
     } = useChatContext();
 
     useEffect(() => {
@@ -149,6 +161,55 @@ export function ChatInterface({
         setPaddingTop(`${transform}rem`);
     }, [validStages]);
 
+    // check if the current streaming state has an error
+    const hasStreamingError = messages.length > 0 && messages[messages.length - 1].status === 'error';
+
+    const handleRetry = useCallback(() => {
+        if (!currentChat || !currentChat.messages || currentChat.messages.length === 0 || isProcessing) {
+            return;
+        }
+
+        // find the last user message, for retry
+        const messagesWithoutSystem = currentChat.messages.filter(msg => msg.sender !== 'system');
+        let lastUserMessageIndex = -1;
+
+        // find the last user message, for retry
+        for (let i = messagesWithoutSystem.length - 1; i >= 0; i--) {
+            if (messagesWithoutSystem[i].sender === 'user') {
+                lastUserMessageIndex = i;
+                break;
+            }
+        }
+
+        if (lastUserMessageIndex === -1) {
+            console.warn("no user message found for retry");
+            return;
+        }
+
+        // get the last user message, for retry
+        const lastUserMessage = messagesWithoutSystem[lastUserMessageIndex];
+
+        // clean up the process:
+        // 1. close the current stream, reset the error status
+        if (clearMessages) {
+            clearMessages();
+        }
+
+        // 2. retry the message
+        console.log(`retry message: ${lastUserMessage.content}`);
+
+        try {
+            sendMessage(lastUserMessage.content);
+
+            // 3. scroll to the bottom
+            setTimeout(() => {
+                scrollToBottom();
+            }, 100);
+        } catch (error) {
+            console.error("retry message failed:", error);
+        }
+    }, [currentChat, sendMessage, scrollToBottom, clearMessages, isProcessing]);
+
     return (
         <div
             onClick={handleWindowClick}
@@ -236,6 +297,7 @@ export function ChatInterface({
                                 onNewChat={createNewChat}
                                 transformY={transformY}
                                 paddingTop={paddingTop}
+                                onRetry={handleRetry}
                             />
 
                             {/* Message end reference - put after Stage */}

@@ -50,6 +50,7 @@ export interface MessageChunk {
     };
     error?: {
         message: string;
-        type: string;
+        type?: string;
+        status?: number;
     };
 } 

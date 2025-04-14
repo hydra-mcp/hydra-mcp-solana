@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { StreamingMessage } from '@/lib/streaming/types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle, AlertTriangle, Lock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock } from '@/components/ui/code-block';
@@ -23,9 +23,45 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
 
     // Handle error status
     if (message.status === 'error') {
+        const errorType = message.metadata?.errorType || 'unknown';
+        const errorStatus = message.metadata?.errorStatus;
+
+        // Handle different types of errors
+        if (errorType === 'auth_error' || errorStatus === 401) {
+            return (
+                <div className="flex items-start space-x-2 text-red-500">
+                    <Lock className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <p className="font-medium">{message.content || 'Authentication expired, please login again'}</p>
+                        <p className="text-sm text-red-400 mt-1">Your session has expired, please refresh the page or login again to continue using.</p>
+                    </div>
+                </div>
+            );
+        }
+
+        // Handle connection errors
+        if (errorType === 'connection_error') {
+            return (
+                <div className="flex items-start space-x-2 text-red-500">
+                    <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <p className="font-medium">{message.content || 'Connection error'}</p>
+                        <p className="text-sm text-red-400 mt-1">
+                            {errorStatus ? `Server returned error (${errorStatus})` : 'Cannot connect to the server, please check your network connection or try again later.'}
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        // Generic error
         return (
-            <div className="text-red-500">
-                {message.content || 'An error occurred while generating the response.'}
+            <div className="flex items-start space-x-2 text-red-500">
+                <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <div>
+                    <p>{message.content || 'Error occurred while generating response.'}</p>
+                    {errorStatus && <p className="text-sm text-red-400 mt-1">Error code: {errorStatus}</p>}
+                </div>
             </div>
         );
     }

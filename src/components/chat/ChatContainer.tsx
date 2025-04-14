@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { Chat } from '@/types/chat';
 import { StreamingMessageBubble } from '@/components/streaming/StreamingMessageBubble';
 import { EmptyChatState } from './EmptyChatState';
@@ -11,25 +11,49 @@ interface ChatContainerProps {
     onNewChat: () => void;
     transformY?: string;
     paddingTop?: string;
+    onRetry?: () => void;
 }
 
 export function ChatContainer({
     currentChat,
     onNewChat,
     transformY = 'translateY(0)',
-    paddingTop = '4rem'
+    paddingTop = '4rem',
+    onRetry
 }: ChatContainerProps) {
     const { isLoadingChats } = useChatContext();
+    const [lastError, setLastError] = useState<{
+        message: string;
+        type?: string;
+        status?: number;
+    } | null>(null);
 
-    // Get streaming context if available
     let isStreaming = false;
 
     try {
         const streamingContext = useStreaming();
         isStreaming = streamingContext.isStreaming;
+
+        const lastMessage = streamingContext.messages[streamingContext.messages.length - 1];
+        if (lastMessage && lastMessage.status === 'error' && lastMessage.sender === 'ai') {
+            if (!lastError && lastMessage.content.startsWith('Error:')) {
+                setLastError({
+                    message: lastMessage.content,
+                    type: lastMessage.metadata?.errorType,
+                    status: lastMessage.metadata?.errorStatus
+                });
+            }
+        }
     } catch (error) {
         console.log('StreamingProvider not available, using chat metadata for stages');
     }
+
+    const handleRetryMessage = useCallback(() => {
+        setLastError(null);
+        if (onRetry) {
+            onRetry();
+        }
+    }, [onRetry]);
 
     if (isLoadingChats) {
         return (
@@ -42,21 +66,32 @@ export function ChatContainer({
         );
     }
 
-    // Show empty state when there is no chat history
     if (!currentChat || currentChat.messages.length === 0) {
         return <EmptyChatState onNewChat={onNewChat} />;
     }
 
-    // Convert regular messages to standard display format, but filter out system messages
     const messages = currentChat.messages
         .filter(msg => msg.sender !== 'system')
-        .map(msg => ({
-            id: msg.id,
-            content: msg.content,
-            sender: msg.sender as 'user' | 'ai' | 'system',
-            status: 'completed',
-            createdAt: msg.createdAt
-        } as StreamingMessage));
+        .map(msg => {
+            const streamingMsg: StreamingMessage = {
+                id: msg.id,
+                content: msg.content,
+                sender: msg.sender as 'user' | 'ai' | 'system',
+                status: 'completed',
+                createdAt: msg.createdAt
+            };
+
+            if (msg.sender === 'ai' && msg === currentChat.messages[currentChat.messages.length - 1] && lastError) {
+                streamingMsg.status = 'error';
+                streamingMsg.content = lastError.message || msg.content;
+                streamingMsg.metadata = {
+                    errorType: lastError.type,
+                    errorStatus: lastError.status
+                };
+            }
+
+            return streamingMsg;
+        });
 
     if (messages.length === 0) {
         return <EmptyChatState onNewChat={onNewChat} />;
@@ -65,16 +100,14 @@ export function ChatContainer({
     return (
         <div className="py-16 space-y-4" style={{ transform: transformY, transition: 'transform 0.3s ease-in-out' }}>
             <div className="space-y-6">
-                {/* Chat message list */}
                 {messages.map((message) => (
                     <StreamingMessageBubble
                         key={message.id}
                         message={message}
-                        isStreaming={isStreaming && message.sender === 'ai' && message === messages[messages.length - 1]}
+                        isStreaming={isStreaming && message.sender === 'ai' && message === messages[messages.length - 1] && message.status !== 'error'}
+                        onRetry={message.status === 'error' ? handleRetryMessage : undefined}
                     />
                 ))}
-
-                {/* Message end marker moved to ChatInterface component */}
             </div>
         </div>
     );

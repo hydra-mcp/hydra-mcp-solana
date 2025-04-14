@@ -114,9 +114,18 @@ export async function sendSSERequest<T>(
             // Handle error event
             source.addEventListener('error', function (e) {
                 const event = e as SSEEvent;
-                const errorData = event.data || '';
+                let errorData = event.data || '';
                 const errorStatus = event.responseCode || 0;
-                const errorMessage = `SSE connection error: ${errorData || 'Unknown error'}`;
+                let errorMessage = ""
+                let errorType = ""
+                try {
+                    errorData = JSON.parse(errorData);
+                    errorMessage = (errorData as any).message || errorData;
+                    errorType = (errorData as any).type || "";
+                } catch (error) {
+                    console.warn('[SSEClient] Failed to parse error event:', error, errorData);
+                }
+                // const errorMessage = `SSE connection error: ${errorData || 'Unknown error'}`;
 
                 console.error('[SSEClient] Error:', errorMessage, errorStatus);
 
@@ -189,7 +198,8 @@ export async function sendSSERequest<T>(
                     type: 'error',
                     error: {
                         message: errorMessage,
-                        type: 'connection_error',
+                        // type: 'connection_error',
+                        type: errorType,
                         status: errorStatus
                     }
                 });
@@ -240,29 +250,29 @@ export async function sendSSERequest<T>(
             });
 
             // Handle content event
-            source.addEventListener('content', function (e) {
-                const event = e as SSEEvent;
-                const data = event.data || '';
+            // source.addEventListener('content', function (e) {
+            //     const event = e as SSEEvent;
+            //     const data = event.data || '';
 
-                try {
-                    const jsonData = JSON.parse(data);
-                    const content = jsonData.choices?.[0]?.delta?.content || jsonData.content || '';
+            //     try {
+            //         const jsonData = JSON.parse(data);
+            //         const content = jsonData.choices?.[0]?.delta?.content || jsonData.content || '';
 
-                    if (content) {
-                        callbacks.onChunk({
-                            type: 'content',
-                            content: content
-                        });
-                    }
-                } catch (error) {
-                    console.warn('[SSEClient] Failed to parse content event:', error, data);
-                    // Try to use data directly
-                    callbacks.onChunk({
-                        type: 'content',
-                        content: typeof data === 'string' ? data : ''
-                    });
-                }
-            });
+            //         if (content) {
+            //             callbacks.onChunk({
+            //                 type: 'content',
+            //                 content: content
+            //             });
+            //         }
+            //     } catch (error) {
+            //         console.warn('[SSEClient] Failed to parse content event:', error, data);
+            //         // Try to use data directly
+            //         callbacks.onChunk({
+            //             type: 'content',
+            //             content: typeof data === 'string' ? data : ''
+            //         });
+            //     }
+            // });
 
             // Handle message event (default event)
             source.addEventListener('message', function (e) {
