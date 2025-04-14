@@ -50,3 +50,12 @@ export interface PhantomWindow {
 export function hasPhantomWallet(window: any): window is Window & PhantomWindow {
     return window.phantom && window.phantom.solana;
 }
+
+// Extend the global Window interface to include phantom
+declare global {
+    interface Window {
+        phantom?: {
+            solana?: PhantomProvider;
+        };
+    }
+}
