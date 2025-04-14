@@ -1,16 +1,18 @@
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { apiRequest } from '@/lib/api';
 import { UserWalletInfo, BalanceResponse, RechargeHistory, RechargeOrder } from '@/types/wallet';
+import { PhantomProvider, PhantomWindow } from '@/types/phantom';
 
 // Connect wallet
 export const connectWallet = async (): Promise<string | null> => {
-    if (!window.phantom?.solana) {
+    if (!(window as unknown as PhantomWindow).phantom?.solana) {
         throw new Error("Phantom wallet not detected, please install Phantom wallet extension");
     }
 
     try {
         // Try to connect wallet
-        const resp = await window.phantom.solana.connect();
+        const provider = (window as unknown as PhantomWindow).phantom!.solana as PhantomProvider;
+        const resp = await provider.connect();
         const publicKey = resp.publicKey.toString();
 
         // Store wallet address
@@ -26,12 +28,13 @@ export const connectWallet = async (): Promise<string | null> => {
 
 // Disconnect wallet
 export const disconnectWallet = async (): Promise<void> => {
-    if (!window.phantom?.solana) {
+    if (!(window as unknown as PhantomWindow).phantom?.solana) {
         return;
     }
 
     try {
-        await window.phantom.solana.disconnect();
+        const provider = (window as unknown as PhantomWindow).phantom!.solana as PhantomProvider;
+        await provider.disconnect();
         localStorage.removeItem('wallet_address');
     } catch (error) {
         console.error("Failed to disconnect wallet:", error);
@@ -46,7 +49,7 @@ export const getCurrentWalletAddress = (): string | null => {
 
 // Check if wallet is connected
 export const isWalletConnected = async (): Promise<boolean> => {
-    if (!window.phantom?.solana) {
+    if (!(window as unknown as PhantomWindow).phantom?.solana) {
         return false;
     }
 
