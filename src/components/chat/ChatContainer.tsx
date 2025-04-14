@@ -1,8 +1,18 @@
+<<<<<<< HEAD
 import { Chat } from "@/types/chat";
 import { MessageBubble } from "./MessageBubble";
 import { memo, useEffect, useState } from "react";
 import { Bot, MessageSquarePlus, ArrowRight, Info, CheckCircle, Loader2, BrainCircuit, Sparkles, Zap, Stars, Lightbulb, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+=======
+import React, { useCallback, useState } from 'react';
+import { Chat } from '@/types/chat';
+import { StreamingMessageBubble } from '@/components/streaming/StreamingMessageBubble';
+import { EmptyChatState } from './EmptyChatState';
+import { StreamingMessage } from '@/lib/streaming/types';
+import { useStreaming } from '@/lib/streaming/StreamingContext';
+import { useChatContext } from '@/context/ChatContext';
+>>>>>>> f14550e (feat: enhance chat functionality with error handling and retry mechanism for streaming messages)
 
 <<<<<<< HEAD
 
@@ -17,7 +27,11 @@ interface ChatContainerProps {
     onNewChat: () => void;
     transformY?: string;
     paddingTop?: string;
+<<<<<<< HEAD
 >>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
+=======
+    onRetry?: () => void;
+>>>>>>> f14550e (feat: enhance chat functionality with error handling and retry mechanism for streaming messages)
 }
 
 interface ChatContainerProps {
@@ -39,9 +53,11 @@ export const ChatContainer = memo(({
     const [, setForceUpdate] = useState(0);
 =======
     transformY = 'translateY(0)',
-    paddingTop = '4rem'
+    paddingTop = '4rem',
+    onRetry
 }: ChatContainerProps) {
     const { isLoadingChats } = useChatContext();
+<<<<<<< HEAD
 >>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
 
     useEffect(() => {
@@ -70,6 +86,42 @@ export const ChatContainer = memo(({
     }
 
     if (currentChat.messages.length === 0) {
+=======
+    const [lastError, setLastError] = useState<{
+        message: string;
+        type?: string;
+        status?: number;
+    } | null>(null);
+
+    let isStreaming = false;
+
+    try {
+        const streamingContext = useStreaming();
+        isStreaming = streamingContext.isStreaming;
+
+        const lastMessage = streamingContext.messages[streamingContext.messages.length - 1];
+        if (lastMessage && lastMessage.status === 'error' && lastMessage.sender === 'ai') {
+            if (!lastError && lastMessage.content.startsWith('Error:')) {
+                setLastError({
+                    message: lastMessage.content,
+                    type: lastMessage.metadata?.errorType,
+                    status: lastMessage.metadata?.errorStatus
+                });
+            }
+        }
+    } catch (error) {
+        console.log('StreamingProvider not available, using chat metadata for stages');
+    }
+
+    const handleRetryMessage = useCallback(() => {
+        setLastError(null);
+        if (onRetry) {
+            onRetry();
+        }
+    }, [onRetry]);
+
+    if (isLoadingChats) {
+>>>>>>> f14550e (feat: enhance chat functionality with error handling and retry mechanism for streaming messages)
         return (
             <div className="flex h-full flex-col items-center justify-center px-4 py-8 text-center">
                 <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
@@ -112,6 +164,7 @@ export const ChatContainer = memo(({
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     return (
         <div className="flex h-full flex-col">
             <div className="flex-1 space-y-4 p-4">
@@ -120,20 +173,34 @@ export const ChatContainer = memo(({
                         key={`${message.id}-${isStreaming && index === currentChat.messages.length - 1 ? Date.now() : 'static'}`}
 =======
     // Show empty state when there is no chat history
+=======
+>>>>>>> f14550e (feat: enhance chat functionality with error handling and retry mechanism for streaming messages)
     if (!currentChat || currentChat.messages.length === 0) {
         return <EmptyChatState onNewChat={onNewChat} />;
     }
 
-    // Convert regular messages to standard display format, but filter out system messages
     const messages = currentChat.messages
         .filter(msg => msg.sender !== 'system')
-        .map(msg => ({
-            id: msg.id,
-            content: msg.content,
-            sender: msg.sender as 'user' | 'ai' | 'system',
-            status: 'completed',
-            createdAt: msg.createdAt
-        } as StreamingMessage));
+        .map(msg => {
+            const streamingMsg: StreamingMessage = {
+                id: msg.id,
+                content: msg.content,
+                sender: msg.sender as 'user' | 'ai' | 'system',
+                status: 'completed',
+                createdAt: msg.createdAt
+            };
+
+            if (msg.sender === 'ai' && msg === currentChat.messages[currentChat.messages.length - 1] && lastError) {
+                streamingMsg.status = 'error';
+                streamingMsg.content = lastError.message || msg.content;
+                streamingMsg.metadata = {
+                    errorType: lastError.type,
+                    errorStatus: lastError.status
+                };
+            }
+
+            return streamingMsg;
+        });
 
     if (messages.length === 0) {
         return <EmptyChatState onNewChat={onNewChat} />;
@@ -142,12 +209,12 @@ export const ChatContainer = memo(({
     return (
         <div className="py-16 space-y-4" style={{ transform: transformY, transition: 'all 0.3s ease-in-out', paddingTop: paddingTop }}>
             <div className="space-y-6">
-                {/* Chat message list */}
                 {messages.map((message) => (
                     <StreamingMessageBubble
                         key={message.id}
 >>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
                         message={message}
+<<<<<<< HEAD
                         isStreaming={isStreaming && index === currentChat.messages.length - 1 && message.sender === 'ai'}
                     />
                 ))}
@@ -203,6 +270,12 @@ export const ChatContainer = memo(({
                     </div>
                 )}
                 <div ref={messagesEndRef} />
+=======
+                        isStreaming={isStreaming && message.sender === 'ai' && message === messages[messages.length - 1] && message.status !== 'error'}
+                        onRetry={message.status === 'error' ? handleRetryMessage : undefined}
+                    />
+                ))}
+>>>>>>> f14550e (feat: enhance chat functionality with error handling and retry mechanism for streaming messages)
             </div>
         </div>
     );

@@ -14,6 +14,7 @@ interface StreamingContextType {
     endStream: (messageId?: string, error?: Error) => void;
     clearMessages: () => void;
     sessionId: string;
+    lastError: { message: string; type?: string; status?: number } | null;
 }
 
 /**
@@ -45,6 +46,7 @@ export function StreamingProvider({
     const [stages, setStages] = useState<StreamingStage[]>([]);
     const [isStreaming, setIsStreaming] = useState(false);
     const [currentSessionId] = useState(sessionId);
+    const [lastError, setLastError] = useState<{ message: string; type?: string; status?: number } | null>(null);
 
     console.log(`[StreamProvider] Using session ID: ${currentSessionId}`);
 
@@ -172,6 +174,15 @@ export function StreamingProvider({
                 case 'error':
                     if (processedChunk.error) {
                         const errorMessage = `Error: ${processedChunk.error.message}`;
+                        const errorType = processedChunk.error.type || 'unknown';
+                        const errorStatus = processedChunk.error.status || 0;
+
+                        // Store the error details
+                        setLastError({
+                            message: errorMessage,
+                            type: errorType,
+                            status: errorStatus
+                        });
 
                         setMessages(prev => {
                             const msgIndex = prev.findIndex(m => m.id === messageId);
@@ -181,7 +192,12 @@ export function StreamingProvider({
                             updatedMessages[msgIndex] = {
                                 ...updatedMessages[msgIndex],
                                 content: errorMessage,
-                                status: 'error'
+                                status: 'error',
+                                metadata: {
+                                    ...updatedMessages[msgIndex].metadata,
+                                    errorType,
+                                    errorStatus
+                                }
                             };
                             return updatedMessages;
                         });
@@ -227,6 +243,7 @@ export function StreamingProvider({
         setMessages([]);
         setStages([]);
         setIsStreaming(false);
+        setLastError(null);
     }, []);
 
     // Context value
@@ -238,7 +255,8 @@ export function StreamingProvider({
         processChunk,
         endStream,
         clearMessages,
-        sessionId: currentSessionId
+        sessionId: currentSessionId,
+        lastError
     };
 
     return (

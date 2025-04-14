@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Bot, User, Copy, Check, Loader2 } from 'lucide-react';
+import { Bot, User, Copy, Check, Loader2, AlertCircle, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StreamingMessage } from '@/lib/streaming/types';
 import { StreamingMessageContent } from '@/components/streaming/StreamingMessageContent';
@@ -10,9 +10,15 @@ interface StreamingMessageBubbleProps {
     message: StreamingMessage;
     className?: string;
     isStreaming?: boolean; // Allow external control of streaming state
+    onRetry?: () => void; // Add callback for retry action
 }
 
-export function StreamingMessageBubble({ message, className, isStreaming: externalStreaming }: StreamingMessageBubbleProps) {
+export function StreamingMessageBubble({
+    message,
+    className,
+    isStreaming: externalStreaming,
+    onRetry
+}: StreamingMessageBubbleProps) {
     const [copied, setCopied] = useState(false);
     const isUser = message.sender === 'user';
 
@@ -24,6 +30,12 @@ export function StreamingMessageBubble({ message, className, isStreaming: extern
     const isStreaming = externalStreaming !== undefined
         ? externalStreaming
         : message.status === 'streaming' || message.status === 'pending';
+
+    // Check if message has an error
+    const isError = message.status === 'error';
+
+    // Check if error is related to authentication
+    const isAuthError = isError && message.metadata?.errorType === 'auth_error';
 
     // Handle copy
     const handleCopy = async () => {
@@ -48,9 +60,14 @@ export function StreamingMessageBubble({ message, className, isStreaming: extern
         >
             {/* AI avatar */}
             {!isUser && (
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center mr-2 flex-shrink-0">
+                <div className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center mr-2 flex-shrink-0",
+                    isError ? "bg-red-500" : "bg-primary"
+                )}>
                     {isStreaming ? (
                         <Loader2 className="h-4 w-4 text-primary-foreground animate-spin" />
+                    ) : isError ? (
+                        <AlertCircle className="h-4 w-4 text-primary-foreground" />
                     ) : (
                         <Bot className="h-4 w-4 text-primary-foreground" />
                     )}
@@ -62,7 +79,9 @@ export function StreamingMessageBubble({ message, className, isStreaming: extern
                 "rounded-xl p-3 max-w-[80%]",
                 isUser
                     ? "bg-primary text-primary-foreground rounded-tr-none"
-                    : "bg-muted text-muted-foreground rounded-tl-none"
+                    : isError
+                        ? "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 rounded-tl-none"
+                        : "bg-muted text-muted-foreground rounded-tl-none"
             )}>
                 {/* Handle content based on sender */}
                 {isUser ? (
@@ -73,11 +92,25 @@ export function StreamingMessageBubble({ message, className, isStreaming: extern
 
                 {/* Time and action buttons */}
                 <div className={cn(
-                    "text-xs mt-1 text-right opacity-70 flex items-center justify-end gap-2",
-                    isUser ? "text-primary-foreground" : "text-muted-foreground"
+                    "text-xs mt-1 text-right flex items-center justify-end gap-2",
+                    isUser ? "text-primary-foreground opacity-70" :
+                        isError ? "text-red-500" : "text-muted-foreground opacity-70"
                 )}>
+                    {/* Retry button for errors */}
+                    {!isUser && isError && onRetry && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 rounded-full opacity-70 hover:opacity-100"
+                            onClick={onRetry}
+                        >
+                            <RefreshCcw className="h-3 w-3" />
+                            <span className="sr-only">Retry</span>
+                        </Button>
+                    )}
+
                     {/* Copy button - only show for non-user and non-streaming state */}
-                    {!isUser && !isStreaming && message.content && (
+                    {!isUser && !isStreaming && message.content && !isAuthError && (
                         <Button
                             variant="ghost"
                             size="icon"
