@@ -14,7 +14,7 @@ import { AnimatedSolButton } from '@/components/AnimatedSolButton';
 import { AnimatedBackground } from '@/components/AnimatedBackground';
 
 export const SolanaPaymentPage: React.FC = () => {
-    const [amountSol, setAmountSol] = useState<number>(0.1);
+    const [amountSol, setAmountSol] = useState<number>(0.5);
     const [showPayment, setShowPayment] = useState<boolean>(false);
     const [paymentResult, setPaymentResult] = useState<{
         success: boolean;
@@ -203,8 +203,8 @@ export const SolanaPaymentPage: React.FC = () => {
                                                     type="number"
                                                     value={amountSol}
                                                     onChange={(e) => setAmountSol(parseFloat(e.target.value))}
-                                                    min="0.001"
-                                                    step="0.001"
+                                                    min="0.1"
+                                                    step="0.1"
                                                     className="w-full p-2 border rounded bg-white/70"
                                                 />
                                             </div>
