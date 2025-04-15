@@ -102,6 +102,10 @@ module.exports = {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.7" }
         },
+        "pulse-gentle": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.85" }
+        },
         "twinkle": {
           "0%, 100%": { opacity: "0.2" },
           "50%": { opacity: "0.8" }
@@ -248,38 +252,36 @@ module.exports = {
           "40.001%": { opacity: "0.7" },
           "40.002%": {
             transform: "translateX(-100%)",
-            opacity: "0",
+            opacity: "0.7",
             background: "linear-gradient(90deg, transparent, rgba(79, 70, 229, 0.4) 50%, transparent 100%)"
           },
-          "50%": {
-            opacity: "0.5",
-          },
-          "100%": {
-            transform: "translateX(80%)",
-            opacity: "0.7",
-            background: "linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5) 50%, transparent 100%)"
-          }
+          "100%": { opacity: "0.7" }
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.3s ease-out",
-        "bounce-slow": "bounce-slow 6s infinite",
-        "pulse-slow": "pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        "shimmer": "shimmer 1.5s infinite",
-        "meteor": "meteor 10s linear infinite",
-        "meteor-glow": "meteor-glow 10s linear infinite",
-        "flare": "flare 6s ease-in-out infinite",
-        "galaxy-rotate": "galaxy-rotate 120s linear infinite",
+        "fade-in": "fade-in 0.5s ease-out",
+        "blink": "blink 1s infinite",
+        "gradient-shift": "gradient-shift 6s ease infinite",
+        "float": "float 6s ease-in-out infinite",
+        "pulse-glow": "pulse-glow 2s infinite",
+        "bounce-slow": "bounce-slow 2s infinite",
+        "pulse-slow": "pulse-slow 3s infinite",
+        "pulse-gentle": "pulse-gentle 4s infinite",
+        "twinkle": "twinkle 3s ease-in-out infinite",
+        "twinkle-random": "twinkle-random 5s ease-in-out infinite",
+        "meteor": "meteor 5s linear infinite",
+        "meteor-glow": "meteor-glow 5s linear infinite",
+        "flare": "flare 8s ease-in-out infinite",
+        "galaxy-rotate": "galaxy-rotate 60s linear infinite",
         "galaxy-fade": "galaxy-fade 8s ease-in-out infinite",
         "text-glow": "text-glow 2s ease-in-out infinite",
         "letter-float": "letter-float 3s ease-in-out infinite",
-        "title-reveal": "title-reveal 1s forwards",
+        "title-reveal": "title-reveal 0.8s cubic-bezier(0.25, 1, 0.3, 1) forwards",
         "neon-pulse": "neon-pulse 1.5s ease-in-out infinite",
-        "gradient-shift": "gradient-shift 3s ease infinite",
+        "shimmer": "shimmer 2s ease-in-out infinite",
         "light-sweep": "light-sweep 3s ease-in-out infinite",
-        "blink": "blink 1s step-start infinite",
       },
       typography: {
         DEFAULT: {
