@@ -17,7 +17,7 @@ export interface SSEEvent extends CustomEvent {
  */
 export type ChunkType =
     | { type: 'content', content: string }
-    | { type: 'stage', stage: { content: string, message: string, status: number } }
+    | { type: 'stage', stage: { content: string, message: string, status: number, detail?: Record<string, any> } }
     | { type: 'error', error: { message: string, type?: string, status?: number } }
     | { type: 'done' }
     | { type: 'auth_refresh', message: string };
@@ -225,12 +225,14 @@ export async function sendSSERequest<T>(
                     const stageContent = jsonData.stage || '';
                     const stageStatus = jsonData.status || 0;
                     const messageContent = jsonData.choices?.[0]?.delta?.content || jsonData.message || '';
+                    const stageDetail = jsonData.choices?.[0]?.delta?.detail;
 
                     // Send stage update
                     callbacks.onChunk({
                         type: 'stage',
                         stage: {
                             content: stageContent,
+                            detail: stageDetail,
                             message: messageContent,
                             status: stageStatus
                         }

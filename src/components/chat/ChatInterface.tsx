@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ChevronDown, Info, Menu, RefreshCcw } from 'lucide-react';
+import { ChevronDown, Info, Menu, RefreshCcw, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,6 +10,12 @@ import { ChatContainer } from '@/components/chat/ChatContainer';
 import { useStreaming } from '@/lib/streaming/StreamingContext';
 import { StageDisplay } from '@/components/streaming/StageDisplay';
 import { useTheme } from '@/hooks/use-theme';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ChatInterfaceProps {
     modalMode?: boolean;
@@ -261,6 +267,45 @@ export function ChatInterface({
                             )} />
                         </Button>
                     )}
+
+                    {/* New Chat Button */}
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={createNewChat}
+                                    className={cn(
+                                        "fixed z-30 rounded-full shadow-md transition-all duration-300 hover:scale-105 group",
+                                        "backdrop-blur-sm border",
+                                        modalMode
+                                            ? "top-16 right-6"
+                                            : "top-6 right-6 lg:right-12",
+                                        isDarkMode
+                                            ? "hover:bg-blue-500/15 border-blue-800/30 text-blue-300 bg-gray-800/80"
+                                            : "hover:bg-blue-500/15 border-blue-300/50 text-blue-600 bg-white/80",
+                                        !modalMode && sidebarEnabled && isSidebarOpen
+                                            ? "lg:right-[calc(80px+1rem)]"
+                                            : ""
+                                    )}
+                                    style={{ marginTop: modalMode ? '-8px' : '0' }}
+                                    aria-label="New chat"
+                                >
+                                    <Plus className={cn(
+                                        "h-4 w-4",
+                                        isDarkMode ? "text-blue-300" : "text-blue-600",
+                                        "transition-transform duration-300 group-hover:rotate-90"
+                                    )} />
+                                    <span className="sr-only">New chat</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">
+                                <p>Start a new chat</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
                     {/* App description */}
                     {config.appDefinition?.description && (
                         <div className="mb-4 mt-4 mx-4 p-3 pl-12 rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 flex items-center gap-3 overflow-hidden">

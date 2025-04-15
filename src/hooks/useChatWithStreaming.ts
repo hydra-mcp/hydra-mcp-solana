@@ -111,7 +111,7 @@ export function useChatWithStreaming({
             }
 
             // Format messages for API
-            const messages = updatedMessages.map(msg => ({
+            const messages = updatedMessages.slice(-10).map(msg => ({
                 role: msg.sender === 'user' ? 'user' : 'assistant',
                 content: msg.content
             }));

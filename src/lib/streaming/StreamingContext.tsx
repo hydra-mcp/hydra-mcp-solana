@@ -126,12 +126,25 @@ export function StreamingProvider({
                 case 'stage':
                     if (processedChunk.stage) {
                         setStages(prev => {
-                            // Convert status to proper type (0, 1, 2)
-                            const stageStatus = (typeof processedChunk.stage?.status === 'number')
-                                ? (processedChunk.stage.status > 1 ? 2 : processedChunk.stage.status < 1 ? 0 : 1) as 0 | 1 | 2
-                                : 0 as 0;
+                            // Convert status to proper type (0, 1, 2, 3)
+                            let stageStatus: 0 | 1 | 2 | 3;
+
+                            if (typeof processedChunk.stage?.status === 'number') {
+                                if (processedChunk.stage.status === 3) {
+                                    stageStatus = 3; // Warning
+                                } else if (processedChunk.stage.status > 1) {
+                                    stageStatus = 2; // Error
+                                } else if (processedChunk.stage.status < 1) {
+                                    stageStatus = 0; // In progress
+                                } else {
+                                    stageStatus = 1; // Completed
+                                }
+                            } else {
+                                stageStatus = 0; // Default to in progress
+                            }
 
                             const stageContent = processedChunk.stage.content || '';
+                            const stageDetail = processedChunk.stage.detail || {};
                             const stageMessage = processedChunk.stage.message || '';
 
                             // Generate a unique ID for this stage
@@ -142,12 +155,14 @@ export function StreamingProvider({
                             let updatedPrev = [...prev];
                             let needToAdd = true;
 
-                            // If a stage with the same content exists, only update its status
+                            // If a stage with the same content exists, update its status AND detail object
                             for (let i = 0; i < updatedPrev.length; i++) {
                                 if (updatedPrev[i].content === stageContent && updatedPrev[i].message === stageMessage) {
                                     updatedPrev[i] = {
                                         ...updatedPrev[i],
-                                        status: stageStatus
+                                        status: stageStatus,
+                                        // Always update the detail object with the latest values
+                                        detail: stageDetail
                                     };
                                     needToAdd = false;
                                     break;
@@ -160,6 +175,7 @@ export function StreamingProvider({
                                 updatedPrev.push({
                                     id: stageId,
                                     content: stageContent,
+                                    detail: stageDetail,
                                     message: stageMessage,
                                     status: stageStatus,
                                     sessionId: currentSessionId
