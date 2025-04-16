@@ -14,6 +14,17 @@ HYDRA-AI is a modern AI chat application built with React, TypeScript, and Tailw
 - 📱 Responsive design with specialized layouts for different devices (including iOS)
 - 🚀 Built with Vite, providing a fast development experience
 - 👛 Wallet connectivity features for blockchain interactions
+- 💰 Solana payment integration with Phantom wallet
+- 📱 iOS desktop simulation with window management
+- 💸 Recharge and consumption history tracking
+
+## Key Modules
+
+- **iOS Desktop Experience**: Simulated iOS desktop interface with app window management, context menus, and theme switching
+- **Solana Payment System**: Complete Solana blockchain integration for creating recharge orders, making payments, and tracking transaction history
+- **AI Chat Interface**: Advanced chat system with message streaming, history persistence, and context management
+- **Wallet Integration**: Phantom wallet connectivity for Solana blockchain interactions
+- **Authentication System**: Secure user auth with token management
 
 ## Tech Stack
 
@@ -27,6 +38,8 @@ HYDRA-AI is a modern AI chat application built with React, TypeScript, and Tailw
 - **Language**: TypeScript
 - **Animation**: Framer Motion
 - **API Communication**: Fetch API with SSE support
+- **Blockchain**: Solana Web3.js
+- **Form Handling**: React Hook Form + Zod validation
 
 ## Development Environment Setup
 
@@ -76,13 +89,40 @@ The application is organized into the following key components:
 - **Authentication System**: Login page with token-based authentication
 - **Wallet Integration**: Connection to blockchain wallets for crypto interactions
 - **Error Handling**: Global error boundary and API error handling system
+- **iOS Desktop Simulation**: Interactive iOS-like desktop environment with window management
+- **Solana Payment**: Complete payment flow with wallet connection, transaction processing, and history tracking
 
 ### Pages
 
-- **Home**: Landing page for the application
+- **Home**: Landing page showcasing available features and system capabilities
 - **ChatPage**: Main chat interface with AI assistant
-- **WalletFinder**: Interface for connecting to blockchain wallets
-- **IOSDesktop**: Specialized interface for iOS devices
+- **IOSDesktop**: iOS-like desktop environment with multiple app windows and interactions
+- **SolanaPaymentPage**: Interface for Solana blockchain payments and recharge history
+
+## Component Organization
+
+```
+src/
+├── components/        # Reusable UI components
+│   ├── chat/          # Chat-related components
+│   ├── ui/            # Core UI components (Shadcn)
+│   ├── phantom/       # Wallet connection components
+│   ├── ios/           # iOS-specific components
+│   └── SolanaPayment/ # Solana payment flow components
+├── contexts/          # React contexts for state management
+├── hooks/             # Custom React hooks
+├── layouts/           # Layout components
+├── lib/               # Utility functions and API clients
+│   ├── api.ts         # API communication layer
+│   ├── sse.ts         # Server-Sent Events implementation
+│   ├── walletService.ts # Wallet connection and management
+│   └── utils.ts       # General utility functions
+├── pages/             # Application pages
+├── types/             # TypeScript type definitions
+├── App.tsx            # Main application component with routes
+├── Login.tsx          # Authentication page
+└── main.tsx           # Application entry point
+```
 
 ## Build and Deployment
 
@@ -173,30 +213,6 @@ The built files will be located in the `dist` directory.
 
 - `VITE_API_BASE_URL`: API server base URL
 - `VITE_BASE_URL`: Optional alternative API base URL (for development/testing)
-
-## Project Structure
-
-```
-src/
-├── components/        # Reusable UI components
-│   ├── chat/          # Chat-related components
-│   ├── ui/            # Core UI components (Shadcn)
-│   ├── phantom/       # Wallet connection components
-│   └── ios/           # iOS-specific components
-├── contexts/          # React contexts for state management
-├── hooks/             # Custom React hooks
-├── layouts/           # Layout components
-├── lib/               # Utility functions and API clients
-│   ├── api.ts         # API communication layer
-│   ├── sse.ts         # Server-Sent Events implementation
-│   └── utils.ts       # General utility functions
-├── pages/             # Application pages
-├── types/             # TypeScript type definitions
-├── App.tsx            # Main application component with routes
-├── Login.tsx          # Authentication page
-├── index.css          # Global styles
-└── main.tsx           # Application entry point
-```
 
 ## API Documentation
 
