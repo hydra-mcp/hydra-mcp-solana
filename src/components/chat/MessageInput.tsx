@@ -35,6 +35,7 @@ export function MessageInput({
     const { isStreaming } = streamingState;
 
     const [input, setInput] = React.useState('');
+    const [isComposing, setIsComposing] = React.useState(false);
     const isDisabled = !currentChatId || isStreaming || isProcessing || !input.trim() || externalDisabled;
 
     const handleSend = async () => {
@@ -51,12 +52,20 @@ export function MessageInput({
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
             e.preventDefault();
             if (!isDisabled) {
                 handleSend();
             }
         }
+    };
+
+    const handleCompositionStart = () => {
+        setIsComposing(true);
+    };
+
+    const handleCompositionEnd = () => {
+        setIsComposing(false);
     };
 
     return (
@@ -66,6 +75,8 @@ export function MessageInput({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onCompositionStart={handleCompositionStart}
+                onCompositionEnd={handleCompositionEnd}
                 placeholder={placeholder}
                 className={cn(
                     "min-h-[40px] max-h-[80px] sm:max-h-[120px] flex-1 resize-none rounded-lg",
