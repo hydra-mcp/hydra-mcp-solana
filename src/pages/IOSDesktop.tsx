@@ -256,8 +256,6 @@ const IOSDesktopContent = ({
             name: app.title,
             icon: app.icon,
             path: app.path,
-            // Add special handling for the settings application
-            // onClick: app.id === 'settings' ? toggleTheme : undefined
         }))
     );
 
@@ -277,7 +275,6 @@ const IOSDesktopContent = ({
             name: appRegistry.settings.title,
             icon: appRegistry.settings.icon,
             path: appRegistry.settings.path,
-            // onClick: toggleTheme
         }
     ];
 

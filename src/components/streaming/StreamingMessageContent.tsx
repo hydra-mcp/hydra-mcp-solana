@@ -71,34 +71,34 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
         <div className={cn('prose dark:prose-invert', className)}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-                components={{
-                    code({ node, inline, className, children, ...props }: any) {
-                        const match = /language-(\w+)/.exec(className || '');
+            // components={{
+            //     code({ node, inline, className, children, ...props }: any) {
+            //         const match = /language-(\w+)/.exec(className || '');
 
-                        if (inline) {
-                            return (
-                                <code className={cn('px-1 py-0.5 rounded-md bg-muted', className)} {...props}>
-                                    {children}
-                                </code>
-                            );
-                        }
+            //         if (inline) {
+            //             return (
+            //                 <code className={cn('px-1 py-0.5 rounded-md bg-muted', className)} {...props}>
+            //                     {children}
+            //                 </code>
+            //             );
+            //         }
 
-                        const language = match ? match[1] : '';
-                        const content = String(children).replace(/\n$/, '');
+            //         const language = match ? match[1] : '';
+            //         const content = String(children).replace(/\n$/, '');
 
-                        return (
-                            <CodeBlock
-                                content={content}
-                                language={language}
-                                fileName=""
-                                showLineNumbers
-                            />
-                        );
-                    },
-                    pre({ children }: any) {
-                        return <>{children}</>;
-                    }
-                }}
+            //         return (
+            //             <CodeBlock
+            //                 content={content}
+            //                 language={language}
+            //                 fileName=""
+            //                 showLineNumbers
+            //             />
+            //         );
+            //     },
+            //     pre({ children }: any) {
+            //         return <>{children}</>;
+            //     }
+            // }}
             >
                 {message.content}
             </ReactMarkdown>

@@ -55,12 +55,16 @@ export function useChatWithStreaming({
         setIsRefreshingAuth(false);
         const aiMessageId = crypto.randomUUID();
 
-        // Reset content cache for this message
-        messageContentRef.current[aiMessageId] = '';
+        // clear all previous errors and cache
+        // 1. clear content cache
+        messageContentRef.current = { [aiMessageId]: '' };
 
-        // Reset stages for this chat
+        // 2. reset stages
         if (!streamingContext) {
             stagesRef.current[chatId] = [];
+        } else {
+            // 3. clear messages and error status in streaming context
+            streamingContext.clearMessages();
         }
 
         try {
@@ -155,6 +159,8 @@ export function useChatWithStreaming({
 
                     // Also handle content updates directly for unified UX
                     if (chunk.type === 'content' && chunk.content) {
+                        // Check if we were refreshing auth and now it's complete
+                        const wasRefreshingAuth = isRefreshingAuth;
                         setIsRefreshingAuth(false);
 
                         // Accumulate content in cache
@@ -167,7 +173,10 @@ export function useChatWithStreaming({
                             const updatedMessagesList = [...currentMessages];
                             updatedMessagesList[aiMessageIndex] = {
                                 ...updatedMessagesList[aiMessageIndex],
-                                content: messageContentRef.current[aiMessageId]
+                                // If we were refreshing auth, replace the placeholder completely
+                                content: wasRefreshingAuth
+                                    ? messageContentRef.current[aiMessageId]
+                                    : messageContentRef.current[aiMessageId]
                             };
 
                             // Update reference
@@ -233,7 +242,8 @@ export function useChatWithStreaming({
 
                         // Handle error
                         const errorMessage = `Error: ${chunk.error.message}`;
-                        messageContentRef.current[aiMessageId] = errorMessage;
+                        // ensure only save error content of current message, not accumulate previous errors
+                        messageContentRef.current = { [aiMessageId]: errorMessage };
 
                         // Update message with error
                         const aiMessageIndex = currentMessages.findIndex(m => m.id === aiMessageId);
