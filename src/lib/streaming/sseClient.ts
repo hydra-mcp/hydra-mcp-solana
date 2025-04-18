@@ -3,7 +3,7 @@
  */
 
 import { SSE } from '@/lib/sse';
-
+import { StageStatus } from './types';
 /**
  * Define SSE event type
  */
@@ -17,7 +17,7 @@ export interface SSEEvent extends CustomEvent {
  */
 export type ChunkType =
     | { type: 'content', content: string }
-    | { type: 'stage', stage: { content: string, message: string, status: number, detail?: Record<string, any> } }
+    | { type: 'stage', stage: { content: string, message: string, status: StageStatus, detail?: Record<string, any> } }
     | { type: 'error', error: { message: string, type?: string, status?: number } }
     | { type: 'done' }
     | { type: 'auth_refresh', message: string };
@@ -223,7 +223,7 @@ export async function sendSSERequest<T>(
                 try {
                     const jsonData = JSON.parse(data);
                     const stageContent = jsonData.stage || '';
-                    const stageStatus = jsonData.status || 0;
+                    const stageStatus = jsonData.status || StageStatus.Start;
                     const messageContent = jsonData.choices?.[0]?.delta?.content || jsonData.message || '';
                     const stageDetail = jsonData.choices?.[0]?.delta?.detail;
 
@@ -245,7 +245,7 @@ export async function sendSSERequest<T>(
                         stage: {
                             content: typeof data === 'string' ? data : 'Unknown stage',
                             message: '',
-                            status: 0
+                            status: StageStatus.Start
                         }
                     });
                 }

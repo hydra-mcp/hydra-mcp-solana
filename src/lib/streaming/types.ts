@@ -18,9 +18,18 @@ export interface StreamingMessage {
 export interface WalletProgressDetail {
     current: number;
     total: number;
+    processed: number;
     is_high_value: boolean;
     high_value_count: number;
     wallet: string;
+}
+
+// Stage Status Enum
+export enum StageStatus {
+    Start = "start",
+    Completed = "completed",
+    Error = "error",
+    Warning = "warning"
 }
 
 /**
@@ -31,7 +40,7 @@ export interface StreamingStage {
     content: string;
     detail?: Record<string, any> | WalletProgressDetail;
     message: string;
-    status: 0 | 1 | 2 | 3; // 0: in progress, 1: completed, 2: error, 3: warning
+    status: StageStatus;
     sessionId?: string;
 }
 

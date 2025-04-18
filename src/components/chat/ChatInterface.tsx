@@ -10,6 +10,7 @@ import { ChatContainer } from '@/components/chat/ChatContainer';
 import { useStreaming } from '@/lib/streaming/StreamingContext';
 import { StageDisplay } from '@/components/streaming/StageDisplay';
 import { useTheme } from '@/hooks/use-theme';
+import { StageStatus } from '@/lib/streaming/types';
 import {
     Tooltip,
     TooltipContent,
@@ -33,6 +34,7 @@ export function ChatInterface({
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
     const { isDarkMode } = useTheme();
+    const [hasStageError, setHasStageError] = useState(false);
 
     const [isLocalStreaming, setIsLocalStreaming] = useState(false);
     let streamingState = {
@@ -55,6 +57,26 @@ export function ChatInterface({
         (stage.content && stage.content.trim() !== '')
     );
     const hasValidStages = validStages.length > 0;
+
+    // Update hasStageError whenever validStages changes
+    useEffect(() => {
+        if (hasValidStages) {
+            const lastStage = validStages[validStages.length - 1];
+            setHasStageError(lastStage.status === StageStatus.Error);
+        } else {
+            setHasStageError(false);
+        }
+    }, [validStages, hasValidStages]);
+
+    // Also check if the messages have an error status
+    useEffect(() => {
+        if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            if (lastMessage.status === 'error') {
+                setHasStageError(true);
+            }
+        }
+    }, [messages]);
 
     const showStage = isStreaming && hasValidStages;
     const stageRef = useRef<HTMLDivElement>(null);
@@ -166,9 +188,6 @@ export function ChatInterface({
         setTransformY(`translateY(-${transform}rem)`);
         setPaddingTop(`${transform}rem`);
     }, [validStages]);
-
-    // check if the current streaming state has an error
-    const hasStreamingError = messages.length > 0 && messages[messages.length - 1].status === 'error';
 
     const handleRetry = useCallback(() => {
         if (!currentChat || !currentChat.messages || currentChat.messages.length === 0 || isProcessing) {
@@ -398,12 +417,29 @@ export function ChatInterface({
             )}>
                 <div className="container mx-auto py-2.5 sm:py-3">
                     <div className="px-4">
+<<<<<<< HEAD
                         <MessageInput
                             autoFocus={modalMode}
                             placeholder="Type your message..."
                             disabled={isStreaming}
                             className="max-h-[80px]"
                         />
+=======
+                        {config.appDefinition?.status !== 'coming_soon' ? (
+                            <MessageInput
+                                autoFocus={modalMode}
+                                placeholder="Type your message..."
+                                disabled={isStreaming && !hasStageError}
+                                className="max-h-[80px]"
+                            />
+                        ) : (
+                            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 rounded-md text-center">
+                                <p className="text-amber-700 dark:text-amber-400 font-medium">
+                                    Coming soon, stay tuned！
+                                </p>
+                            </div>
+                        )}
+>>>>>>> 19367bc (feat: add theme management component and enhance chat interface with stage error handling)
                     </div>
                 </div>
             </footer>

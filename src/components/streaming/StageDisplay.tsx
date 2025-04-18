@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { StreamingStage } from '@/lib/streaming/types';
+import { StreamingStage, StageStatus } from '@/lib/streaming/types';
 import {
     Loader2,
     CheckCircle,
@@ -40,9 +40,9 @@ export function StageDisplay({ stages, className }: StageDisplayProps) {
 
             {validStages.map((stage) => {
                 // Calculate status
-                const isCompleted = stage.status === 1;
-                const isError = stage.status === 2;
-                const isWarning = stage.status === 3;
+                const isCompleted = stage.status === StageStatus.Completed;
+                const isError = stage.status === StageStatus.Error;
+                const isWarning = stage.status === StageStatus.Warning;
                 const stageText = stage.message.trim() || stage.content.trim();
                 const stageDetail = stage.detail;
 
@@ -51,6 +51,12 @@ export function StageDisplay({ stages, className }: StageDisplayProps) {
                     stageDetail.current !== undefined &&
                     stageDetail.total !== undefined &&
                     stageDetail.wallet !== undefined;
+
+                // Check if this is a wallet analysis completed stage
+                const isWalletCompleted = stageDetail &&
+                    stageDetail.high_value_count !== undefined &&
+                    stageDetail.total !== undefined &&
+                    stageDetail.processed !== undefined;
 
                 // This check should be redundant now due to our filtering above
                 if (!stageText) return null;
@@ -158,6 +164,26 @@ export function StageDisplay({ stages, className }: StageDisplayProps) {
                                         </div>
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* Wallet Analysis Completed */}
+                        {isWalletCompleted && (
+                            <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800">
+                                <div className="flex items-center">
+                                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                                    <span className="text-sm font-medium text-green-700 dark:text-green-400">Wallet Analysis Completed</span>
+                                </div>
+                                <div className="mt-1.5 grid grid-cols-2 gap-2">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-slate-500 dark:text-slate-400">Smart Wallets Detected</span>
+                                        <span className="text-sm font-medium text-amber-500">{stageDetail.high_value_count}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-slate-500 dark:text-slate-400">Processed Wallets</span>
+                                        <span className="text-sm font-medium">{stageDetail.processed}</span>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>

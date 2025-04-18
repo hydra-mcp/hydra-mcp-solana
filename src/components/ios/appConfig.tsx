@@ -1,10 +1,14 @@
 import React, { ReactNode, lazy, Suspense } from 'react';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon } from './AppIcons';
 import { cn } from '@/lib/utils';
 import { Calendar, Settings, Sliders, Image, Mail, Home, Search } from 'lucide-react';
 =======
 import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, DeepSearchIcon, RechargeIcon } from './AppIcons';
+=======
+import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, DeepSearchIcon, RechargeIcon, ThemeIcon } from './AppIcons';
+>>>>>>> 19367bc (feat: add theme management component and enhance chat interface with stage error handling)
 import { cn } from '@/lib/utils';
 import {
     Calendar, Settings, Sliders, Image, Mail, Home, Search, SignalIcon,
@@ -66,6 +70,79 @@ const SettingsApp = () => {
         )}>
             <div className="border-b px-4 py-3 flex items-center justify-between dark:border-gray-700">
                 <h1 className="text-lg font-semibold">Settings</h1>
+                <Settings className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+                <div className={cn(
+                    "rounded-lg mb-4 overflow-hidden border",
+                    isDarkMode ? "border-gray-700" : "border-gray-200"
+                )}>
+                    <div className={cn(
+                        "p-4 flex items-center justify-between cursor-pointer hover:bg-gray-200/50 dark:hover:bg-gray-800/50",
+                        isDarkMode ? "bg-gray-800" : "bg-white"
+                    )}>
+                        <div className="flex items-center">
+                            <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center mr-3">
+                                <Sliders className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                                <h3 className="font-medium">Appearance</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Choose light or dark theme</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={toggleTheme}
+                            className={cn(
+                                "px-3 py-1.5 rounded-full text-sm",
+                                isDarkMode
+                                    ? "bg-gray-700 text-gray-300"
+                                    : "bg-gray-200 text-gray-700"
+                            )}
+                        >
+                            {isDarkMode ? "Dark" : "Light"}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Other settings items placeholder */}
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                        key={i}
+                        className={cn(
+                            "rounded-lg mb-4 p-4 border",
+                            isDarkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+                        )}
+                    >
+                        <div className="flex items-center">
+                            <div className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center mr-3",
+                                ["bg-blue-500", "bg-green-500", "bg-amber-500"][i]
+                            )}>
+                                <div className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="font-medium">Setting option {i + 1}</h3>
+                                <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-2" />
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+// Theme app component
+const ThemeApp = () => {
+    const { isDarkMode, toggleTheme } = useTheme();
+
+    return (
+        <div className={cn(
+            "h-full flex flex-col",
+            isDarkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
+        )}>
+            <div className="border-b px-4 py-3 flex items-center justify-between dark:border-gray-700">
+                <h1 className="text-lg font-semibold">Theme</h1>
                 <Settings className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </div>
             <div className="flex-1 p-4 overflow-auto">
@@ -212,6 +289,16 @@ export const appRegistry: Record<string, AppDefinition> = {
         component: <SettingsApp />,
         defaultSize,
         description: 'Change your settings'
+    },
+    theme: {
+        id: 'theme',
+        path: '/theme',
+        title: 'Theme',
+        icon: <ThemeIcon />,
+        component: <ThemeApp />,
+        defaultSize,
+        description: 'Change your theme',
+        status: 'online'
     },
     messages: {
         id: 'messages',

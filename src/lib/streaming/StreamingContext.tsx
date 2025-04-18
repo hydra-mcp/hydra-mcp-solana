@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { StreamingMessage, StreamingStage, MessageChunk } from './types';
+import { StreamingMessage, StreamingStage, MessageChunk, StageStatus } from './types';
 import { ChunkType } from './sseClient';
 
 /**
@@ -126,23 +126,7 @@ export function StreamingProvider({
                 case 'stage':
                     if (processedChunk.stage) {
                         setStages(prev => {
-                            // Convert status to proper type (0, 1, 2, 3)
-                            let stageStatus: 0 | 1 | 2 | 3;
-
-                            if (typeof processedChunk.stage?.status === 'number') {
-                                if (processedChunk.stage.status === 3) {
-                                    stageStatus = 3; // Warning
-                                } else if (processedChunk.stage.status > 1) {
-                                    stageStatus = 2; // Error
-                                } else if (processedChunk.stage.status < 1) {
-                                    stageStatus = 0; // In progress
-                                } else {
-                                    stageStatus = 1; // Completed
-                                }
-                            } else {
-                                stageStatus = 0; // Default to in progress
-                            }
-
+                            let stageStatus: StageStatus = processedChunk.stage.status as StageStatus;
                             const stageContent = processedChunk.stage.content || '';
                             const stageDetail = processedChunk.stage.detail || {};
                             const stageMessage = processedChunk.stage.message || '';
@@ -157,12 +141,13 @@ export function StreamingProvider({
 
                             // If a stage with the same content exists, update its status AND detail object
                             for (let i = 0; i < updatedPrev.length; i++) {
-                                if (updatedPrev[i].content === stageContent && updatedPrev[i].message === stageMessage) {
+                                if (updatedPrev[i].content === stageContent) {
                                     updatedPrev[i] = {
                                         ...updatedPrev[i],
                                         status: stageStatus,
                                         // Always update the detail object with the latest values
-                                        detail: stageDetail
+                                        detail: stageDetail,
+                                        message: stageMessage
                                     };
                                     needToAdd = false;
                                     break;
