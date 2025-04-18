@@ -1,4 +1,4 @@
-import { Wallet, MessageSquare, Settings, Image, Home, Search, Calendar, Mail, BarChart, DollarSign, CreditCard, Zap } from 'lucide-react';
+import { Wallet, MessageSquare, Settings, Image, Home, Search, Calendar, Mail, BarChart, DollarSign, CreditCard, Zap, SunMoon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -122,6 +122,88 @@ export const SettingsIcon = ({ className }: { className?: string }) => {
                 >
                     <Settings className="w-9 h-9 text-white" />
                 </motion.div>
+            }
+        />
+    );
+};
+
+// theme icon
+export const ThemeIcon = ({ className }: { className?: string }) => {
+    return (
+        <AppIconBase
+            color="#8b5cf6"
+            secondaryColor="#a78bfa"
+            className={className}
+            icon={
+                <div className="relative">
+                    <motion.div
+                        initial={{ rotate: 0 }}
+                        animate={{ rotate: 180 }}
+                        transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            repeatType: "reverse",
+                            ease: "easeInOut"
+                        }}
+                    >
+                        <div className="flex items-center justify-center">
+                            <motion.div
+                                className="absolute w-9 h-9 rounded-full"
+                                initial={{ background: "linear-gradient(to right, #fbbf24, #f59e0b)" }}
+                                animate={{ background: "linear-gradient(to right, #3b82f6, #2563eb)" }}
+                                transition={{
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    repeatType: "reverse",
+                                    ease: "easeInOut"
+                                }}
+                                style={{ opacity: 0.3 }}
+                            />
+                            <motion.div
+                                animate={{
+                                    scale: [1, 1.1, 1],
+                                    opacity: [0.8, 1, 0.8]
+                                }}
+                                transition={{
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                            >
+                                <SunMoon className="w-9 h-9 text-white" />
+                            </motion.div>
+                        </div>
+                    </motion.div>
+
+                    {/* Floating stars/particles */}
+                    <motion.div
+                        className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full"
+                        animate={{
+                            opacity: [0, 1, 0],
+                            scale: [0.8, 1.2, 0.8],
+                            y: [-2, -4, -2]
+                        }}
+                        transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                    />
+                    <motion.div
+                        className="absolute bottom-0 -left-1 w-1.5 h-1.5 bg-blue-300 rounded-full"
+                        animate={{
+                            opacity: [0, 1, 0],
+                            scale: [0.8, 1.2, 0.8],
+                            x: [-1, -3, -1]
+                        }}
+                        transition={{
+                            duration: 2.5,
+                            delay: 0.5,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                    />
+                </div>
             }
         />
     );
