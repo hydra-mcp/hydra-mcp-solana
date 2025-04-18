@@ -96,6 +96,13 @@ export function ChatInterface({
         isProcessing
     } = useChatContext();
 
+    // reset error status when sending message
+    const handleSendMessage = useCallback((message: string) => {
+        // reset error status when sending message
+        setHasStageError(false);
+        sendMessage(message);
+    }, [sendMessage, setHasStageError]);
+
     useEffect(() => {
         if (!currentChat?.messages) return;
 
@@ -431,6 +438,7 @@ export function ChatInterface({
                                 placeholder="Type your message..."
                                 disabled={isStreaming && !hasStageError}
                                 className="max-h-[80px]"
+                                onSendMessage={handleSendMessage}
                             />
                         ) : (
                             <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 rounded-md text-center">

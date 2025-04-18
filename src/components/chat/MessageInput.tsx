@@ -11,13 +11,15 @@ interface MessageInputProps {
     placeholder?: string;
     autoFocus?: boolean;
     disabled?: boolean;
+    onSendMessage?: (message: string) => void;
 }
 
 export function MessageInput({
     className,
     placeholder = "Type your message...",
     autoFocus = false,
-    disabled: externalDisabled
+    disabled: externalDisabled,
+    onSendMessage
 }: MessageInputProps) {
     const {
         inputRef,
@@ -44,7 +46,11 @@ export function MessageInput({
         const message = input.trim();
         setInput('');
 
-        sendMessage(message);
+        if (onSendMessage) {
+            onSendMessage(message);
+        } else {
+            sendMessage(message);
+        }
 
         setTimeout(() => {
             scrollToBottom();

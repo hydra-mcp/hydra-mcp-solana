@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { StreamingMessage } from '@/lib/streaming/types';
 import { StreamingMessageContent } from '@/components/streaming/StreamingMessageContent';
 import { formatTime } from '@/lib/streaming/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface StreamingMessageBubbleProps {
     message: StreamingMessage;
@@ -20,6 +21,7 @@ export function StreamingMessageBubble({
     onRetry
 }: StreamingMessageBubbleProps) {
     const [copied, setCopied] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
     const isUser = message.sender === 'user';
 
     if (message.sender === 'system') {
@@ -47,6 +49,53 @@ export function StreamingMessageBubble({
             console.error('Failed to copy:', e);
         }
     };
+
+    // Enhanced copy button component with different styles for user/AI messages
+    const CopyButton = () => (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                            "relative h-6 w-6 rounded-full transition-all duration-200",
+                            "hover:scale-110 active:scale-95",
+                            isUser
+                                ? "text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/20"
+                                : "text-muted-foreground/70 hover:text-foreground hover:bg-primary/10",
+                            copied && (isUser
+                                ? "bg-emerald-500/30 text-white"
+                                : "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400")
+                        )}
+                        onClick={handleCopy}
+                        onMouseEnter={() => setIsHovering(true)}
+                        onMouseLeave={() => setIsHovering(false)}
+                        aria-label="Copy message"
+                    >
+                        {copied ? (
+                            <Check className={cn(
+                                "h-3.5 w-3.5 transition-transform duration-200",
+                                "animate-in zoom-in-50"
+                            )} />
+                        ) : (
+                            <Copy className={cn(
+                                "h-3.5 w-3.5 transition-all duration-200",
+                                isHovering && "rotate-2"
+                            )} />
+                        )}
+                        <span className={cn(
+                            "absolute inset-0 rounded-full bg-current",
+                            copied ? "animate-ping opacity-10" : "opacity-0"
+                        )} />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="center" className="text-xs font-medium">
+                    {copied ? "Copied!" : "Copy message"}
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
 
     // User and AI messages
     return (
@@ -92,16 +141,16 @@ export function StreamingMessageBubble({
 
                 {/* Time and action buttons */}
                 <div className={cn(
-                    "text-xs mt-1 text-right flex items-center justify-end gap-2",
-                    isUser ? "text-primary-foreground opacity-70" :
-                        isError ? "text-red-500" : "text-muted-foreground opacity-70"
+                    "text-xs mt-1.5 text-right flex items-center justify-end gap-2",
+                    isUser ? "text-primary-foreground/70" :
+                        isError ? "text-red-500" : "text-muted-foreground/70"
                 )}>
                     {/* Retry button for errors */}
                     {!isUser && isError && onRetry && (
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-5 w-5 rounded-full opacity-70 hover:opacity-100"
+                            className="h-5 w-5 rounded-full opacity-70 hover:opacity-100 hover:scale-110 active:scale-95 transition-all duration-200"
                             onClick={onRetry}
                         >
                             <RefreshCcw className="h-3 w-3" />
@@ -109,22 +158,8 @@ export function StreamingMessageBubble({
                         </Button>
                     )}
 
-                    {/* Copy button - only show for non-user and non-streaming state */}
-                    {!isUser && !isStreaming && message.content && !isAuthError && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-5 w-5 rounded-full opacity-50 hover:opacity-100"
-                            onClick={handleCopy}
-                        >
-                            {copied ? (
-                                <Check className="h-3 w-3" />
-                            ) : (
-                                <Copy className="h-3 w-3" />
-                            )}
-                            <span className="sr-only">Copy</span>
-                        </Button>
-                    )}
+                    {/* Copy button - show for both user and AI messages */}
+                    {!isStreaming && message.content && !isAuthError && <CopyButton />}
 
                     {/* Status and time */}
                     {isStreaming && !isUser ? (
