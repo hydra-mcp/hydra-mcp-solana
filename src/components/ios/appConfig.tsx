@@ -11,7 +11,7 @@ import {
     Wallet,
     Shield
 } from 'lucide-react';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, toggleThemeDirectly } from '@/hooks/use-theme';
 import { CASignalIcon } from './AppIcons';
 
 // Common loading placeholder component
@@ -122,28 +122,63 @@ const SettingsApp = () => {
                 </div>
 
                 {/* Other settings items placeholder */}
-                {Array.from({ length: 3 }).map((_, i) => (
-                    <div
-                        key={i}
-                        className={cn(
-                            "rounded-lg mb-4 p-4 border",
-                            isDarkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
-                        )}
-                    >
-                        <div className="flex items-center">
-                            <div className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center mr-3",
-                                ["bg-blue-500", "bg-green-500", "bg-amber-500"][i]
-                            )}>
-                                <div className="w-4 h-4 text-white" />
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="font-medium">Setting option {i + 1}</h3>
-                                <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-2" />
-                            </div>
+                <div
+                    className={cn(
+                        "rounded-lg mb-4 p-4 border",
+                        isDarkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+                    )}
+                >
+                    <div className="flex items-center">
+                        <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center mr-3",
+                            "bg-blue-500"
+                        )}>
+                            <div className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="font-medium">Setting CA Analysis option</h3>
+                            <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-2" />
                         </div>
                     </div>
-                ))}
+                </div>
+                <div
+                    className={cn(
+                        "rounded-lg mb-4 p-4 border",
+                        isDarkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+                    )}
+                >
+                    <div className="flex items-center">
+                        <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center mr-3",
+                            "bg-green-500"
+                        )}>
+                            <div className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="font-medium">Setting CA Signal option</h3>
+                            <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-2" />
+                        </div>
+                    </div>
+                </div>
+                <div
+                    className={cn(
+                        "rounded-lg mb-4 p-4 border",
+                        isDarkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+                    )}
+                >
+                    <div className="flex items-center">
+                        <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center mr-3",
+                            "bg-amber-500"
+                        )}>
+                            <div className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="font-medium">Setting CA Signal option</h3>
+                            <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-2" />
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
@@ -280,6 +315,7 @@ export interface AppDefinition {
     defaultPosition?: { x: number; y: number };
     description?: string;
     status?: 'online' | 'coming_soon';
+    onIconClick?: () => void;
     chatModuleTexts?: {
         welcomeTitle?: string;
         welcomeDescription?: string;
@@ -327,7 +363,8 @@ export const appRegistry: Record<string, AppDefinition> = {
         component: <ThemeApp />,
         defaultSize,
         description: 'Change your theme',
-        status: 'online'
+        status: 'online',
+        onIconClick: toggleThemeDirectly
     },
     messages: {
         id: 'messages',

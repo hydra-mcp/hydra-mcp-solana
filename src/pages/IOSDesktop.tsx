@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@/hooks/use-theme';
-import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
 import { IOSIcon } from '@/components/ios/IOSIcon';
 import { IOSDock } from '@/components/ios/IOSDock';
 import { IOSStatusBar } from '@/components/ios/IOSStatusBar';
+import { cn } from '@/lib/utils';
+import { useTheme, WALLPAPERS } from '@/hooks/use-theme';
+import { AnimatePresence, motion } from 'framer-motion';
 import { WindowManager } from '@/components/ios/WindowManager';
 import { createAppWindow } from '@/components/ios/AppRegistry';
 import { appRegistry } from '@/components/ios/appConfig';
@@ -257,7 +257,7 @@ const IOSDesktopContent = ({
             icon: app.icon,
             path: app.path,
             // Add special handling for the settings application
-            onClick: app.id === 'settings' ? toggleTheme : undefined
+            // onClick: app.id === 'settings' ? toggleTheme : undefined
         }))
     );
 
@@ -276,8 +276,8 @@ const IOSDesktopContent = ({
         {
             name: appRegistry.settings.title,
             icon: appRegistry.settings.icon,
-            path: "#",
-            onClick: toggleTheme
+            path: appRegistry.settings.path,
+            // onClick: toggleTheme
         }
     ];
 
@@ -288,21 +288,29 @@ const IOSDesktopContent = ({
             return;
         }
 
-        const app = apps.find(app => app.id === id);
-        if (!app) return;
+        // Find app definition
+        const iosApp = apps.find(app => app.id === id);
+        if (!iosApp) return;
 
-        if (app.onClick) {
-            app.onClick();
-        } else if (app.path) {
+        // Find complete application configuration
+        const appKey = Object.keys(appRegistry).find(
+            key => appRegistry[key].title === iosApp.name
+        );
+
+        if (appKey && appRegistry[appKey].onIconClick) {
+            // If the application defines a custom click processing function, execute it
+            appRegistry[appKey].onIconClick();
+        } else {
+            // Otherwise, the default behavior is to open the application window
             // Determine appId from path (remove leading slash)
-            const appId = app.path.startsWith('/') ? app.path.substring(1) : app.path;
+            const appId = iosApp.path.startsWith('/') ? iosApp.path.substring(1) : iosApp.path;
             // Create application window and open
             const appWindow = createAppWindow(appId);
             if (appWindow) {
                 openApp(appWindow);
             } else {
                 // If the corresponding application window definition is not found, fall back to traditional navigation
-                navigate(app.path);
+                navigate(iosApp.path);
             }
         }
     };
@@ -396,8 +404,8 @@ const IOSDesktopContent = ({
 
     // Wallpaper URL
     const wallpaperUrl = isDarkMode
-        ? "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1170&auto=format&fit=crop"
-        : "https://images.unsplash.com/photo-1502472584811-0a2f2feb8968?q=80&w=2070&auto=format&fit=crop";
+        ? WALLPAPERS.DARK
+        : WALLPAPERS.LIGHT;
 
     // Handle right-click on the desktop area
     const handleDesktopContextMenu = (e: React.MouseEvent) => {
