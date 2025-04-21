@@ -15,6 +15,7 @@ interface ChatProviderProps {
         enableHistory?: boolean;
         historyStorageKey?: string;
         initialMessages?: any[];
+        scrollButtonThreshold?: number;
     };
 }
 
@@ -27,7 +28,8 @@ export function ChatProvider({
     const {
         enableHistory = true,
         historyStorageKey = 'chat-history',
-        initialMessages = []
+        initialMessages = [],
+        scrollButtonThreshold = 100
     } = options;
 
     const { toast } = useToast();
@@ -69,7 +71,8 @@ export function ChatProvider({
         handleScroll,
         checkScrollState
     } = useScrollBehavior({
-        defaultIsStreaming: false
+        defaultIsStreaming: false,
+        bottomThreshold: scrollButtonThreshold
     });
 
     // Generate a unique session ID for this provider instance

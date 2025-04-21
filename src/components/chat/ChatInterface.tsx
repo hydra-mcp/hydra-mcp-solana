@@ -23,13 +23,15 @@ interface ChatInterfaceProps {
     sidebarEnabled?: boolean;
     className?: string;
     showScrollToBottom?: boolean;
+    scrollButtonThreshold?: number;
 }
 
 export function ChatInterface({
     modalMode = false,
     sidebarEnabled = true,
     className,
-    showScrollToBottom = true
+    showScrollToBottom = true,
+    scrollButtonThreshold = 100
 }: ChatInterfaceProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
@@ -106,11 +108,14 @@ export function ChatInterface({
     useEffect(() => {
         if (!currentChat?.messages) return;
 
-        const rafId = requestAnimationFrame(() => {
+        // only check scroll state once after messages are loaded
+        // use setTimeout instead of requestAnimationFrame
+        // to avoid frequent scroll check, causing user manual scroll to be interrupted
+        const timerId = setTimeout(() => {
             checkScrollState();
-        });
+        }, 300);
 
-        return () => cancelAnimationFrame(rafId);
+        return () => clearTimeout(timerId);
     }, [currentChat?.messages, checkScrollState]);
 
     // Window click event, keep input focus (modal mode)
@@ -241,6 +246,31 @@ export function ChatInterface({
             console.error("retry message failed:", error);
         }
     }, [currentChat, sendMessage, scrollToBottom, clearMessages, isProcessing]);
+
+    // ref for the bottom detector element
+    const bottomDetectorRef = useRef<HTMLDivElement>(null);
+
+    // use useEffect to handle the setup and cleanup of IntersectionObserver
+    useEffect(() => {
+        const detector = bottomDetectorRef.current;
+        if (!detector || !showScrollToBottom) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            // when the element is in view, it means it has scrolled to the bottom
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    checkScrollState();
+                }
+            });
+        }, { threshold: 0.5 });
+
+        observer.observe(detector);
+
+        // cleanup when the component unmounts
+        return () => {
+            observer.disconnect();
+        };
+    }, [showScrollToBottom, checkScrollState]);
 
     return (
         <div
@@ -407,10 +437,29 @@ export function ChatInterface({
                                 modalMode ? "bottom-24 right-6" : "bottom-24 right-6",
                                 !modalMode && sidebarEnabled && isSidebarOpen ? "lg:right-6" : "right-6"
                             )}
-                            onClick={scrollToBottom}
+                            onClick={() => {
+                                // click the button to scroll to the bottom
+                                scrollToBottom();
+                                // ensure the button is hidden immediately
+                                setTimeout(() => {
+                                    if (messagesEndRef.current) {
+                                        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+                                        setTimeout(checkScrollState, 300);
+                                    }
+                                }, 0);
+                            }}
                         >
                             <ChevronDown className="h-4 w-4" />
                         </Button>
+                    )}
+
+                    {/* add a scroll end detection hook */}
+                    {showScrollToBottom && (
+                        <div
+                            className="hidden"
+                            aria-hidden="true"
+                            ref={bottomDetectorRef}
+                        />
                     )}
                 </div>
             </main>

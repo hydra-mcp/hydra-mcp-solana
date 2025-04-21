@@ -12,22 +12,51 @@ export function uuid() {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 
-// Add throttle function to limit function call frequency
+// improve the throttle function, add special handling for the last call, ensure the final state is updated correctly
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
-  limit: number
+  limit: number,
+  options: { trailing?: boolean } = { trailing: true }
 ): (...args: Parameters<T>) => ReturnType<T> | undefined {
   let inThrottle = false;
   let lastResult: ReturnType<T> | undefined;
+  let lastArgs: Parameters<T> | null = null;
+  let lastThis: any = null;
+  let timeoutId: NodeJS.Timeout | null = null;
+
+  // ensure the timer is cleared when the component unmounts
+  const clearTimer = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+  };
 
   return function (this: any, ...args: Parameters<T>): ReturnType<T> | undefined {
+    // save the last call context and parameters
+    lastArgs = args;
+    lastThis = this;
+
+    // if not in throttle, execute the function immediately
     if (!inThrottle) {
       inThrottle = true;
       lastResult = func.apply(this, args);
-      setTimeout(() => {
+
+      // set the throttle end timer
+      timeoutId = setTimeout(() => {
         inThrottle = false;
+
+        // if there is a trailing option and there is a last call, execute it
+        if (options.trailing && lastArgs) {
+          lastResult = func.apply(lastThis, lastArgs);
+          lastArgs = null;
+          lastThis = null;
+        }
+
+        timeoutId = null;
       }, limit);
     }
+
     return lastResult;
   };
 }

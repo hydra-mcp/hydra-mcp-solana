@@ -18,9 +18,18 @@ import { ChatInterface } from '@/components/chat/ChatInterface';
 import { appRegistry } from '@/components/ios/appConfig';
 >>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
 
+<<<<<<< HEAD
 interface SidebarContext {
     isSidebarOpen: boolean;
     toggleSidebar: () => void;
+=======
+interface ChatPageProps {
+    isModal?: boolean;
+    apiEndpoint?: string;
+    appId?: string;
+    showScrollToBottom?: boolean;
+    scrollButtonThreshold?: number;
+>>>>>>> ea7d3c4 (feat: Enhance the chat interface, add scroll button threshold and improved scroll detection mechanism)
 }
 
 <<<<<<< HEAD
@@ -599,7 +608,8 @@ export function ChatPage({
     isModal = true,
     apiEndpoint = '/mcp/chat/completions',
     appId = 'messages',
-    showScrollToBottom = true
+    showScrollToBottom = true,
+    scrollButtonThreshold = 100
 }: ChatPageProps) {
     // Get application definition, use the definition in appRegistry directly
     const app = appRegistry[appId];
@@ -610,13 +620,15 @@ export function ChatPage({
             appDefinition={app}
             options={{
                 enableHistory: true,
-                historyStorageKey: `chat-history-${appId}`
+                historyStorageKey: `chat-history-${appId}`,
+                scrollButtonThreshold
             }}
         >
             <ChatInterface
                 modalMode={isModal}
                 sidebarEnabled={true}
                 showScrollToBottom={showScrollToBottom}
+                scrollButtonThreshold={scrollButtonThreshold}
             />
         </ChatProvider>
 >>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
