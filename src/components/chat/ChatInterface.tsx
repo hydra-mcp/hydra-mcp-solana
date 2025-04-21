@@ -102,8 +102,12 @@ export function ChatInterface({
     const handleSendMessage = useCallback((message: string) => {
         // reset error status when sending message
         setHasStageError(false);
+        // clear the status and error in StreamingContext before sending a new message
+        if (clearMessages) {
+            clearMessages();
+        }
         sendMessage(message);
-    }, [sendMessage, setHasStageError]);
+    }, [sendMessage, setHasStageError, clearMessages]);
 
     useEffect(() => {
         if (!currentChat?.messages) return;

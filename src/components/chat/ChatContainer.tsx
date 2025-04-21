@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { Chat } from "@/types/chat";
 import { MessageBubble } from "./MessageBubble";
 import { memo, useEffect, useState } from "react";
@@ -6,6 +7,9 @@ import { Bot, MessageSquarePlus, ArrowRight, Info, CheckCircle, Loader2, BrainCi
 import { Button } from "@/components/ui/button";
 =======
 import React, { useCallback, useState } from 'react';
+=======
+import React, { useCallback, useState, useEffect } from 'react';
+>>>>>>> f4625cc (feat: Enhance chat functionality, add stream state change monitoring and error state reset mechanism)
 import { Chat } from '@/types/chat';
 import { StreamingMessageBubble } from '@/components/streaming/StreamingMessageBubble';
 import { EmptyChatState } from './EmptyChatState';
@@ -94,10 +98,19 @@ export const ChatContainer = memo(({
     } | null>(null);
 
     let isStreaming = false;
+    let streamingContext;
 
     try {
-        const streamingContext = useStreaming();
+        streamingContext = useStreaming();
         isStreaming = streamingContext.isStreaming;
+
+        // use useEffect to listen to the streaming status change, reset the error status when a new stream starts
+        useEffect(() => {
+            if (isStreaming) {
+                // when a new stream starts, reset the previous error status
+                setLastError(null);
+            }
+        }, [isStreaming]);
 
         const lastMessage = streamingContext.messages[streamingContext.messages.length - 1];
         if (lastMessage && lastMessage.status === 'error' && lastMessage.sender === 'ai') {
