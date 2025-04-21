@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { HistoryIcon, ExternalLink, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { getRechargeHistory, formatSolAmount, formatShortAddress } from '@/lib/walletService';
 import { RechargeOrder, OrderStatus } from '@/types/wallet';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface RechargeHistoryProps {
     walletAddress?: string;
@@ -146,57 +147,59 @@ export const RechargeHistory: React.FC<RechargeHistoryProps> = ({
                         <p className="text-sm text-gray-500">No recharge records yet</p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
-                        {orders.map((order) => (
-                            <div
-                                key={order.order_id}
-                                className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                            >
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <div className="flex items-center space-x-1.5">
-                                            {getStatusIcon(order.status)}
-                                            <span className="font-medium">{formatSolAmount(order.amount)} SOL</span>
-                                            <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700">
-                                                {getStatusText(order.status)}
-                                            </span>
+                    <ScrollArea className="h-[460px] pr-4 overflow-y-auto">
+                        <div className="space-y-3">
+                            {orders.map((order) => (
+                                <div
+                                    key={order.order_id}
+                                    className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="flex items-center space-x-1.5">
+                                                {getStatusIcon(order.status)}
+                                                <span className="font-medium">{formatSolAmount(order.amount)} SOL</span>
+                                                <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700">
+                                                    {getStatusText(order.status)}
+                                                </span>
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                {formatTime(order.created_at)}
+                                            </div>
                                         </div>
-                                        <div className="text-xs text-gray-500 mt-1">
-                                            {formatTime(order.created_at)}
-                                        </div>
+
+                                        {order.transaction_signature && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 px-2 -mt-1"
+                                                onClick={() => window.open(`https://explorer.solana.com/tx/${order.transaction_signature}`, '_blank')}
+                                            >
+                                                <ExternalLink className="h-3 w-3" />
+                                            </Button>
+                                        )}
                                     </div>
 
-                                    {order.transaction_signature && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 px-2 -mt-1"
-                                            onClick={() => window.open(`https://explorer.solana.com/tx/${order.transaction_signature}`, '_blank')}
-                                        >
-                                            <ExternalLink className="h-3 w-3" />
-                                        </Button>
-                                    )}
+                                    <div className="mt-1.5 text-xs text-gray-500">
+                                        Order Number: {order.order_number}
+                                    </div>
                                 </div>
+                            ))}
 
-                                <div className="mt-1.5 text-xs text-gray-500">
-                                    Order Number: {order.order_number}
+                            {hasMore && (
+                                <div className="flex justify-center pt-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleLoadMore}
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? 'Loading...' : 'Load more'}
+                                    </Button>
                                 </div>
-                            </div>
-                        ))}
-
-                        {hasMore && (
-                            <div className="flex justify-center pt-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleLoadMore}
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? 'Loading...' : 'Load more'}
-                                </Button>
-                            </div>
-                        )}
-                    </div>
+                            )}
+                        </div>
+                    </ScrollArea>
                 )}
             </CardContent>
         </Card>
