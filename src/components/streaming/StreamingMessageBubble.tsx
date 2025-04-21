@@ -136,7 +136,21 @@ export function StreamingMessageBubble({
                 {isUser ? (
                     <div className="whitespace-pre-wrap break-words">{message.content}</div>
                 ) : (
-                    <StreamingMessageContent message={message} className="prose-sm max-w-none" />
+                    <>
+                        <StreamingMessageContent message={message} className="prose-sm max-w-none" />
+
+                        {/* Status Indicator */}
+                        {isStreaming && (
+                            <div className="flex items-center gap-2 mt-3 mb-1">
+                                <div className="flex space-x-1">
+                                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                    <div className="w-2 h-2 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                </div>
+                                <span className="text-xs font-medium bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 bg-clip-text text-transparent animate-pulse">Thinking...</span>
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {/* Time and action buttons */}
@@ -161,12 +175,8 @@ export function StreamingMessageBubble({
                     {/* Copy button - show for both user and AI messages */}
                     {!isStreaming && message.content && !isAuthError && <CopyButton />}
 
-                    {/* Status and time */}
-                    {isStreaming && !isUser ? (
-                        <span className="animate-pulse">Thinking...</span>
-                    ) : (
-                        <span>{formatTime(message.createdAt)}</span>
-                    )}
+                    {/* Time display */}
+                    <span>{formatTime(message.createdAt)}</span>
                 </div>
             </div>
 
