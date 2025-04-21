@@ -5,6 +5,7 @@ import { HistoryIcon, CheckCircle, XCircle, RotateCcw, ShoppingCart, Zap, Globe 
 import { getConsumptionHistory, formatSolAmount } from '@/lib/walletService';
 import { ConsumptionRecord, ConsumptionStatus, ConsumptionType } from '@/types/wallet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ConsumptionHistoryProps {
     walletAddress?: string;
@@ -201,61 +202,63 @@ export const ConsumptionHistory: React.FC<ConsumptionHistoryProps> = ({
                         <p className="text-sm text-gray-500">No consumption records yet</p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
-                        {records.map((record, index) => (
-                            <div
-                                key={index}
-                                className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                            >
-                                <div className="flex justify-between items-start">
-                                    <div>
+                    <ScrollArea className="h-[460px] pr-4 overflow-y-auto">
+                        <div className="space-y-3">
+                            {records.map((record, index) => (
+                                <div
+                                    key={index}
+                                    className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="flex items-center space-x-1.5">
+                                                {getStatusIcon(record.status)}
+                                                <span className="font-medium">{formatSolAmount(record.amount)} SOL</span>
+                                                <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700">
+                                                    {getStatusText(record.status)}
+                                                </span>
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                {formatTime(record.created_at)}
+                                            </div>
+                                        </div>
+
                                         <div className="flex items-center space-x-1.5">
-                                            {getStatusIcon(record.status)}
-                                            <span className="font-medium">{formatSolAmount(record.amount)} SOL</span>
+                                            {getTypeIcon(record.consumption_type)}
                                             <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700">
-                                                {getStatusText(record.status)}
+                                                {getTypeText(record.consumption_type)}
                                             </span>
                                         </div>
-                                        <div className="text-xs text-gray-500 mt-1">
-                                            {formatTime(record.created_at)}
+                                    </div>
+
+                                    {record.description && (
+                                        <div className="mt-1.5 text-xs text-gray-500">
+                                            {record.description} {record.quantity > 1 ? `(×${record.quantity})` : ''}
                                         </div>
-                                    </div>
+                                    )}
 
-                                    <div className="flex items-center space-x-1.5">
-                                        {getTypeIcon(record.consumption_type)}
-                                        <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700">
-                                            {getTypeText(record.consumption_type)}
-                                        </span>
-                                    </div>
+                                    {record.feature_id && (
+                                        <div className="mt-0.5 text-xs text-gray-400">
+                                            ID: {record.feature_id}
+                                        </div>
+                                    )}
                                 </div>
+                            ))}
 
-                                {record.description && (
-                                    <div className="mt-1.5 text-xs text-gray-500">
-                                        {record.description} {record.quantity > 1 ? `(×${record.quantity})` : ''}
-                                    </div>
-                                )}
-
-                                {record.feature_id && (
-                                    <div className="mt-0.5 text-xs text-gray-400">
-                                        ID: {record.feature_id}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-
-                        {hasMore && (
-                            <div className="flex justify-center pt-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleLoadMore}
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? 'Loading...' : 'Load more'}
-                                </Button>
-                            </div>
-                        )}
-                    </div>
+                            {hasMore && (
+                                <div className="flex justify-center pt-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleLoadMore}
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? 'Loading...' : 'Load more'}
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </ScrollArea>
                 )}
             </CardContent>
         </Card>
