@@ -21,9 +21,11 @@ import {
 import { useTheme, toggleThemeDirectly } from '@/hooks/use-theme';
 import { CASignalIcon } from './AppIcons';
 import AppStoreComponent from '@/components/AppStore/AppStoreComponent';
+// Import ChatPageProps from ChatPage
+import type { ChatPageProps } from '@/pages/ChatPage';
 
 // Common loading placeholder component
-const LoadingPlaceholder = () => (
+export const LoadingPlaceholder = () => (
     <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center">
             <div className="w-8 h-8 border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent rounded-full animate-spin"></div>
@@ -42,11 +44,11 @@ const WalletFinderComponent = lazy(() => import('@/pages/WalletFinder').then(mod
 })));
 
 // Lazy load Chat component
-const ChatComponent = lazy(() => import('@/pages/ChatPage').then(module => ({
+export const ChatComponent = (props: ChatPageProps) => lazy(() => import('@/pages/ChatPage').then(module => ({
     default: () => {
         // Load ChatPage component and set it to modal mode
         const { ChatPage } = module;
-        return <ChatPage />;
+        return <ChatPage {...props} />;
     }
 })));
 
@@ -335,7 +337,7 @@ export interface AppDefinition {
     };
 }
 
-const defaultSize = { width: '80%', height: '85%' }
+export const defaultSize = { width: '80%', height: '85%' }
 
 // AppStore component
 const AppStoreApp = () => {
@@ -386,7 +388,8 @@ export const appRegistry: Record<string, AppDefinition> = {
         icon: <MessagesIcon />,
         component: (
             <Suspense fallback={<LoadingPlaceholder />}>
-                <ChatComponent />
+                {/* Pass proper ChatPageProps to ChatComponent */}
+                {React.createElement(ChatComponent({ appId: 'messages' }))}
             </Suspense>
         ),
         defaultSize,

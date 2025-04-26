@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IOSIcon } from '@/components/ios/IOSIcon';
 import { IOSDock } from '@/components/ios/IOSDock';
@@ -7,9 +7,11 @@ import { cn } from '@/lib/utils';
 import { useTheme, WALLPAPERS } from '@/hooks/use-theme';
 import { AnimatePresence, motion } from 'framer-motion';
 import { WindowManager } from '@/components/ios/WindowManager';
-import { createAppWindow } from '@/components/ios/AppRegistry';
-import { appRegistry } from '@/components/ios/appConfig';
+import { createAppWindow, getDefaultAppPosition } from '@/components/ios/AppRegistry';
+import { AppDefinition, appRegistry, ChatComponent, defaultSize, LoadingPlaceholder } from '@/components/ios/appConfig';
 import { useAppWindow } from '@/contexts/AppWindowContext';
+import { fetchApps, AppItem } from '@/lib/appStoreService';
+import { v4 as uuidv4 } from 'uuid';
 
 // Context menu component
 interface ContextMenuProps {
@@ -248,16 +250,64 @@ const IOSDesktopContent = ({
     navigate: (path: string) => void;
 }) => {
     const { openApp } = useAppWindow();
+    const [installedApps, setInstalledApps] = useState<AppItem[]>([]);
 
     // Generate application list from appRegistry
-    const [apps, setApps] = useState(() =>
+    const [apps, setApps] = useState<AppDefinition[]>(() =>
         Object.values(appRegistry).map((app, index) => ({
             id: String(index + 1),
-            name: app.title,
-            icon: app.icon,
-            path: app.path,
+            ...app
         }))
     );
+
+    // Fetch installed apps from the API
+    useEffect(() => {
+        const fetchInstalledApps = async () => {
+            try {
+                const appsData = await fetchApps();
+                const installed = appsData.filter(app => app.installed);
+                setInstalledApps(installed);
+            } catch (error) {
+                console.error('Error fetching installed apps:', error);
+            }
+        };
+
+        fetchInstalledApps();
+    }, []);
+
+    // Add installed apps to the desktop
+    useEffect(() => {
+        if (installedApps.length > 0) {
+            // Convert installed apps to the format needed for desktop icons
+            const installedAppIcons = installedApps.map((app, index) => {
+                // Get the next available ID after existing apps
+                const nextId = String(Object.values(appRegistry).length + index + 1);
+                const appDefinition: AppDefinition = {
+                    id: nextId,
+                    title: app.name,
+                    // Use default icon if app icon is not available
+                    icon: app.icon ?
+                        <img src={app.icon} alt={app.name} className="w-full h-full" /> :
+                        <div className="w-full h-full flex items-center justify-center bg-blue-500 rounded-xl">
+                            <span className="text-white text-4xl font-bold">{app.name.charAt(0)}</span>
+                        </div>,
+                    path: `/app/${app.id}`,
+                    component: (
+                        <Suspense fallback={<LoadingPlaceholder />}>
+                            {React.createElement(ChatComponent({ appId: app.id }))}
+                        </Suspense>
+                    ),
+                    defaultSize
+                }
+                return appDefinition;
+            });
+
+            // Add installed apps to the desktop without modifying existing apps
+            setApps(prevApps => {
+                return [...prevApps, ...installedAppIcons];
+            });
+        }
+    }, [installedApps]);
 
     // Dock apps - using appRegistry application information
     const dockApps = [
@@ -289,9 +339,38 @@ const IOSDesktopContent = ({
         const iosApp = apps.find(app => app.id === id);
         if (!iosApp) return;
 
+        // Handle installed apps from App Store
+        if (iosApp.path.startsWith('/app/')) {
+            const appStoreAppId = iosApp.path.replace('/app/', '');
+            const installedApp = installedApps.find(app => app.id === appStoreAppId);
+
+            if (installedApp) {
+                const installedAppConfig = {
+                    id: appStoreAppId,
+                    path: iosApp.path,
+                    title: installedApp.name,
+                    icon: iosApp.icon,
+                    component: iosApp.component,
+                    defaultSize: iosApp.defaultSize || defaultSize,
+                    description: installedApp.description
+                };
+
+                // add installed app to appRegistry
+                appRegistry[appStoreAppId] = installedAppConfig;
+
+                // create window with installed app
+                const appWindow = createAppWindow(appStoreAppId);
+
+                if (appWindow) {
+                    openApp(appWindow);
+                }
+                return;
+            }
+        }
+
         // Find complete application configuration
         const appKey = Object.keys(appRegistry).find(
-            key => appRegistry[key].title === iosApp.name
+            key => appRegistry[key].path === iosApp.path
         );
 
         if (appKey && appRegistry[appKey].onIconClick) {
@@ -320,7 +399,7 @@ const IOSDesktopContent = ({
         if (!app) return;
 
         setContextMenuPosition({ x: e.clientX, y: e.clientY });
-        setSelectedApp(app.name);
+        setSelectedApp(app.title);
         setShowContextMenu(true);
     };
 
@@ -339,7 +418,7 @@ const IOSDesktopContent = ({
     const handleConfirmRename = (newName: string) => {
         if (selectedApp) {
             setApps(prev => prev.map(app =>
-                app.name === selectedApp ? { ...app, name: newName } : app
+                app.title === selectedApp ? { ...app, title: newName } : app
             ));
             setSelectedApp(null);
             setShowRenameDialog(false);
@@ -349,7 +428,7 @@ const IOSDesktopContent = ({
     // Handle deleting applications
     const handleDelete = () => {
         if (selectedApp) {
-            setApps(prev => prev.filter(app => app.name !== selectedApp));
+            setApps(prev => prev.filter(app => app.title !== selectedApp));
             setShowContextMenu(false);
             setSelectedApp(null);
         }
@@ -450,7 +529,7 @@ const IOSDesktopContent = ({
                     {apps.map((app) => (
                         <IOSIcon
                             key={app.id}
-                            name={app.name}
+                            name={app.title}
                             icon={app.icon}
                             onClick={() => handleAppClick(app.id)}
                             onContextMenu={(e) => handleContextMenu(e, app.id)}

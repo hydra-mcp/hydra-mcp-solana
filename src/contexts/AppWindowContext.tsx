@@ -8,7 +8,7 @@ export interface AppWindow {
     isMinimized: boolean;
     zIndex: number;
     position: { x: number; y: number };
-    size: { width: number; height: number };
+    size: { width: number | string; height: number | string };
     path: string;
 }
 
@@ -19,7 +19,7 @@ interface AppWindowContextType {
     closeApp: (id: string) => void;
     focusApp: (id: string) => void;
     moveApp: (id: string, position: { x: number; y: number }) => void;
-    resizeApp: (id: string, size: { width: number; height: number }) => void;
+    resizeApp: (id: string, size: { width: number | string; height: number | string }) => void;
     minimizeApp: (id: string) => void;
     restoreApp: (id: string) => void;
     closeAllApps: () => void;

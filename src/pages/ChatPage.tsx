@@ -3,7 +3,7 @@ import { ChatProvider } from '@/components/chat/ChatProvider';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { appRegistry } from '@/components/ios/appConfig';
 
-interface ChatPageProps {
+export interface ChatPageProps {
     isModal?: boolean;
     apiEndpoint?: string;
     appId?: string;
@@ -22,7 +22,14 @@ export function ChatPage({
     const app = appRegistry[appId];
 
     // if no app is found, use the default messages app
-    const appDefinition = app || appRegistry['messages'];
+    // Create a fallback app definition in case the app isn't found
+    const defaultApp = appRegistry['messages'];
+    const appDefinition = app || {
+        ...defaultApp,
+        id: appId,
+        title: appId, // Use appId as title if no app definition is found
+        chatModuleTexts: defaultApp.chatModuleTexts // Use default chat module texts
+    };
 
     return (
         <ChatProvider
