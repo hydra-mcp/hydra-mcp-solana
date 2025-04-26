@@ -4,6 +4,7 @@ import { useStreaming } from '@/lib/streaming/StreamingContext';
 import { sendChatStream, ChunkType } from '@/lib/streaming/sseClient';
 import { StreamingMessage, MessageChunk } from '@/lib/streaming/types';
 import { generateChatTitle } from '@/lib/utils';
+import { AppDefinition } from '@/components/ios/AppRegistry';
 
 /**
  * Streaming chat hook configuration
@@ -12,6 +13,9 @@ interface UseChatWithStreamingOptions {
     apiEndpoint: string;
     onUpdateChat: (chatId: string, updates: Partial<Chat>) => void;
     onError?: (error: Error) => void;
+    config: {
+        appDefinition?: AppDefinition;
+    };
 }
 
 /**
@@ -20,7 +24,8 @@ interface UseChatWithStreamingOptions {
 export function useChatWithStreaming({
     apiEndpoint,
     onUpdateChat,
-    onError
+    onError,
+    config
 }: UseChatWithStreamingOptions) {
     // States
     const [isProcessing, setIsProcessing] = useState(false);
@@ -266,7 +271,8 @@ export function useChatWithStreaming({
                             onError(new Error(chunk.error.message));
                         }
                     }
-                }
+                },
+                config?.appDefinition?.id
             );
 
             // Stream complete
@@ -282,8 +288,8 @@ export function useChatWithStreaming({
             setIsRefreshingAuth(false);
             delete messageContentRef.current[aiMessageId];
 
-        } catch (error) {
-            console.error(`[sendMessage] Error:`, error);
+        } catch (error: any) {
+            console.error('[sendMessage] Error during stream processing:', error);
 
             // End streaming in context if available
             if (streamingContext) {
@@ -298,7 +304,7 @@ export function useChatWithStreaming({
                 onError(error instanceof Error ? error : new Error(String(error)));
             }
         }
-    }, [apiEndpoint, isProcessing, onUpdateChat, onError, streamingContext]);
+    }, [apiEndpoint, isProcessing, onUpdateChat, onError, streamingContext, config]);
 
     return {
         sendMessage,

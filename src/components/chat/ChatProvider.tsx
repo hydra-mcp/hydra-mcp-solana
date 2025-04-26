@@ -175,7 +175,8 @@ function StreamingAwareChat({
                 description: error.message || 'Failed to get AI response.',
                 duration: 3000,
             });
-        }
+        },
+        config: config
     });
 
     // Send message

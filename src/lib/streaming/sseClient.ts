@@ -398,30 +398,48 @@ export async function sendSSERequest<T>(
 }
 
 /**
- * Send chat message using SSE
- * @param url API endpoint
+ * Send chat stream request
+ * @param url Request URL
  * @param messages Message list
- * @param onChunk Data block callback
- * @returns Promise
+ * @param onChunk Chunk callback function
+ * @param appId Application ID (optional)
+ * @returns Promise<any>
  */
 export async function sendChatStream(
     url: string,
     messages: Array<{ role: string, content: string }>,
-    onChunk: (chunk: ChunkType) => void
+    onChunk: (chunk: ChunkType) => void,
+    appId?: string
 ): Promise<any> {
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
     const fullUrl = `${baseUrl}${url}`;
 
     const payload = {
         messages,
-        stream: true
+        stream: true,
     };
 
-    console.log('[sendChatStream] Sending chat request:', { url: fullUrl, messagesCount: messages.length });
+    // Append appId to URL if provided
+    const requestUrl = appId ? `${fullUrl}?appId=${encodeURIComponent(appId)}` : fullUrl;
 
-    return sendSSERequest(fullUrl, payload, {
+    console.log(`[SSEClient] Sending chat stream request to ${requestUrl}`);
+
+    return sendSSERequest<any>(requestUrl, payload, {
         onChunk,
-        onComplete: () => console.log('[SSEClient] Chat stream completed'),
-        onError: (error) => console.error('[SSEClient] Chat stream error:', error)
+        onComplete: () => {
+            // Notify completion
+            onChunk({ type: 'done' });
+            console.log('[SSEClient] Chat stream completed');
+        },
+        onError: (error) => {
+            // Notify error
+            onChunk({
+                type: 'error',
+                error: {
+                    message: error.message || 'Unknown SSE error'
+                }
+            });
+            console.error('[SSEClient] Chat stream error:', error);
+        }
     });
 } 
