@@ -37,6 +37,7 @@ export function ChatInterface({
     const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
     const { isDarkMode } = useTheme();
     const [hasStageError, setHasStageError] = useState(false);
+    const [inputValue, setInputValue] = useState('');
 
     const [isLocalStreaming, setIsLocalStreaming] = useState(false);
     let streamingState = {
@@ -403,6 +404,7 @@ export function ChatInterface({
                                 transformY={transformY}
                                 paddingTop={paddingTop}
                                 onRetry={handleRetry}
+                                setInputValue={setInputValue}
                             />
 
                             {/* Message end reference - put after Stage */}
@@ -483,6 +485,8 @@ export function ChatInterface({
                                 placeholder="Type your message..."
                                 disabled={isStreaming && !hasStageError}
                                 className="max-h-[80px]"
+                                value={inputValue}
+                                onInputChange={setInputValue}
                                 onSendMessage={handleSendMessage}
                             />
                         ) : (

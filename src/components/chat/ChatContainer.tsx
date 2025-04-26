@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, Dispatch, SetStateAction } from 'react';
 import { Chat } from '@/types/chat';
 import { StreamingMessageBubble } from '@/components/streaming/StreamingMessageBubble';
 import { EmptyChatState } from './EmptyChatState';
@@ -12,6 +12,7 @@ interface ChatContainerProps {
     transformY?: string;
     paddingTop?: string;
     onRetry?: () => void;
+    setInputValue: Dispatch<SetStateAction<string>>;
 }
 
 export function ChatContainer({
@@ -19,7 +20,8 @@ export function ChatContainer({
     onNewChat,
     transformY = 'translateY(0)',
     paddingTop = '4rem',
-    onRetry
+    onRetry,
+    setInputValue
 }: ChatContainerProps) {
     const { isLoadingChats } = useChatContext();
     const [lastError, setLastError] = useState<{
@@ -76,7 +78,7 @@ export function ChatContainer({
     }
 
     if (!currentChat || currentChat.messages.length === 0) {
-        return <EmptyChatState onNewChat={onNewChat} />;
+        return <EmptyChatState onNewChat={onNewChat} setInputValue={setInputValue} />;
     }
 
     const messages = currentChat.messages
@@ -103,7 +105,7 @@ export function ChatContainer({
         });
 
     if (messages.length === 0) {
-        return <EmptyChatState onNewChat={onNewChat} />;
+        return <EmptyChatState onNewChat={onNewChat} setInputValue={setInputValue} />;
     }
 
     return (

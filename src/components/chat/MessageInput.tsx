@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ interface MessageInputProps {
     autoFocus?: boolean;
     disabled?: boolean;
     onSendMessage?: (message: string) => void;
+    value: string;
+    onInputChange: Dispatch<SetStateAction<string>>;
 }
 
 export function MessageInput({
@@ -19,7 +21,9 @@ export function MessageInput({
     placeholder = "Type your message...",
     autoFocus = false,
     disabled: externalDisabled,
-    onSendMessage
+    onSendMessage,
+    value,
+    onInputChange
 }: MessageInputProps) {
     const {
         inputRef,
@@ -36,15 +40,15 @@ export function MessageInput({
 
     const { isStreaming } = streamingState;
 
-    const [input, setInput] = React.useState('');
     const [isComposing, setIsComposing] = React.useState(false);
-    const isDisabled = !currentChatId || isStreaming || isProcessing || !input.trim() || externalDisabled;
+
+    const isDisabled = !currentChatId || isStreaming || isProcessing || !value.trim() || externalDisabled;
 
     const handleSend = async () => {
         if (isDisabled) return;
 
-        const message = input.trim();
-        setInput('');
+        const message = value.trim();
+        onInputChange('');
 
         if (onSendMessage) {
             onSendMessage(message);
@@ -78,8 +82,8 @@ export function MessageInput({
         <div className={cn("flex gap-2 w-full", className)}>
             <AutoResizeTextarea
                 ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
+                value={value}
+                onChange={(e) => onInputChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onCompositionStart={handleCompositionStart}
                 onCompositionEnd={handleCompositionEnd}

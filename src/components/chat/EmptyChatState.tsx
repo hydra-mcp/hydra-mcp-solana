@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import { Bot, HelpCircle, Info, Puzzle, Lightbulb } from 'lucide-react';
 import { useChatContext } from '@/context/ChatContext';
 import { cn } from '@/lib/utils';
 
 interface EmptyChatStateProps {
     onNewChat: () => void;
+    setInputValue: Dispatch<SetStateAction<string>>;
 }
 
 // default modules
@@ -41,7 +42,7 @@ const GRADIENT_COLORS = [
     'from-rose-500/10 to-red-500/10',
 ];
 
-export function EmptyChatState({ onNewChat }: EmptyChatStateProps) {
+export function EmptyChatState({ onNewChat, setInputValue }: EmptyChatStateProps) {
     const { config } = useChatContext();
     const appName = config.appDefinition?.title || 'Chat';
 
@@ -61,6 +62,17 @@ export function EmptyChatState({ onNewChat }: EmptyChatStateProps) {
             icon: module.icon || DEFAULT_MODULES[index % DEFAULT_MODULES.length].icon,
         };
     });
+
+    const fillTextarea = (content: string) => {
+        const textarea = document.querySelector('textarea');
+        if (textarea) {
+            const cleanedContent = content.replace(/"/g, '');
+            setInputValue(cleanedContent);
+
+            // Focus the textarea
+            textarea.focus();
+        }
+    };
 
     return (
         <div className="flex h-full flex-col items-center justify-center px-4 py-12 text-center">
@@ -88,20 +100,10 @@ export function EmptyChatState({ onNewChat }: EmptyChatStateProps) {
                             GRADIENT_COLORS[index % GRADIENT_COLORS.length]
                         )}
                         tabIndex={0}
-                        onClick={() => {
-                            const textarea = document.querySelector('textarea');
-                            if (textarea) {
-                                textarea.value = module.content.replace(/"/g, '');
-                                textarea.focus();
-                            }
-                        }}
+                        onClick={() => fillTextarea(module.content)}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === ' ') {
-                                const textarea = document.querySelector('textarea');
-                                if (textarea) {
-                                    textarea.value = module.content.replace(/"/g, '');
-                                    textarea.focus();
-                                }
+                                fillTextarea(module.content);
                             }
                         }}
                     >
