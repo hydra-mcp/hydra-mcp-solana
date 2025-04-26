@@ -457,3 +457,99 @@ export function clearAppChats(appId: string): void {
   const storageKey = `${STORAGE_KEY_PREFIX}_${appId}`;
   localStorage.removeItem(storageKey);
 }
+
+// App Store API functions
+export interface AppCategory {
+  id: string;
+  name: string;
+}
+
+export interface AppItem {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  icon: string;
+  rating: number;
+  downloads: string;
+  version?: string;
+  publisher?: string;
+  size?: string;
+  releaseDate?: string;
+}
+
+export interface UserAppInstallation {
+  appId: string;
+  installed: boolean;
+  installDate?: string;
+}
+
+// Fetch available app categories
+export async function fetchAppCategories(): Promise<AppCategory[]> {
+  try {
+    return await apiRequest<AppCategory[]>('/apps/categories');
+  } catch (error) {
+    console.error('Error fetching app categories:', error);
+    // Return default categories if API fails
+    return [
+      { id: 'all', name: 'All' },
+      { id: 'defi', name: 'DeFi' },
+      { id: 'nft', name: 'NFT' },
+      { id: 'wallet', name: 'Wallet' },
+      { id: 'analytics', name: 'Analytics' },
+      { id: 'trading', name: 'Trading' },
+      { id: 'governance', name: 'Governance' }
+    ];
+  }
+}
+
+// Fetch apps with optional category filter
+export async function fetchApps(category?: string): Promise<AppItem[]> {
+  try {
+    const endpoint = category && category !== 'all'
+      ? `/apps?category=${encodeURIComponent(category)}`
+      : '/apps';
+    return await apiRequest<AppItem[]>(endpoint);
+  } catch (error) {
+    console.error('Error fetching apps:', error);
+    // Return empty array if API fails
+    return [];
+  }
+}
+
+// Fetch user's installed apps
+export async function fetchUserInstalledApps(): Promise<UserAppInstallation[]> {
+  try {
+    return await apiRequest<UserAppInstallation[]>('/apps/user/installed');
+  } catch (error) {
+    console.error('Error fetching user installed apps:', error);
+    // Return empty array if API fails
+    return [];
+  }
+}
+
+// Install an app
+export async function installApp(appId: string): Promise<{ success: boolean }> {
+  try {
+    return await apiRequest<{ success: boolean }>('/apps/install', {
+      method: 'POST',
+      body: JSON.stringify({ appId }),
+    });
+  } catch (error) {
+    console.error('Error installing app:', error);
+    throw error;
+  }
+}
+
+// Uninstall an app
+export async function uninstallApp(appId: string): Promise<{ success: boolean }> {
+  try {
+    return await apiRequest<{ success: boolean }>('/apps/uninstall', {
+      method: 'POST',
+      body: JSON.stringify({ appId }),
+    });
+  } catch (error) {
+    console.error('Error uninstalling app:', error);
+    throw error;
+  }
+}

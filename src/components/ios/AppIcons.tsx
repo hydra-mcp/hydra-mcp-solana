@@ -1,4 +1,4 @@
-import { Wallet, MessageSquare, Settings, Image, Home, Search, Calendar, Mail, BarChart, DollarSign, CreditCard, Zap, SunMoon } from 'lucide-react';
+import { Wallet, MessageSquare, Settings, Image, Home, Search, Calendar, Mail, BarChart, DollarSign, CreditCard, Zap, SunMoon, Grid, Store } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -536,3 +536,48 @@ export const RechargeIcon = ({ className }: { className?: string }) => {
         />
     );
 };
+
+export const AppStoreIcon = ({ className }: { className?: string }) => {
+    return (
+        <AppIconBase
+            color="#0ea5e9"
+            secondaryColor="#38bdf8"
+            className={className}
+            icon={
+                <div className="relative">
+                    {/* Main Icon */}
+                    <motion.div
+                        initial={{ scale: 1 }}
+                        animate={{ scale: [1, 1.05, 1] }}
+                        transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            repeatType: "loop",
+                            ease: "easeInOut"
+                        }}
+                    >
+                        <Store className="w-9 h-9 text-white" />
+                    </motion.div>
+
+                    {/* New Badge */}
+                    <motion.div
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center"
+                        initial={{ scale: 0.8 }}
+                        animate={{
+                            scale: [0.8, 1, 0.8],
+                            rotate: [0, 5, 0, -5, 0]
+                        }}
+                        transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                    >
+                        <span className="text-[8px] font-bold text-white">new</span>
+                    </motion.div>
+                </div>
+            }
+        />
+    );
+};
+

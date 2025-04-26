@@ -1,5 +1,5 @@
-import React, { ReactNode, lazy, Suspense } from 'react';
-import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, DeepSearchIcon, RechargeIcon, ThemeIcon } from './AppIcons';
+import React, { ReactNode, lazy, Suspense, useState, useEffect } from 'react';
+import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, DeepSearchIcon, RechargeIcon, ThemeIcon, AppStoreIcon } from './AppIcons';
 import { cn } from '@/lib/utils';
 import {
     Calendar, Settings, Sliders, Image, Mail, Home, Search, SignalIcon,
@@ -9,10 +9,18 @@ import {
     BookOpen,
     Zap,
     Wallet,
-    Shield
+    Shield,
+    Download,
+    Loader2,
+    Star,
+    Check,
+    Package,
+    Trash2,
+    X
 } from 'lucide-react';
 import { useTheme, toggleThemeDirectly } from '@/hooks/use-theme';
 import { CASignalIcon } from './AppIcons';
+import AppStoreComponent from '@/components/AppStore/AppStoreComponent';
 
 // Common loading placeholder component
 const LoadingPlaceholder = () => (
@@ -329,6 +337,11 @@ export interface AppDefinition {
 
 const defaultSize = { width: '80%', height: '85%' }
 
+// AppStore component
+const AppStoreApp = () => {
+    return <AppStoreComponent />;
+};
+
 // Create a registry of all available apps
 export const appRegistry: Record<string, AppDefinition> = {
     walletFinder: {
@@ -586,5 +599,23 @@ export const appRegistry: Record<string, AppDefinition> = {
             ]
         }
     },
-
+    appStore: {
+        id: 'app-store',
+        path: '/app-store',
+        title: 'MCP App Store',
+        icon: <AppStoreIcon />,
+        component: <AppStoreApp />,
+        defaultSize,
+        description: 'Explore and install the latest applications and tools for Hydra OS',
+        status: 'online',
+        chatModuleTexts: {
+            welcomeDescription: 'Welcome to the MCP App Store, where you can browse, download, and install the latest blockchain applications and tools.',
+            modules: [
+                { title: 'Application Classification', content: 'Browse applications by function category', icon: <Puzzle className="h-5 w-5" /> },
+                { title: 'Top Recommendations', content: 'View the top applications loved by users', icon: <Star className="h-5 w-5" /> },
+                { title: 'New Releases', content: 'Explore the latest released applications', icon: <Zap className="h-5 w-5" /> },
+                { title: 'Application Management', content: 'Manage installed applications and updates', icon: <Settings className="h-5 w-5" /> }
+            ]
+        }
+    }
 }; 
