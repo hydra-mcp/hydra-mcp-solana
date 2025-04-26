@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Download, Loader2, Check, Package, Trash2, Star
+    Download, Loader2, Check, Package, Trash2, Star, ExternalLink
 } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
 import {
     fetchAppCategories,
     fetchApps,
-    fetchUserInstalledApps,
     installApp,
     uninstallApp,
     AppCategory,
     AppItem,
-    UserAppInstallation
-} from '@/lib/api';
+} from '@/lib/appStoreService';
 
 interface AppStoreComponentProps {
     title?: string;
@@ -52,20 +50,25 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
         loadCategories();
     }, []);
 
-    // Fetch apps and user's installed apps
+    // Fetch apps and derive installed status from the response
     useEffect(() => {
-        const loadData = async () => {
+        const loadAppsData = async () => {
             setLoading(true);
             setError(null);
+            setApps([]); // Clear previous apps while loading new category
+            setInstalledApps([]); // Clear installed state
 
             try {
                 // Load apps based on selected category
                 const appsData = await fetchApps(selectedCategory);
                 setApps(appsData);
 
-                // Load user's installed apps
-                const userInstalledApps = await fetchUserInstalledApps();
-                setInstalledApps(userInstalledApps.filter(app => app.installed).map(app => app.appId));
+                // Derive installed apps directly from the appsData response
+                const initiallyInstalled = appsData
+                    .filter(app => app.installed)
+                    .map(app => app.id);
+                setInstalledApps(initiallyInstalled);
+
             } catch (err) {
                 setError('Failed to load apps data');
                 console.error(err);
@@ -74,7 +77,7 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
             }
         };
 
-        loadData();
+        loadAppsData();
     }, [selectedCategory]);
 
     // Handle app installation
@@ -86,6 +89,9 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
 
             if (result.success) {
                 setInstalledApps(prev => [...prev, appId]);
+                setApps(prevApps => prevApps.map(app =>
+                    app.id === appId ? { ...app, installed: true } : app
+                ));
             } else {
                 throw new Error('Installation failed');
             }
@@ -107,6 +113,9 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
 
             if (result.success) {
                 setInstalledApps(prev => prev.filter(id => id !== appId));
+                setApps(prevApps => prevApps.map(app =>
+                    app.id === appId ? { ...app, installed: false, installDate: null } : app
+                ));
             } else {
                 throw new Error('Uninstallation failed');
             }
@@ -306,6 +315,24 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                         <div className="text-gray-500 dark:text-gray-400 text-xs">
                                             {app.downloads} downloads
                                         </div>
+                                        {app.detailUrl && (
+                                            <div className="ml-auto" onClick={e => e.stopPropagation()}>
+                                                <a
+                                                    href={app.detailUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className={cn(
+                                                        "flex items-center text-xs gap-1 px-2 py-1 rounded-md transition-colors",
+                                                        isDarkMode
+                                                            ? "text-blue-400 hover:bg-gray-700"
+                                                            : "text-blue-600 hover:bg-gray-100"
+                                                    )}
+                                                >
+                                                    <span>Details</span>
+                                                    <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
