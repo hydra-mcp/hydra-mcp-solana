@@ -15,7 +15,20 @@ interface ApiErrorEvent extends CustomEvent {
 export function ErrorHandler() {
     const { toast } = useToast();
     const navigate = useNavigate();
-    const { logout } = useAuth();
+    // Use try-catch to useAuth, prevent error when used outside AuthProvider
+    let authContext;
+    try {
+        authContext = useAuth();
+    } catch (error) {
+        console.warn('ErrorHandler: AuthContext not available', error);
+    }
+    // from authContext get logout method, if not available, provide an empty function
+    const logout = authContext?.logout || (() => {
+        console.warn('Logout function not available, clearing local storage directly');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user_info');
+    });
 
     useEffect(() => {
         // Create a custom event listener to handle API errors
@@ -44,7 +57,7 @@ export function ErrorHandler() {
                     title: 'API Error',
                     description: message || 'An unexpected error occurred',
                     variant: 'destructive',
-                    duration: 3000,
+                    duration: 5000,
                 });
             }
         };

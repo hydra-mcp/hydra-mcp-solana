@@ -477,14 +477,6 @@ export function ChatInterface({
             )}>
                 <div className="container mx-auto py-2.5 sm:py-3">
                     <div className="px-4">
-<<<<<<< HEAD
-                        <MessageInput
-                            autoFocus={modalMode}
-                            placeholder="Type your message..."
-                            disabled={isStreaming}
-                            className="max-h-[80px]"
-                        />
-=======
                         {config.appDefinition?.status !== 'coming_soon' ? (
                             <MessageInput
                                 autoFocus={modalMode}
@@ -500,7 +492,6 @@ export function ChatInterface({
                                 </p>
                             </div>
                         )}
->>>>>>> 19367bc (feat: add theme management component and enhance chat interface with stage error handling)
                     </div>
                 </div>
             </footer>

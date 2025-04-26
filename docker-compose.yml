@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hydra-frontend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    networks:
+      - hydra-network
+    depends_on:
+      - backend
+
+  # Please adjust the backend service configuration according to the actual situation
+  backend:
+    image: hydra-backend:latest
+    container_name: hydra-backend
+    restart: unless-stopped
+    ports:
+      - "8070:8070"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - hydra-network
+
+networks:
+  hydra-network:
+    driver: bridge 

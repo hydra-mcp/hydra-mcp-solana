@@ -1,19 +1,22 @@
+import React from 'react';
 import { cn } from '@/lib/utils';
-import { Chat } from '@/types/chat';
-<<<<<<< HEAD
-import { MessageSquarePlus, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-=======
+import { Loader2, MessageSquare, Trash2, Plus, Eraser } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction
+} from '@/components/ui/alert-dialog';
+import { Chat } from '@/types/chat';
 import { useTheme } from '@/hooks/use-theme';
->>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
 
 interface ChatListProps {
   chats: Chat[];
   currentChatId: string | null;
-  onSelectChat: (chatId: string) => void;
+  onSelectChat: (id: string) => void;
   onNewChat: () => void;
+  onDeleteChat: (id: string) => void;
+  onClearAllChats: () => void;
+  isLoading?: boolean;
 }
 
 export function ChatList({
@@ -21,9 +24,10 @@ export function ChatList({
   currentChatId,
   onSelectChat,
   onNewChat,
+  onDeleteChat,
+  onClearAllChats,
+  isLoading = false
 }: ChatListProps) {
-<<<<<<< HEAD
-=======
   const { isDarkMode } = useTheme();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = React.useState(false);
@@ -51,37 +55,22 @@ export function ChatList({
     setIsClearAllDialogOpen(false);
   };
 
->>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
   return (
-    <div className="flex h-full flex-col gap-2">
+    <div className="flex flex-col gap-2">
+      {/* New chat button */}
       <Button
         variant="outline"
-<<<<<<< HEAD
-        className="w-full justify-start gap-2"
-=======
         className={cn(
           "flex items-center gap-2 w-full shadow-sm hover:shadow-md transition-all duration-200 h-10 font-medium",
           isDarkMode
             ? "bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border-blue-500/30"
             : "bg-blue-600/10 hover:bg-blue-600/15 text-blue-600 border-blue-400/30"
         )}
->>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
         onClick={onNewChat}
       >
-        <MessageSquarePlus className="h-4 w-4" />
-        New Chat
+        <Plus className="h-4 w-4" />
+        <span>New Chat</span>
       </Button>
-<<<<<<< HEAD
-      <Separator />
-      <ScrollArea className="flex-1">
-        <div className="flex flex-col gap-1">
-          {chats.map((chat) => (
-            <Button
-              key={chat.id}
-              variant={chat.id === currentChatId ? 'secondary' : 'ghost'}
-              className="w-full justify-start gap-2"
-              onClick={() => onSelectChat(chat.id)}
-=======
 
       {/* Chat list */}
       <div className="flex flex-col gap-1.5 mt-3">
@@ -147,16 +136,10 @@ export function ChatList({
                   : "text-gray-500 hover:text-red-500 border-gray-200 hover:border-red-200"
               )}
               onClick={() => setIsClearAllDialogOpen(true)}
->>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
             >
-              <MessageSquare className="h-4 w-4" />
-              <span className="truncate">{chat.title}</span>
+              <Eraser className="h-4 w-4" />
+              <span>Clear All Chats</span>
             </Button>
-<<<<<<< HEAD
-          ))}
-        </div>
-      </ScrollArea>
-=======
           </>
         ) : (
           <div className={cn(
@@ -230,7 +213,6 @@ export function ChatList({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
->>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
     </div>
   );
 }

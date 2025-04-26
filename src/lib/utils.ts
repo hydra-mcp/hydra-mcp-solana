@@ -1,11 +1,10 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { toast } from '@/hooks/use-toast';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-<<<<<<< HEAD
-=======
 
 export function uuid() {
   // generate a prefix sorted by time + a random suffix
@@ -133,4 +132,3 @@ export function generateChatTitle(message: string): string {
 
   return title;
 }
->>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)

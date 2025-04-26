@@ -1,12 +1,16 @@
 import { SSE } from '@/lib/sse';
 import { Chat, Message, OpenAIResponse } from '@/types/chat';
 import { triggerApiError } from '@/components/ErrorHandler';
+import { useAuth } from '@/contexts/AuthContext';
+import { sendChatStream, ChunkType } from '@/lib/streaming/sseClient';
 
 // Add type definition for SSE events
-interface SSEvent extends CustomEvent {
+interface SSEEvent extends CustomEvent {
   data?: string;
+  responseCode?: number;
 }
 
+// Development mock data
 const MOCK_DELAY = 1000;
 const MOCK_RESPONSES = [
   "I understand your question. Let me help you with that.",
@@ -59,6 +63,12 @@ export async function apiRequest<T>(
 
     // Handle 401 error - token expired
     if (response.status === 401) {
+      // Need to get the detail from the body
+      const errorBody = await response.json().catch(() => ({}));
+      const errorMessage = errorBody.detail ||
+        errorBody.error ||
+        `API request failed with status ${response.status}`;
+
       // Try to refresh token
       try {
         await refreshTokenRequest();
@@ -69,18 +79,16 @@ export async function apiRequest<T>(
           throw new Error('Token refresh failed');
         }
 
-        const newHeaders = {
-          ...headers,
-          'Authorization': `Bearer ${newToken}`,
-        };
-
         const retryResponse = await fetch(url, {
           ...options,
-          headers: newHeaders,
+          headers: {
+            ...headers,
+            'Authorization': `Bearer ${newToken}`,
+          },
         });
 
         if (!retryResponse.ok) {
-          throw new Error(`API request failed with status ${retryResponse.status}`);
+          throw new Error(errorMessage);
         }
 
         if (retryResponse.status === 204 || retryResponse.status === 404) {
@@ -94,10 +102,12 @@ export async function apiRequest<T>(
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user_info');
 
-        // Trigger global API error event, not redirect directly
-        triggerApiError('Authentication failed, please login again', 401, endpoint);
+        // If already on the login page, do not redirect
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
 
-        throw new Error('Authentication failed, please login again');
+        throw new Error(errorMessage);
       }
     }
 
@@ -142,6 +152,14 @@ export async function apiRequest<T>(
     }
   } catch (error) {
     console.error('API request error:', error);
+
+    // Check if it is an authentication error, if so redirect to the login page
+    if (error instanceof Error &&
+      (error.message.includes('Authentication failed') ||
+        error.message.includes('Token refresh failed')) && window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
+
     throw error;
   }
 }
@@ -205,8 +223,18 @@ export async function mockStreamResponse(message: string, onChunk: (chunk: strin
   };
 }
 
+export async function sendWalletFinderMessage(message: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
+  return sendStreamMessage('/agent/chat/completions', message, chatHistory, onChunk);
+}
+
+// WalletFinder stream message request
+export async function sendChatMessage(message: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
+  return sendStreamMessage('/mcp/chat/completions', message, chatHistory, onChunk);
+}
+
 // Stream message request implemented using SSE.ts
 export async function sendStreamMessage(
+  url: string,
   message: string,
   chatHistory: Message[],
   onChunk: (chunk: string) => void
@@ -219,264 +247,100 @@ export async function sendStreamMessage(
     return mockStreamResponse(message, onChunk);
   }
 
-  // Return Promise
-  return new Promise((resolve, reject) => {
-    try {
-      // Convert chat history to OpenAI format
-      const messages = chatHistory.map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
-        content: msg.content
-      }));
+  try {
+    // Convert chat history to OpenAI format
+    const messages = chatHistory.map(msg => ({
+      role: msg.sender === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    }));
 
-      // Add current message
-      messages.push({ role: 'user', content: message });
-
-      // Get access token
-      const token = getAccessToken();
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    // Use the new SSE client to send the request
+    const result = await sendChatStream(
+      url,
+      messages,
+      // Process data blocks, convert to string and pass to the original onChunk callback
+      (chunk: ChunkType) => {
+        onChunk(JSON.stringify(chunk));
       }
+    );
 
-      // Store stage messages
-      let stageMessages: string[] = [];
+    // Return compatible response format
+    return {
+      id: result?.id || Date.now().toString(),
+      choices: [
+        {
+          message: {
+            content: "Stream complete",
+          },
+        },
+      ],
+    };
+  } catch (error) {
+    console.error("Error initializing streaming chat:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
-      // Create SSE connection
-      const source = new SSE(`${baseUrl}/agent/chat/completions`, {
-        headers,
-        method: 'POST',
-        payload: JSON.stringify({
-          messages,
-          stream: true
-        })
-      });
+    onChunk(JSON.stringify({
+      type: 'error',
+      error: {
+        message: errorMessage,
+        type: 'client_error'
+      }
+    }));
 
-      // Handle connection opened
-      source.addEventListener('open', function (e) {
-        console.log('SSE connection opened:', e);
-      });
-
-      // Handle error
-      source.addEventListener('error', function (e) {
-        const event = e as SSEvent;
-        const errorData = event.data || '';
-        let errorMessage = 'Connection failed';
-        let errorStatus = 0;
-
-        // Check if it is a 401 unauthorized error
-        if (errorData.includes('401') || errorData.includes('unauthorized') || errorData.includes('Unauthorized')) {
-          errorMessage = 'Session expired. Please login again.';
-          errorStatus = 401;
-
-          // Try to refresh token
-          refreshTokenRequest().catch(() => {
-            // Refresh failed, clear token
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            localStorage.removeItem('user_info');
-
-            // Trigger global API error event, not redirect directly
-            triggerApiError(errorMessage, 401, '/agent/chat/completions');
-          });
-        } else {
-          errorMessage = `Error: ${errorData}`;
-        }
-
-        console.error('SSE connection error:', errorMessage);
-
-        onChunk(JSON.stringify({
-          type: 'error',
-          error: {
-            message: errorMessage,
-            type: 'connection_error',
-            status: errorStatus
-          }
-        }));
-
-        source.close();
-        reject(new Error(errorMessage));
-      });
-
-      // Handle stage event (stage notification)
-      source.addEventListener('stage', function (e) {
-        const event = e as SSEvent;
-        const data = event.data || '';
-
-        try {
-          const jsonData = JSON.parse(data);
-          const stageContent = jsonData.stage;
-          const stageStatus = jsonData.status;
-          const messageContent = jsonData.choices?.[0]?.delta?.content || '';
-
-          // Send stage update
-          onChunk(JSON.stringify({
-            type: 'stage',
-            status: stageStatus,
-            content: stageContent,
-            message: messageContent
-          }));
-        } catch (error) {
-          console.warn('Failed to parse stage event:', error, data);
-          // Try to use data directly
-          const stageContent = typeof data === 'string' ? data : 'Unknown stage';
-
-          if (!stageMessages.some(msg => msg.includes(stageContent))) {
-            stageMessages.push(stageContent);
-          }
-
-          const formattedStages = stageMessages.join('|LINE_BREAK|');
-          onChunk(JSON.stringify({
-            type: 'stage',
-            content: formattedStages
-          }));
-        }
-      });
-
-      // Handle content event (content update)
-      source.addEventListener('content', function (e) {
-        const event = e as SSEvent;
-        const data = event.data || '';
-
-        try {
-          const jsonData = JSON.parse(data);
-          const content = jsonData.choices?.[0]?.delta?.content || '';
-
-          if (content) {
-            onChunk(JSON.stringify({
-              type: 'content',
-              content: content
-            }));
-          }
-        } catch (error) {
-          console.warn('Failed to parse content event:', error, data);
-          // Try to use data directly
-          onChunk(JSON.stringify({
-            type: 'content',
-            content: typeof data === 'string' ? data : ''
-          }));
-        }
-      });
-
-      // Handle message event (default event, handle old format or message without specified event type)
-      source.addEventListener('message', function (e) {
-        const event = e as SSEvent;
-        const data = event.data || '';
-
-        // If it is a [DONE] message, handle completion
-        if (data === '[DONE]') {
-          onChunk(JSON.stringify({ type: 'done' }));
-          source.close();
-
-          resolve({
-            id: Date.now().toString(),
-            choices: [
-              {
-                message: {
-                  content: "Stream complete",
-                },
-              },
-            ],
-          });
-          return;
-        }
-
-        try {
-          const jsonData = JSON.parse(data);
-
-          // Check if there is a clear type field
-          if (jsonData.type) {
-            if (jsonData.type === 'error') {
-              // Error message
-              onChunk(data);
-              source.close();
-              reject(new Error(jsonData.error?.message || 'Unknown error'));
-              return;
-            }
-
-            // Other type messages directly pass
-            onChunk(data);
-            return;
-          }
-
-          // Check if there is a stage field
-          if (jsonData.stage) {
-            // Already handled through 'stage' event, skip duplicate processing
-            return;
-          }
-
-          // Check if there is content update
-          if (jsonData.choices && jsonData.choices[0]?.delta?.content) {
-            const content = jsonData.choices[0].delta.content;
-            onChunk(JSON.stringify({
-              type: 'content',
-              content: content
-            }));
-          } else {
-            // Unrecognized format, pass original data directly
-            onChunk(data);
-          }
-        } catch (error) {
-          console.warn('Failed to parse message event:', error, data);
-          // Non-JSON message, pass original data directly
-          onChunk(data);
-        }
-      });
-
-      // Handle completion event
-      source.addEventListener('done', function () {
-        source.close();
-        resolve({
-          id: Date.now().toString(),
-          choices: [
-            {
-              message: {
-                content: "Stream complete",
-              },
-            },
-          ],
-        });
-      });
-
-      // Start SSE connection
-      source.stream();
-
-    } catch (error) {
-      console.error("Error initializing streaming chat:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-
-      onChunk(JSON.stringify({
-        type: 'error',
-        error: {
-          message: errorMessage,
-          type: 'client_error'
-        }
-      }));
-
-      reject(error);
-    }
-  });
+    throw error;
+  }
 }
 
-// Keep original function as fallback
-export async function sendMessage(message: string): Promise<OpenAIResponse> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
+export async function sendMessage(url: string, message: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
+  try {
+    // Build full URL
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const fullUrl = `${baseUrl}${url}`;
 
-  // Simulate OpenAI response format
-  return {
-    id: Date.now().toString(),
-    choices: [
-      {
-        message: {
-          content: MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)] +
-            " " + message,
-        },
-      },
-    ],
-  };
+    // Get access token
+    const token = getAccessToken();
+
+    // Build request headers
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Build message body, only include current message
+    const payload = {
+      messages: chatHistory.map(msg => ({ role: msg.sender === 'user' ? 'user' : 'assistant', content: msg.content })),
+      stream: false
+    };
+
+    // Send request
+    const response = await fetch(fullUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload)
+    });
+
+    // Handle error response
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || errorData.error || `Request failed, status code: ${response.status}`;
+
+      // Trigger global API error event
+      triggerApiError(errorMessage, response.status, fullUrl);
+
+      throw new Error(errorMessage);
+    }
+
+    // Parse and return response
+    const data = await response.json();
+    onChunk && onChunk(data.choices[0].message.content);
+    return data as OpenAIResponse;
+  } catch (error) {
+    console.error("Send message error:", error);
+    throw error;
+  }
 }
 
 // Chat history management functions
@@ -505,7 +369,6 @@ export function saveChats(chats: Chat[]): void {
 
 export function loadChats(): Chat[] {
   try {
-<<<<<<< HEAD
     const allChats: Chat[] = [];
 
     // Find all localStorage keys that start with STORAGE_KEY_PREFIX
@@ -519,13 +382,6 @@ export function loadChats(): Chat[] {
           allChats.push(...chats);
         }
       }
-=======
-    const storedChats = localStorage.getItem(STORAGE_KEY);
-    if (storedChats) {
-      // Parse the stored data
-      const chats: Chat[] = JSON.parse(storedChats);
-      return chats;
->>>>>>> 83eb0db (Complete the basic functions of the project, including real-time AI data analysis and UI experience optimization.)
     }
 
     // Sort by update time, latest first

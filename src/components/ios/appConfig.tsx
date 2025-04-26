@@ -1,14 +1,5 @@
 import React, { ReactNode, lazy, Suspense } from 'react';
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon } from './AppIcons';
-import { cn } from '@/lib/utils';
-import { Calendar, Settings, Sliders, Image, Mail, Home, Search } from 'lucide-react';
-=======
-import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, DeepSearchIcon, RechargeIcon } from './AppIcons';
-=======
 import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, DeepSearchIcon, RechargeIcon, ThemeIcon } from './AppIcons';
->>>>>>> 19367bc (feat: add theme management component and enhance chat interface with stage error handling)
 import { cn } from '@/lib/utils';
 import {
     Calendar, Settings, Sliders, Image, Mail, Home, Search, SignalIcon,
@@ -20,13 +11,8 @@ import {
     Wallet,
     Shield
 } from 'lucide-react';
-<<<<<<< HEAD
->>>>>>> 39ec333 (feat: implement Solana recharge feature with wallet connection, transaction handling, and UI enhancements for better user experience)
-import { useTheme } from '@/hooks/use-theme';
-=======
 import { useTheme, toggleThemeDirectly } from '@/hooks/use-theme';
 import { CASignalIcon } from './AppIcons';
->>>>>>> b072646 (feat: enhance theme management with direct toggle functionality and update wallpaper handling in iOS components)
 
 // Common loading placeholder component
 const LoadingPlaceholder = () => (
@@ -52,7 +38,33 @@ const ChatComponent = lazy(() => import('@/pages/ChatPage').then(module => ({
     default: () => {
         // Load ChatPage component and set it to modal mode
         const { ChatPage } = module;
-        return <ChatPage isModal={true} />;
+        return <ChatPage />;
+    }
+})));
+
+// Lazy load CaSignal component
+const CaSignalComponent = lazy(() => import('@/pages/CaSignal').then(module => ({
+    default: () => {
+        // Load CaSignal component and set it to modal mode
+        const { CaSignal } = module;
+        return <CaSignal />;
+    }
+})));
+
+// Lazy load SmartWallet component
+const SmartWalletComponent = lazy(() => import('@/pages/SmartWallet').then(module => ({
+    default: () => {
+        // Load SmartWallet component and set it to modal mode
+        const { SmartWallet } = module;
+        return <SmartWallet />;
+    }
+})));
+
+const DeepSearchComponent = lazy(() => import('@/pages/DeepSearch').then(module => ({
+    default: () => {
+        // Load DeepSearch component and set it to modal mode
+        const { DeepSearch } = module;
+        return <DeepSearch />;
     }
 })));
 
@@ -302,8 +314,6 @@ export interface AppDefinition {
     };
     defaultPosition?: { x: number; y: number };
     description?: string;
-<<<<<<< HEAD
-=======
     status?: 'online' | 'coming_soon';
     onIconClick?: () => void;
     chatModuleTexts?: {
@@ -315,17 +325,16 @@ export interface AppDefinition {
             icon?: ReactNode;
         }>;
     };
->>>>>>> b072646 (feat: enhance theme management with direct toggle functionality and update wallpaper handling in iOS components)
 }
 
-const defaultSize = { width: '80%', height: '80%' }
+const defaultSize = { width: '80%', height: '85%' }
 
 // Create a registry of all available apps
 export const appRegistry: Record<string, AppDefinition> = {
     walletFinder: {
         id: 'wallet-finder',
         path: '/wallet-finder',
-        title: 'Wallet Finder',
+        title: 'CA Analysis',
         icon: <WalletFinderIcon />,
         component: (
             <Suspense fallback={<LoadingPlaceholder />}>
@@ -333,7 +342,8 @@ export const appRegistry: Record<string, AppDefinition> = {
             </Suspense>
         ),
         defaultSize,
-        description: 'Find the smart wallet of blockchain project.'
+        description: 'Find the smart wallet of blockchain project.',
+        status: 'online'
     },
     settings: {
         id: 'settings',
@@ -342,7 +352,8 @@ export const appRegistry: Record<string, AppDefinition> = {
         icon: <SettingsIcon />,
         component: <SettingsApp />,
         defaultSize,
-        description: 'Change your settings'
+        description: 'Change your settings',
+        status: 'online'
     },
     theme: {
         id: 'theme',
@@ -366,17 +377,28 @@ export const appRegistry: Record<string, AppDefinition> = {
             </Suspense>
         ),
         defaultSize,
-        description: 'Chat with your friends'
+        description: 'Chat with your friends',
+        status: 'online',
+        chatModuleTexts: {
+            welcomeTitle: 'Welcome to Hydra OS',
+            welcomeDescription: 'You can access all apps through the desktop or Dock bar.',
+            modules: [
+                { title: 'Ask a Question', content: 'Ask a question to get started', icon: <HelpCircle className="h-5 w-5" /> },
+                { title: 'Get Information', content: 'Get information about blockchain projects', icon: <Info className="h-5 w-5" /> },
+                { title: 'Solve Problems', content: 'Solve problems related to blockchain projects', icon: <Puzzle className="h-5 w-5" /> },
+                { title: 'Get Recommendations', content: 'Get recommendations for blockchain projects', icon: <Lightbulb className="h-5 w-5" /> }
+            ]
+        }
     },
-    photos: {
-        id: 'photos',
-        path: '/photos',
-        title: 'Photos',
-        icon: <PhotosIcon />,
-        component: <PhotosApp />,
-        defaultSize: { width: '75%', height: '65%' },
-        description: 'View your photos'
-    },
+    // photos: {
+    //     id: 'photos',
+    //     path: '/photos',
+    //     title: 'Photos',
+    //     icon: <PhotosIcon />,
+    //     component: <PhotosApp />,
+    //     defaultSize: { width: '75%', height: '65%' },
+    //     description: 'View your photos'
+    // },
     home: {
         id: 'home',
         path: '/',
@@ -392,32 +414,33 @@ export const appRegistry: Record<string, AppDefinition> = {
             </div>
         ),
         defaultSize: { width: '60%', height: '50%' },
-        description: 'Home'
+        description: 'Home',
+        status: 'online'
     },
-    search: {
-        id: 'search',
-        path: '/search',
-        title: 'Search',
-        icon: <SearchIcon />,
-        component: (
-            <div className="p-4 h-full flex flex-col items-center justify-center">
-                <Search className="w-16 h-16 text-blue-500 mb-4" />
-                <h2 className="text-xl font-bold mb-2">Search App</h2>
-                <div className="w-full max-w-md">
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Search files or apps..."
-                            className="w-full px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    </div>
-                </div>
-            </div>
-        ),
-        defaultSize: { width: '50%', height: '45%' },
-        description: 'Search for files or apps'
-    },
+    // search: {
+    //     id: 'search',
+    //     path: '/search',
+    //     title: 'Search',
+    //     icon: <SearchIcon />,
+    //     component: (
+    //         <div className="p-4 h-full flex flex-col items-center justify-center">
+    //             <Search className="w-16 h-16 text-blue-500 mb-4" />
+    //             <h2 className="text-xl font-bold mb-2">Search App</h2>
+    //             <div className="w-full max-w-md">
+    //                 <div className="relative">
+    //                     <input
+    //                         type="text"
+    //                         placeholder="Search files or apps..."
+    //                         className="w-full px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    //                     />
+    //                     <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     ),
+    //     defaultSize: { width: '50%', height: '45%' },
+    //     description: 'Search for files or apps'
+    // },
     calendar: {
         id: 'calendar',
         path: '/calendar',
@@ -441,37 +464,46 @@ export const appRegistry: Record<string, AppDefinition> = {
             </div>
         ),
         defaultSize: { width: '65%', height: '70%' },
-        description: 'View your calendar'
+        description: 'View your calendar',
+        status: 'online'
     },
-    mail: {
-        id: 'mail',
-        path: '/mail',
-        title: 'Mail',
-        icon: <MailIcon />,
+    // mail: {
+    //     id: 'mail',
+    //     path: '/mail',
+    //     title: 'Mail',
+    //     icon: <MailIcon />,
+    //     component: (
+    //         <div className="h-full flex flex-col bg-white dark:bg-gray-900">
+    //             <div className="border-b dark:border-gray-700 px-4 py-3 flex items-center justify-between">
+    //                 <h1 className="text-lg font-semibold">Mail</h1>
+    //                 <Mail className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+    //             </div>
+    //             <div className="flex-1 flex">
+    //                 <div className="w-1/4 border-r dark:border-gray-700 p-2">
+    //                     <div className="p-2 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium mb-2">Inbox</div>
+    //                     <div className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer">Sent</div>
+    //                     <div className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer">Deleted</div>
+    //                     <div className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer">Drafts</div>
+    //                 </div>
+    //                 <div className="w-3/4 p-4 flex items-center justify-center text-gray-500 dark:text-gray-400">
+    //                     Select an email to view content
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     ),
+    //     defaultSize: { width: '70%', height: '75%' },
+    //     description: 'Check your email'
+    // }
+    caSignal: {
+        id: 'ca-signal',
+        path: '/ca-signal',
+        title: 'CA Signal',
+        icon: <CASignalIcon />,
         component: (
-            <div className="h-full flex flex-col bg-white dark:bg-gray-900">
-                <div className="border-b dark:border-gray-700 px-4 py-3 flex items-center justify-between">
-                    <h1 className="text-lg font-semibold">Mail</h1>
-                    <Mail className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                </div>
-                <div className="flex-1 flex">
-                    <div className="w-1/4 border-r dark:border-gray-700 p-2">
-                        <div className="p-2 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium mb-2">Inbox</div>
-                        <div className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer">Sent</div>
-                        <div className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer">Deleted</div>
-                        <div className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer">Drafts</div>
-                    </div>
-                    <div className="w-3/4 p-4 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                        Select an email to view content
-                    </div>
-                </div>
-            </div>
+            <Suspense fallback={<LoadingPlaceholder />}>
+                <CaSignalComponent />
+            </Suspense>
         ),
-<<<<<<< HEAD
-        defaultSize: { width: '70%', height: '75%' },
-        description: 'Check your email'
-    }
-=======
         defaultSize,
         description: 'Based on the trading behavior of smart addresses on the chain, we will push project-related information.',
         status: 'coming_soon',
@@ -555,5 +587,4 @@ export const appRegistry: Record<string, AppDefinition> = {
         }
     },
 
->>>>>>> 39ec333 (feat: implement Solana recharge feature with wallet connection, transaction handling, and UI enhancements for better user experience)
 }; 

@@ -5,24 +5,25 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --primary-rgb: 66, 133, 244;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -30,26 +31,27 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -62,8 +64,10 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
@@ -71,8 +75,6 @@
   .container {
     @apply mx-auto max-w-7xl px-4 md:px-6;
   }
-<<<<<<< HEAD
-=======
 
   .animate-blink {
     animation: blink 1s infinite;
@@ -154,7 +156,6 @@
   .text-shadow-blue {
     text-shadow: 0 0 2px #4BB4F8, 0 0 4px #4BB4F8, 0 0 6px #4BB4F8, 0 0 10px #0e65ff, 0 0 20px #0e65ff;
   }
->>>>>>> 6a8b710 (feat: update chat components to support modal mode and enhance sidebar functionality, including custom scrollbar styles and improved message handling)
 }
 
 @keyframes slide-up {
@@ -162,6 +163,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -170,4 +172,215 @@
 
 .animate-slide-up {
   animation: slide-up 0.2s ease-out forwards;
+}
+
+/* Custom Animation */
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(var(--primary-rgb), 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.6);
+  }
+}
+
+/* Custom Animation */
+@keyframes bounce-slow {
+
+  0%,
+  100% {
+    transform: translateY(-5%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+/* Markdown Styling */
+.prose pre {
+  @apply mt-2 mb-2 rounded-lg !important;
+  overflow: auto;
+}
+
+.prose code {
+  @apply rounded px-1 py-0.5 bg-muted text-muted-foreground !important;
+  font-size: 0.9em;
+}
+
+.prose pre code {
+  @apply bg-transparent text-inherit p-0 !important;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  @apply font-semibold tracking-tight !important;
+}
+
+.prose h1 {
+  @apply text-2xl mt-4 mb-2 !important;
+}
+
+.prose h2 {
+  @apply text-xl mt-3 mb-2 !important;
+}
+
+.prose h3 {
+  @apply text-lg mt-2 mb-1 !important;
+}
+
+.prose p {
+  @apply leading-relaxed my-2 !important;
+}
+
+.prose ul,
+.prose ol {
+  @apply pl-6 my-2 !important;
+}
+
+.prose ul {
+  @apply list-disc !important;
+}
+
+.prose ol {
+  @apply list-decimal !important;
+}
+
+.prose a {
+  @apply text-primary underline underline-offset-2 hover:text-primary/80 !important;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-muted pl-4 italic !important;
+}
+
+.prose table {
+  @apply w-full text-sm border-collapse !important;
+}
+
+.prose th {
+  @apply border py-2 px-3 bg-muted font-semibold !important;
+}
+
+.prose td {
+  @apply border py-2 px-3 !important;
+}
+
+/* Adjust syntax highlighter scrollbar */
+.prose pre::-webkit-scrollbar {
+  @apply h-2 w-2 !important;
+}
+
+.prose pre::-webkit-scrollbar-track {
+  @apply bg-transparent !important;
+}
+
+.prose pre::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full !important;
+}
+
+.prose pre::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50 !important;
+}
+
+/* Password toggle button transition */
+.password-toggle-btn {
+  transition: color 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.password-toggle-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Custom animations for StageDisplay component */
+@keyframes pulse-gentle {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes light-sweep {
+  0% {
+    transform: translateX(-100%) skewX(-30deg);
+    opacity: 0;
+  }
+
+  20%,
+  80% {
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translateX(100%) skewX(-30deg);
+    opacity: 0;
+  }
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-light-sweep {
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: light-sweep 2.5s ease-in-out infinite;
+}
+
+/* Radial gradient for stage icons */
+.bg-gradient-radial {
+  background-image: radial-gradient(var(--tw-gradient-stops));
 }
