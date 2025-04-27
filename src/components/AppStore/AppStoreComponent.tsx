@@ -7,11 +7,10 @@ import { cn } from '@/lib/utils';
 import {
     fetchAppCategories,
     fetchApps,
-    installApp,
-    uninstallApp,
     AppCategory,
     AppItem,
 } from '@/lib/appStoreService';
+import { useAppInstall } from '@/contexts/AppInstallContext';
 
 interface AppStoreComponentProps {
     title?: string;
@@ -25,6 +24,12 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
     onAppClick
 }) => {
     const { isDarkMode } = useTheme();
+    const {
+        installedApps: contextInstalledApps,
+        installAppAndRefresh,
+        uninstallAppAndRefresh,
+        isLoading: contextLoading
+    } = useAppInstall();
     const [apps, setApps] = useState<AppItem[]>([]);
     const [categories, setCategories] = useState<AppCategory[]>([]);
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -85,9 +90,10 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
         setInstallingApps(prev => [...prev, appId]);
 
         try {
-            const result = await installApp(appId);
+            const success = await installAppAndRefresh(appId);
 
-            if (result.success) {
+            if (success) {
+                // Update local state
                 setInstalledApps(prev => [...prev, appId]);
                 setApps(prevApps => prevApps.map(app =>
                     app.id === appId ? { ...app, installed: true } : app
@@ -109,9 +115,10 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
         setUninstallingApps(prev => [...prev, appId]);
 
         try {
-            const result = await uninstallApp(appId);
+            const success = await uninstallAppAndRefresh(appId);
 
-            if (result.success) {
+            if (success) {
+                // Update local state
                 setInstalledApps(prev => prev.filter(id => id !== appId));
                 setApps(prevApps => prevApps.map(app =>
                     app.id === appId ? { ...app, installed: false, installDate: null } : app
@@ -312,8 +319,9 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                             <Star className="w-3.5 h-3.5 text-yellow-400 mr-1" />
                                             <span className="text-gray-600 dark:text-gray-300">{app.rating}</span>
                                         </div>
-                                        <div className="text-gray-500 dark:text-gray-400 text-xs">
-                                            {app.downloads} downloads
+                                        <div className="text-gray-500 dark:text-gray-400 text-xs flex items-center">
+                                            <Download className="w-3.5 h-3.5 mr-1" />
+                                            {app.downloads}
                                         </div>
                                         {app.detailUrl && (
                                             <div className="ml-auto" onClick={e => e.stopPropagation()}>
@@ -328,8 +336,7 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                                             : "text-blue-600 hover:bg-gray-100"
                                                     )}
                                                 >
-                                                    <span>Details</span>
-                                                    <ExternalLink className="w-3 h-3" />
+                                                    <ExternalLink className="w-3.5 h-3.5" />
                                                 </a>
                                             </div>
                                         )}

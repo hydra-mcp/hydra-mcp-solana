@@ -10,7 +10,8 @@ import { WindowManager } from '@/components/ios/WindowManager';
 import { createAppWindow, getDefaultAppPosition } from '@/components/ios/AppRegistry';
 import { AppDefinition, appRegistry, ChatComponent, defaultSize, LoadingPlaceholder } from '@/components/ios/appConfig';
 import { useAppWindow } from '@/contexts/AppWindowContext';
-import { fetchApps, AppItem, uninstallApp } from '@/lib/appStoreService';
+import { AppItem, uninstallApp } from '@/lib/appStoreService';
+import { useAppInstall } from '@/contexts/AppInstallContext';
 import { v4 as uuidv4 } from 'uuid';
 
 // Context menu component
@@ -301,7 +302,7 @@ const IOSDesktopContent = ({
     navigate: (path: string) => void;
 }) => {
     const { openApp } = useAppWindow();
-    const [installedApps, setInstalledApps] = useState<AppItem[]>([]);
+    const { installedApps: contextInstalledApps, uninstallAppAndRefresh } = useAppInstall();
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [appToUninstall, setAppToUninstall] = useState<AppDefinition | null>(null);
 
@@ -314,24 +315,10 @@ const IOSDesktopContent = ({
         }))
     );
 
-    // Fetch installed apps from the API on mount
-    useEffect(() => {
-        const fetchInstalledApps = async () => {
-            try {
-                const appsData = await fetchApps();
-                const installed = appsData.filter(app => app.installed);
-                setInstalledApps(installed); // Update raw installed apps list
-            } catch (error) {
-                console.error('Error fetching installed apps:', error);
-            }
-        };
-        fetchInstalledApps();
-    }, []);
-
     // Effect to merge installed apps into the main 'apps' state
     useEffect(() => {
         // Convert installed apps from API (AppItem) to AppDefinition format
-        const installedAppDefinitions = installedApps.map((app): AppDefinition => ({
+        const installedAppDefinitions = contextInstalledApps.map((app): AppDefinition => ({
             id: app.id, // Use the ACTUAL App Store ID from API
             title: app.name,
             icon: app.icon ?
@@ -369,7 +356,7 @@ const IOSDesktopContent = ({
         // Update the state with the unique, combined list from the map values
         setApps(Array.from(combinedAppsMap.values()));
 
-    }, [installedApps]); // Re-run whenever the raw installedApps list changes
+    }, [contextInstalledApps]); // Re-run whenever contextInstalledApps changes
 
     // Dock apps - definition remains the same
     const dockApps = [
@@ -550,9 +537,13 @@ const IOSDesktopContent = ({
         const appStoreAppId = appToUninstall.id; // ID is the App Store ID
 
         try {
-            await uninstallApp(appStoreAppId);
-            // Update the raw installedApps list; the useEffect will update the main 'apps' state
-            setInstalledApps(prev => prev.filter(app => app.id !== appStoreAppId));
+            // Use the context function instead of direct API call
+            const success = await uninstallAppAndRefresh(appStoreAppId);
+
+            if (!success) {
+                throw new Error(`Failed to uninstall app ${appToUninstall.title}`);
+            }
+
             console.log(`App ${appToUninstall.title} uninstalled successfully.`);
         } catch (error) {
             console.error(`Failed to uninstall app ${appToUninstall.title}:`, error);

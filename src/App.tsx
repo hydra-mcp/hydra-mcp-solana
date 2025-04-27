@@ -14,20 +14,23 @@ import { useToast } from '@/hooks/use-toast';
 import { CaSignal } from '@/pages/CaSignal';
 import { SmartWallet } from './pages/SmartWallet';
 import { SolanaPaymentPage } from './pages/SolanaPaymentPage';
+import { AppInstallProvider } from '@/contexts/AppInstallContext';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppWindowProvider>
-          {/* Global Toaster for notifications */}
-          <Toaster />
+        <AppInstallProvider>
+          <AppWindowProvider>
+            {/* Global Toaster for notifications */}
+            <Toaster />
 
-          {/* Global API error handler */}
-          <ErrorHandler />
+            {/* Global API error handler */}
+            <ErrorHandler />
 
-          <AppContent />
-        </AppWindowProvider>
+            <AppContent />
+          </AppWindowProvider>
+        </AppInstallProvider>
       </AuthProvider>
     </BrowserRouter>
   );

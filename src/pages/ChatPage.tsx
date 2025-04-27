@@ -14,7 +14,7 @@ export interface ChatPageProps {
 export function ChatPage({
     isModal = true,
     apiEndpoint = '/mcp/chat/completions',
-    appId = 'messages',
+    appId = '',
     showScrollToBottom = true,
     scrollButtonThreshold = 100
 }: ChatPageProps) {

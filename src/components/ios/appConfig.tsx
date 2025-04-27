@@ -390,7 +390,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         component: (
             <Suspense fallback={<LoadingPlaceholder />}>
                 {/* Pass proper ChatPageProps to ChatComponent */}
-                {React.createElement(ChatComponent({ appId: 'messages' }))}
+                {React.createElement(ChatComponent({ appId: '' }))}
             </Suspense>
         ),
         defaultSize,
