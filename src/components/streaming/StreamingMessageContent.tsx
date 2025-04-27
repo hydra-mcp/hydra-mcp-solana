@@ -1,10 +1,60 @@
 import React, { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { StreamingMessage } from '@/lib/streaming/types';
-import { Loader2, AlertCircle, AlertTriangle, Lock, Play, Pause, Volume2 } from 'lucide-react';
+import { Loader2, AlertCircle, AlertTriangle, Lock, Play, Pause, Volume2, ExternalLink, ImageIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock } from '@/components/ui/code-block';
+
+// Image Component for Markdown
+const MarkdownImage = ({ src, alt, title }: { src: string, alt?: string, title?: string }) => {
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [hasError, setHasError] = useState(false);
+
+    const handleLoad = () => setIsLoaded(true);
+    const handleError = () => setHasError(true);
+
+    if (hasError) {
+        return (
+            <div className="flex items-center justify-center p-4 my-2 bg-muted/30 rounded-md border border-muted">
+                <div className="flex flex-col items-center text-muted-foreground">
+                    <ImageIcon className="h-8 w-8 mb-2" />
+                    <p className="text-sm">{alt || 'Image failed to load'}</p>
+                    <a
+                        href={src}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs flex items-center mt-2 text-primary hover:underline"
+                    >
+                        View image <ExternalLink className="h-3 w-3 ml-1" />
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="my-4 relative">
+            {!isLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-muted/20 rounded-md">
+                    <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                </div>
+            )}
+            <img
+                src={src}
+                alt={alt || 'Image'}
+                title={title}
+                className={cn(
+                    "max-w-full h-auto rounded-md border border-muted/30",
+                    !isLoaded && "opacity-0",
+                    isLoaded && "opacity-100 transition-opacity duration-200"
+                )}
+                onLoad={handleLoad}
+                onError={handleError}
+            />
+        </div>
+    );
+};
 
 // Custom Audio Player Component
 const InlineAudioPlayer = ({ src, label }: { src: string, label?: React.ReactNode }) => {
@@ -204,17 +254,36 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
+                    img({ src, alt, title }) {
+                        if (!src) return null;
+                        return <MarkdownImage src={src} alt={alt} title={title} />;
+                    },
                     a(props) {
                         const { href, children } = props;
 
-                        // Create a regular expression to detect common audio file extensions in the URL path
-                        const audioFileRegex = /\.(mp3|wav|ogg|m4a|flac)(?=[?#]|$)/i;
+                        if (!href) return <span>{children}</span>;
 
+                        // Check if this is an image link by file extension
+                        const imageFileRegex = /\.(jpe?g|png|gif|webp|bmp|svg|avif|tiff?)(?=[?#]|$)/i;
+
+                        // Check for image service domains or paths
+                        const isImageService = /(\/img\/|\/image\/|\/images\/|image_inference_output|\/photos\/)/.test(href);
+
+                        // Check for query parameters that suggest an image
+                        const hasImageParams = /\?.*(?:img|image|photo|pic|picture|file)=/.test(href);
+
+                        if (href && (imageFileRegex.test(href) || isImageService || hasImageParams)) {
+                            return <MarkdownImage src={href} alt={String(children)} />;
+                        }
+
+                        // Check if this is an audio link
+                        const audioFileRegex = /\.(mp3|wav|ogg|m4a|flac)(?=[?#]|$)/i;
                         if (href && audioFileRegex.test(href)) {
                             return <InlineAudioPlayer src={href} label={children} />;
                         }
 
-                        return <a href={href} {...props}>{children}</a>;
+                        // Regular link
+                        return <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>;
                     },
                     code(props: any) {
                         const { node, inline, className, children, ...rest } = props;
