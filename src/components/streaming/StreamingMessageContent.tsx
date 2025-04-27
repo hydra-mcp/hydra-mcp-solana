@@ -1,10 +1,142 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { StreamingMessage } from '@/lib/streaming/types';
-import { Loader2, AlertCircle, AlertTriangle, Lock } from 'lucide-react';
+import { Loader2, AlertCircle, AlertTriangle, Lock, Play, Pause, Volume2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock } from '@/components/ui/code-block';
+
+// Custom Audio Player Component
+const InlineAudioPlayer = ({ src, label }: { src: string, label?: React.ReactNode }) => {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [duration, setDuration] = useState(0);
+    const [currentTime, setCurrentTime] = useState(0);
+    const audioRef = useRef<HTMLAudioElement>(null);
+
+    const togglePlayPause = () => {
+        if (audioRef.current) {
+            if (isPlaying) {
+                audioRef.current.pause();
+            } else {
+                audioRef.current.play();
+                if (!isExpanded) {
+                    setIsExpanded(true);
+                }
+            }
+            setIsPlaying(!isPlaying);
+        }
+    };
+
+    const onLoadedMetadata = () => {
+        if (audioRef.current) {
+            setDuration(audioRef.current.duration);
+        }
+    };
+
+    const onTimeUpdate = () => {
+        if (audioRef.current) {
+            setCurrentTime(audioRef.current.currentTime);
+        }
+    };
+
+    const onEnded = () => {
+        setIsPlaying(false);
+        // setCurrentTime(0);
+    };
+
+    const formatTime = (time: number) => {
+        const minutes = Math.floor(time / 60);
+        const seconds = Math.floor(time % 60);
+        return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    };
+
+    const progress = duration ? (currentTime / duration) * 100 : 0;
+
+    // Calculate the radius and circumference for the circular progress
+    const radius = 12;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+    // SVG viewBox size
+    const viewBoxSize = (radius + 2) * 2;
+
+    return (
+        <span className="inline-flex items-center gap-2 transition-all duration-300">
+            <span className="relative inline-flex items-center justify-center">
+                {/* Circular button with progress ring */}
+                <button
+                    onClick={togglePlayPause}
+                    className={cn(
+                        "relative flex items-center justify-center rounded-full transition-all overflow-hidden",
+                        isExpanded ? "bg-primary/10 w-8 h-8" : "bg-primary/5 w-7 h-7 hover:bg-primary/10"
+                    )}
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                >
+                    {/* Progress circle */}
+                    {isPlaying && (
+                        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox={`0 0 ${viewBoxSize} ${viewBoxSize}`}>
+                            <circle
+                                cx={radius + 2}
+                                cy={radius + 2}
+                                r={radius}
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                className="text-muted-foreground/30"
+                            />
+                            <circle
+                                cx={radius + 2}
+                                cy={radius + 2}
+                                r={radius}
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                className="text-primary"
+                                strokeDasharray={circumference}
+                                strokeDashoffset={strokeDashoffset}
+                                strokeLinecap="round"
+                            />
+                        </svg>
+                    )}
+
+                    {/* Play/Pause icon */}
+                    <span className={cn(
+                        "relative z-10 transition-transform duration-300",
+                        isPlaying ? "scale-90" : "scale-100"
+                    )}>
+                        {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+                    </span>
+                </button>
+            </span>
+
+            {/* Time and label */}
+            {isExpanded && (
+                <>
+                    <span className="text-xs text-muted-foreground">
+                        {formatTime(currentTime)}
+                    </span>
+
+                    {label && (
+                        <span className="text-sm text-muted-foreground/80 max-w-[120px] truncate">
+                            {label}
+                        </span>
+                    )}
+                </>
+            )}
+
+            {/* Hidden audio element */}
+            <audio
+                ref={audioRef}
+                src={src}
+                onLoadedMetadata={onLoadedMetadata}
+                onTimeUpdate={onTimeUpdate}
+                onEnded={onEnded}
+                className="hidden"
+            />
+        </span>
+    );
+};
 
 interface StreamingMessageContentProps {
     message: StreamingMessage;
@@ -71,34 +203,55 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
         <div className={cn('prose dark:prose-invert', className)}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-            // components={{
-            //     code({ node, inline, className, children, ...props }: any) {
-            //         const match = /language-(\w+)/.exec(className || '');
+                components={{
+                    a(props) {
+                        const { href, children } = props;
 
-            //         if (inline) {
-            //             return (
-            //                 <code className={cn('px-1 py-0.5 rounded-md bg-muted', className)} {...props}>
-            //                     {children}
-            //                 </code>
-            //             );
-            //         }
+                        // Create a regular expression to detect common audio file extensions in the URL path
+                        const audioFileRegex = /\.(mp3|wav|ogg|m4a|flac)(?=[?#]|$)/i;
 
-            //         const language = match ? match[1] : '';
-            //         const content = String(children).replace(/\n$/, '');
+                        if (href && audioFileRegex.test(href)) {
+                            return <InlineAudioPlayer src={href} label={children} />;
+                        }
 
-            //         return (
-            //             <CodeBlock
-            //                 content={content}
-            //                 language={language}
-            //                 fileName=""
-            //                 showLineNumbers
-            //             />
-            //         );
-            //     },
-            //     pre({ children }: any) {
-            //         return <>{children}</>;
-            //     }
-            // }}
+                        return <a href={href} {...props}>{children}</a>;
+                    },
+                    code(props: any) {
+                        const { node, inline, className, children, ...rest } = props;
+                        const match = /language-(\w+)/.exec(className || '');
+                        const content = String(children).replace(/\n$/, '');
+
+                        if (inline) {
+                            return (
+                                <code
+                                    className={cn(
+                                        "px-1 py-0.5 bg-muted/30 text-primary-foreground font-mono text-[0.9em] rounded",
+                                        className
+                                    )}
+                                    {...rest}
+                                >
+                                    {children}
+                                </code>
+                            );
+                        }
+
+                        const language = match ? match[1] : '';
+
+                        return (
+                            <CodeBlock
+                                content={content}
+                                language={language}
+                                fileName=""
+                                showLineNumbers
+                                isSimple={content.split('\n').length === 1 && content.length < 30}
+                            />
+                        );
+                    },
+                    pre(props: any) {
+                        const { children } = props;
+                        return <div className="not-prose my-2 rounded-md overflow-hidden">{children}</div>;
+                    }
+                }}
             >
                 {message.content}
             </ReactMarkdown>

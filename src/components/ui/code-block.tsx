@@ -9,6 +9,7 @@ interface CodeBlockProps {
     showLineNumbers?: boolean;
     highlightLines?: number[];
     className?: string;
+    isSimple?: boolean;
 }
 
 export function CodeBlock({
@@ -17,7 +18,8 @@ export function CodeBlock({
     fileName = '',
     showLineNumbers = false,
     highlightLines = [],
-    className
+    className,
+    isSimple = false
 }: CodeBlockProps) {
     const [copied, setCopied] = useState(false);
 
@@ -28,6 +30,17 @@ export function CodeBlock({
     };
 
     const lines = content.split('\n');
+
+    if (isSimple || (lines.length === 1 && content.trim().length < 50)) {
+        return (
+            <code className={cn(
+                'px-2 py-1 bg-muted/30 text-primary-foreground rounded font-mono whitespace-pre',
+                className
+            )}>
+                {content}
+            </code>
+        );
+    }
 
     return (
         <div className={cn('relative my-4 rounded-md bg-muted overflow-hidden', className)}>
