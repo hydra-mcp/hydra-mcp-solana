@@ -198,13 +198,34 @@ export function ChatInterface({
         }
     }, [modalMode, inputRef]);
 
-    const [transformY, setTransformY] = useState('translateY(0)');
-    const [paddingTop, setPaddingTop] = useState('4rem');
+    // Replace the transformY/paddingTop effect with a memoized calculation that doesn't cause layout shifts
+    const [stageTransformValues, setStageTransformValues] = useState({ transform: 'translateY(0)', padding: '4rem' });
+
+    // Replace the existing transform effect with a memoized version that only updates when necessary
     useEffect(() => {
-        const transform = showStage ? validStages.length * 2 + 2 : 0;
-        setTransformY(`translateY(-${transform}rem)`);
-        setPaddingTop(`${transform}rem`);
-    }, [validStages]);
+        if (showStage === false || validStages.length === 0) {
+            // Only update if actually changing to avoid unnecessary renders
+            if (stageTransformValues.transform !== 'translateY(0)') {
+                setStageTransformValues({ transform: 'translateY(0)', padding: '4rem' });
+            }
+            return;
+        }
+
+        // Use requestAnimationFrame to batch these changes with rendering
+        const transformValue = validStages.length * 2 + 2;
+        const newTransform = `translateY(-${transformValue}rem)`;
+        const newPadding = `${transformValue}rem`;
+
+        // Only update state if values actually changed
+        if (stageTransformValues.transform !== newTransform || stageTransformValues.padding !== newPadding) {
+            requestAnimationFrame(() => {
+                setStageTransformValues({
+                    transform: newTransform,
+                    padding: newPadding
+                });
+            });
+        }
+    }, [validStages, showStage, stageTransformValues]);
 
     const handleRetry = useCallback(() => {
         if (!currentChat || !currentChat.messages || currentChat.messages.length === 0 || isProcessing) {
@@ -276,6 +297,20 @@ export function ChatInterface({
             observer.disconnect();
         };
     }, [showScrollToBottom, checkScrollState]);
+
+    // Debounce the scroll handler to improve performance
+    const debouncedHandleScroll = useCallback(
+        (() => {
+            let timeoutId: ReturnType<typeof setTimeout>;
+            return (e: React.UIEvent<HTMLDivElement>) => {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    handleScroll(e);
+                }, 50); // 50ms debounce
+            };
+        })(),
+        [handleScroll]
+    );
 
     return (
         <div
@@ -386,7 +421,7 @@ export function ChatInterface({
                         className={cn(
                             "scroll-area",
                             "rounded-lg border bg-background/5 shadow-inner flex-1 overflow-auto",
-                            "will-change-scroll transform-gpu",
+                            "will-change-transform will-change-scroll transform-gpu",
                             modalMode
                                 ? config.appDefinition?.description
                                     ? "h-[calc(100%-8rem)]"
@@ -395,14 +430,14 @@ export function ChatInterface({
                                     ? "h-[calc(100vh-14rem)]"
                                     : "h-[calc(100vh-10.5rem)]"
                         )}
-                        onScroll={handleScroll}
+                        onScroll={debouncedHandleScroll}
                     >
                         <div className="px-4 relative will-change-transform">
                             <ChatContainer
                                 currentChat={currentChat}
                                 onNewChat={createNewChat}
-                                transformY={transformY}
-                                paddingTop={paddingTop}
+                                transformY={stageTransformValues.transform}
+                                paddingTop={stageTransformValues.padding}
                                 onRetry={handleRetry}
                                 setInputValue={setInputValue}
                             />
