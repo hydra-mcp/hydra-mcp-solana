@@ -11,6 +11,7 @@ import {
     AppItem,
 } from '@/lib/appStoreService';
 import { useAppInstall } from '@/contexts/AppInstallContext';
+import { motion } from 'framer-motion';
 
 interface AppStoreComponentProps {
     title?: string;
@@ -219,10 +220,15 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                             onClick={e => e.stopPropagation()}
                                         >
                                             <h4 className="font-medium mb-3">Uninstall {app.name}?</h4>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                                This will remove the app from your device.
+                                            </p>
                                             <div className="flex justify-end gap-2 mt-4">
-                                                <button
+                                                <motion.button
+                                                    whileHover={{ scale: 1.03 }}
+                                                    whileTap={{ scale: 0.97 }}
                                                     className={cn(
-                                                        "px-3 py-1 rounded-md text-sm",
+                                                        "px-3 py-1.5 rounded-md text-sm font-medium",
                                                         isDarkMode ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"
                                                     )}
                                                     onClick={(e) => {
@@ -231,16 +237,18 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                                     }}
                                                 >
                                                     Cancel
-                                                </button>
-                                                <button
-                                                    className="px-3 py-1 rounded-md bg-red-500 hover:bg-red-600 text-white text-sm"
+                                                </motion.button>
+                                                <motion.button
+                                                    whileHover={{ scale: 1.03 }}
+                                                    whileTap={{ scale: 0.97 }}
+                                                    className="px-3 py-1.5 rounded-md bg-red-500 hover:bg-red-600 text-white text-sm font-medium shadow-sm hover:shadow-md"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleUninstall(app.id);
                                                     }}
                                                 >
                                                     Uninstall
-                                                </button>
+                                                </motion.button>
                                             </div>
                                         </div>
                                     </div>
@@ -259,7 +267,7 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                             }}
                                         />
                                     ) : null}
-                                    <div className={cn("text-2xl text-white font-bold", app.icon ? "hidden" : "")}>
+                                    <div className={cn("text-3xl text-white font-bold", app.icon ? "hidden" : "")}>
                                         {app.name.substring(0, 1)}
                                     </div>
                                 </div>
@@ -268,15 +276,49 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                         <h3 className="font-medium">{app.name}</h3>
                                         <div onClick={e => e.stopPropagation()}>
                                             {uninstallingApps.includes(app.id) ? (
-                                                <Loader2 className="w-5 h-5 animate-spin text-red-500" />
+                                                <div className="flex items-center gap-1">
+                                                    <motion.div
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        className="bg-red-100 dark:bg-red-900/30 rounded-lg px-3 py-1.5 flex items-center"
+                                                    >
+                                                        <span className="text-xs font-medium text-red-600 dark:text-red-400 flex items-center">
+                                                            <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                                                            Uninstalling
+                                                        </span>
+                                                    </motion.div>
+                                                </div>
                                             ) : installingApps.includes(app.id) ? (
-                                                <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                                                <div className="flex items-center gap-1">
+                                                    <div className="relative w-20 h-8">
+                                                        <motion.div
+                                                            initial={{ width: '5%' }}
+                                                            animate={{ width: '100%' }}
+                                                            transition={{ duration: 1.2, ease: "easeInOut" }}
+                                                            className="absolute inset-0 bg-blue-500 rounded-lg"
+                                                        />
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <span className="text-xs font-medium text-white flex items-center">
+                                                                <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                                                Installing
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             ) : installedApps.includes(app.id) ? (
                                                 <div className="flex items-center gap-2">
-                                                    <div className="flex items-center justify-center">
-                                                        <Check className="w-5 h-5 text-green-500" />
-                                                    </div>
-                                                    <button
+                                                    <motion.div
+                                                        initial={{ scale: 0.8, opacity: 0 }}
+                                                        animate={{ scale: 1, opacity: 1 }}
+                                                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                                                        className="flex items-center justify-center h-7 px-2 rounded-md bg-green-100 dark:bg-green-900/30"
+                                                    >
+                                                        <Check className="w-4 h-4 text-green-500 dark:text-green-400 mr-1" />
+                                                        <span className="text-xs font-medium text-green-700 dark:text-green-400">Installed</span>
+                                                    </motion.div>
+                                                    <motion.button
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             setShowConfirmUninstall(app.id);
@@ -290,24 +332,26 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                                         title="Uninstall"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
-                                                    </button>
+                                                    </motion.button>
                                                 </div>
                                             ) : (
-                                                <button
+                                                <motion.button
+                                                    whileHover={{ scale: 1.03 }}
+                                                    whileTap={{ scale: 0.97 }}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleInstall(app.id);
                                                     }}
                                                     className={cn(
-                                                        "px-4 py-1.5 text-sm rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2",
+                                                        "px-4 py-1.5 text-sm rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm",
                                                         isDarkMode
-                                                            ? "bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
-                                                            : "bg-blue-500 text-white hover:bg-blue-600 active:scale-95"
+                                                            ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md"
+                                                            : "bg-blue-500 text-white hover:bg-blue-600 hover:shadow-md"
                                                     )}
                                                 >
                                                     <Download className="w-4 h-4" />
                                                     Install
-                                                </button>
+                                                </motion.button>
                                             )}
                                         </div>
                                     </div>

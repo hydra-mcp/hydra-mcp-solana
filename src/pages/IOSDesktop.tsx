@@ -322,9 +322,22 @@ const IOSDesktopContent = ({
             id: app.id, // Use the ACTUAL App Store ID from API
             title: app.name,
             icon: app.icon ?
-                <img src={app.icon} alt={app.name} className="w-full h-full object-cover" /> : // Added object-cover
-                <div className="w-full h-full flex items-center justify-center bg-blue-500 rounded-xl">
-                    <span className="text-white text-4xl font-bold">{app.name.charAt(0)}</span>
+                <div className="w-full h-full rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <img
+                        src={app.icon}
+                        alt={app.name}
+                        className="w-full h-full object-cover rounded-xl"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                        }}
+                    />
+                    <div className={cn("text-2xl text-white font-bold hidden")}>
+                        {app.name.substring(0, 1)}
+                    </div>
+                </div> :
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+                    <span className="text-white text-3xl font-bold">{app.name.substring(0, 1)}</span>
                 </div>,
             path: `/app/${app.id}`,
             component: ( // Define component lazily or directly as needed
