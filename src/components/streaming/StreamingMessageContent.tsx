@@ -1,14 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useDeferredValue } from 'react';
 import { cn } from '@/lib/utils';
 import { StreamingMessage } from '@/lib/streaming/types';
 import { Loader2, AlertCircle, AlertTriangle, Lock, Play, Pause, Volume2, ExternalLink, ImageIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import remarkUnwrapImages from 'remark-unwrap-images';
 import { CodeBlock } from '@/components/ui/code-block';
 
-// Image Component for Markdown
-const MarkdownImage = ({ src, alt, title }: { src: string, alt?: string, title?: string }) => {
+// Image Component for Markdown - Wrapped with React.memo
+const MarkdownImageComponent = ({ src, alt, title }: { src: string, alt?: string, title?: string }) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [hasError, setHasError] = useState(false);
     const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
@@ -96,6 +95,7 @@ const MarkdownImage = ({ src, alt, title }: { src: string, alt?: string, title?:
         </div>
     );
 };
+const MarkdownImage = React.memo(MarkdownImageComponent);
 
 // Custom Audio Player Component
 const InlineAudioPlayer = ({ src, label }: { src: string, label?: React.ReactNode }) => {
@@ -240,6 +240,10 @@ function StreamingMessageContentComponent({ message, className }: StreamingMessa
     // Add ref for content container to handle scroll anchoring
     const contentRef = useRef<HTMLDivElement>(null);
 
+    // Defer the content updates passed to ReactMarkdown
+    const deferredContent = useDeferredValue(message.content);
+    const isStale = message.content !== deferredContent; // Check if the UI is lagging behind
+
     // Use useEffect to apply scroll anchoring
     useEffect(() => {
         // When streaming content updates, maintain scroll position relative to content
@@ -320,18 +324,21 @@ function StreamingMessageContentComponent({ message, className }: StreamingMessa
             ref={contentRef}
             className={cn(
                 'prose dark:prose-invert will-change-contents',
+                // Add a subtle style when content is deferred (optional)
+                isStale && 'opacity-80 transition-opacity duration-300',
                 className
             )}
         >
             <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkUnwrapImages]}
+                remarkPlugins={[remarkGfm]}
                 components={{
-                    img({ src, alt, title }) {
+                    img({ node, src, alt, title }) {
                         if (!src) return null;
+                        // Use the memoized MarkdownImage component
                         return <MarkdownImage src={src} alt={alt} title={title} />;
                     },
                     a(props) {
-                        const { href, children } = props;
+                        const { node, href, children, ...rest } = props;
                         if (!href) return <span>{children}</span>;
 
                         // Check if this is an image link by file extension
@@ -344,9 +351,10 @@ function StreamingMessageContentComponent({ message, className }: StreamingMessa
                         const hasImageParams = /\?.*(?:img|image|photo|pic|picture|file)=/.test(href);
 
                         if (href && (imageFileRegex.test(href) || isImageService || hasImageParams)) {
-                            return <MarkdownImage src={href} alt={String(children)} />;
+                            // Extract potential alt text from children if it's just text
+                            const potentialAlt = typeof children === 'string' ? children : undefined;
+                            return <MarkdownImage src={href} alt={potentialAlt} />;
                         }
-
 
                         // Audio link detection remains
                         const audioFileRegex = /\.(mp3|wav|ogg|m4a|flac)(?=[?#]|$)/i;
@@ -356,7 +364,7 @@ function StreamingMessageContentComponent({ message, className }: StreamingMessa
                         }
 
                         // Regular link
-                        return <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>;
+                        return <a href={href} target="_blank" rel="noopener noreferrer" {...rest}>{children}</a>;
                     },
                     code(props: any) {
                         const { node, inline, className, children, ...rest } = props;
@@ -395,7 +403,7 @@ function StreamingMessageContentComponent({ message, className }: StreamingMessa
                     }
                 }}
             >
-                {message.content}
+                {deferredContent}
             </ReactMarkdown>
 
             {/* Streaming status indicator */}
