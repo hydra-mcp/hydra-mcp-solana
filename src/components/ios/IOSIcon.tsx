@@ -152,8 +152,13 @@ export function IOSIcon({
                 }}
             >
                 <span
-                    className="text-xs font-medium text-white text-center truncate max-w-full"
-                    style={{ textShadow: "0px 1px 2px rgba(0,0,0,0.8)" }}
+                    className="text-xs font-medium text-white text-center max-w-full whitespace-nowrap"
+                    style={{
+                        textShadow: "0px 1px 2px rgba(0,0,0,0.8)",
+                        transform: "scale(var(--scale, 1))",
+                        transformOrigin: "center",
+                        wordBreak: "keep-all"
+                    }}
                 >
                     {name}
                 </span>
