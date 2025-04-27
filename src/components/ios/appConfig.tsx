@@ -335,6 +335,7 @@ export interface AppDefinition {
             icon?: ReactNode;
         }>;
     };
+    isDisabled?: boolean;
 }
 
 export const defaultSize = { width: '80%', height: '85%' }

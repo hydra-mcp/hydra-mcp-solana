@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { Ban } from 'lucide-react';
 
 interface IOSIconProps {
     name: string;
@@ -8,6 +9,7 @@ interface IOSIconProps {
     onClick: () => void;
     onContextMenu?: (e: React.MouseEvent) => void;
     isJiggling?: boolean;
+    isDisabled?: boolean;
     className?: string;
 }
 
@@ -17,6 +19,7 @@ export function IOSIcon({
     onClick,
     onContextMenu,
     isJiggling = false,
+    isDisabled,
     className
 }: IOSIconProps) {
     const [isPressed, setIsPressed] = useState(false);
@@ -86,7 +89,8 @@ export function IOSIcon({
         <div
             className={cn(
                 "flex flex-col items-center justify-center w-24 h-32 cursor-pointer select-none",
-                className
+                className,
+                isJiggling ? 'animate-jiggle' : ''
             )}
             onMouseDown={handlePress}
             onMouseUp={handleRelease}
@@ -98,7 +102,7 @@ export function IOSIcon({
         >
             <motion.div
                 className={cn(
-                    "w-20 h-20 rounded-2xl shadow-md overflow-hidden flex items-center justify-center",
+                    "relative w-20 h-20 rounded-2xl shadow-md overflow-hidden flex items-center justify-center",
                     isPressed ? "shadow-sm" : "shadow-lg"
                 )}
                 animate={{
@@ -126,6 +130,14 @@ export function IOSIcon({
                     className="w-full h-full flex items-center justify-center bg-gradient-to-br rounded-2xl"
                 >
                     {icon}
+                    {isDisabled && (
+                        <>
+                            <div className="absolute inset-0 bg-black/30 rounded-2xl"></div>
+                            <div className="absolute top-1 right-1 bg-gray-600/80 backdrop-blur-sm rounded-full p-0.5">
+                                <Ban className="w-4 h-4 text-white/90" />
+                            </div>
+                        </>
+                    )}
                 </motion.div>
             </motion.div>
 

@@ -21,6 +21,7 @@ export interface AppItem {
     detailUrl?: string | null;
     installed: boolean;
     installDate?: string | null;
+    is_disabled?: boolean;
 }
 
 // Define the specific data structure returned by the install endpoint

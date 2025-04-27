@@ -10,19 +10,19 @@ import { WindowManager } from '@/components/ios/WindowManager';
 import { createAppWindow, getDefaultAppPosition } from '@/components/ios/AppRegistry';
 import { AppDefinition, appRegistry, ChatComponent, defaultSize, LoadingPlaceholder } from '@/components/ios/appConfig';
 import { useAppWindow } from '@/contexts/AppWindowContext';
-import { fetchApps, AppItem } from '@/lib/appStoreService';
+import { fetchApps, AppItem, uninstallApp } from '@/lib/appStoreService';
 import { v4 as uuidv4 } from 'uuid';
 
 // Context menu component
 interface ContextMenuProps {
-    appName: string;
+    appTitle: string;
     position: { x: number; y: number };
     onClose: () => void;
     onRename: () => void;
     onDelete: () => void;
 }
 
-const ContextMenu = ({ appName, position, onClose, onRename, onDelete }: ContextMenuProps) => {
+const ContextMenu = ({ appTitle, position, onClose, onRename, onDelete }: ContextMenuProps) => {
     const { isDarkMode } = useTheme();
 
     // Menu item animation variants
@@ -55,7 +55,7 @@ const ContextMenu = ({ appName, position, onClose, onRename, onDelete }: Context
             onClick={(e) => e.stopPropagation()}
         >
             <div className="text-sm font-medium pb-1 border-b border-gray-200 dark:border-gray-700 mb-1">
-                {appName}
+                {appTitle}
             </div>
 
             <div className="flex flex-col">
@@ -100,13 +100,13 @@ const ContextMenu = ({ appName, position, onClose, onRename, onDelete }: Context
 
 // Rename dialog component
 interface RenameDialogProps {
-    appName: string;
+    appTitle: string;
     onClose: () => void;
     onConfirm: (newName: string) => void;
 }
 
-const RenameDialog = ({ appName, onClose, onConfirm }: RenameDialogProps) => {
-    const [newName, setNewName] = useState(appName);
+const RenameDialog = ({ appTitle, onClose, onConfirm }: RenameDialogProps) => {
+    const [newName, setNewName] = useState(appTitle);
     const { isDarkMode } = useTheme();
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -179,13 +179,64 @@ const RenameDialog = ({ appName, onClose, onConfirm }: RenameDialogProps) => {
     );
 };
 
+// Confirmation dialog component
+interface ConfirmDialogProps {
+    title: string;
+    message: string;
+    onClose: () => void;
+    onConfirm: () => void;
+}
+
+const ConfirmDialog = ({ title, message, onClose, onConfirm }: ConfirmDialogProps) => {
+    const { isDarkMode } = useTheme();
+
+    return (
+        <div
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center"
+            onClick={onClose}
+        >
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className={cn(
+                    "w-80 rounded-xl p-4 shadow-lg",
+                    isDarkMode
+                        ? "bg-gray-800 border border-gray-700"
+                        : "bg-white border border-gray-200"
+                )}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <h3 className="text-lg font-semibold mb-2">{title}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{message}</p>
+                <div className="flex justify-end gap-2">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onConfirm}
+                        className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+                    >
+                        Uninstall
+                    </button>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
 // iOS desktop page component
 export function IOSDesktop() {
     const { isDarkMode, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const [showContextMenu, setShowContextMenu] = useState(false);
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
-    const [selectedApp, setSelectedApp] = useState<string | null>(null);
+    const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
     const [isJiggling, setIsJiggling] = useState(false);
     const [showRenameDialog, setShowRenameDialog] = useState(false);
     const [showDockLabels, setShowDockLabels] = useState(true);
@@ -199,8 +250,8 @@ export function IOSDesktop() {
             setShowContextMenu={setShowContextMenu}
             contextMenuPosition={contextMenuPosition}
             setContextMenuPosition={setContextMenuPosition}
-            selectedApp={selectedApp}
-            setSelectedApp={setSelectedApp}
+            selectedAppId={selectedAppId}
+            setSelectedAppId={setSelectedAppId}
             isJiggling={isJiggling}
             setIsJiggling={setIsJiggling}
             showRenameDialog={showRenameDialog}
@@ -221,8 +272,8 @@ const IOSDesktopContent = ({
     setShowContextMenu,
     contextMenuPosition,
     setContextMenuPosition,
-    selectedApp,
-    setSelectedApp,
+    selectedAppId,
+    setSelectedAppId,
     isJiggling,
     setIsJiggling,
     showRenameDialog,
@@ -238,8 +289,8 @@ const IOSDesktopContent = ({
     setShowContextMenu: (show: boolean) => void;
     contextMenuPosition: { x: number; y: number };
     setContextMenuPosition: (position: { x: number; y: number }) => void;
-    selectedApp: string | null;
-    setSelectedApp: (app: string | null) => void;
+    selectedAppId: string | null;
+    setSelectedAppId: (id: string | null) => void;
     isJiggling: boolean;
     setIsJiggling: (jiggling: boolean) => void;
     showRenameDialog: boolean;
@@ -251,155 +302,143 @@ const IOSDesktopContent = ({
 }) => {
     const { openApp } = useAppWindow();
     const [installedApps, setInstalledApps] = useState<AppItem[]>([]);
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const [appToUninstall, setAppToUninstall] = useState<AppDefinition | null>(null);
 
-    // Generate application list from appRegistry
+    // Combined state for all desktop apps (default + installed)
+    // Initialized with default apps using registry key as ID
     const [apps, setApps] = useState<AppDefinition[]>(() =>
-        Object.values(appRegistry).map((app, index) => ({
-            id: String(index + 1),
-            ...app
+        Object.entries(appRegistry).map(([key, app]) => ({
+            ...app,
+            id: key // Use registry key as ID
         }))
     );
 
-    // Fetch installed apps from the API
+    // Fetch installed apps from the API on mount
     useEffect(() => {
         const fetchInstalledApps = async () => {
             try {
                 const appsData = await fetchApps();
                 const installed = appsData.filter(app => app.installed);
-                setInstalledApps(installed);
+                setInstalledApps(installed); // Update raw installed apps list
             } catch (error) {
                 console.error('Error fetching installed apps:', error);
             }
         };
-
         fetchInstalledApps();
     }, []);
 
-    // Add installed apps to the desktop
+    // Effect to merge installed apps into the main 'apps' state
     useEffect(() => {
-        if (installedApps.length > 0) {
-            // Convert installed apps to the format needed for desktop icons
-            const installedAppIcons = installedApps.map((app, index) => {
-                // Get the next available ID after existing apps
-                const nextId = String(Object.values(appRegistry).length + index + 1);
-                const appDefinition: AppDefinition = {
-                    id: nextId,
-                    title: app.name,
-                    // Use default icon if app icon is not available
-                    icon: app.icon ?
-                        <img src={app.icon} alt={app.name} className="w-full h-full" /> :
-                        <div className="w-full h-full flex items-center justify-center bg-blue-500 rounded-xl">
-                            <span className="text-white text-4xl font-bold">{app.name.charAt(0)}</span>
-                        </div>,
-                    path: `/app/${app.id}`,
-                    component: (
-                        <Suspense fallback={<LoadingPlaceholder />}>
-                            {React.createElement(ChatComponent({ appId: app.id }))}
-                        </Suspense>
-                    ),
-                    defaultSize
-                }
-                return appDefinition;
-            });
+        // Convert installed apps from API (AppItem) to AppDefinition format
+        const installedAppDefinitions = installedApps.map((app): AppDefinition => ({
+            id: app.id, // Use the ACTUAL App Store ID from API
+            title: app.name,
+            icon: app.icon ?
+                <img src={app.icon} alt={app.name} className="w-full h-full object-cover" /> : // Added object-cover
+                <div className="w-full h-full flex items-center justify-center bg-blue-500 rounded-xl">
+                    <span className="text-white text-4xl font-bold">{app.name.charAt(0)}</span>
+                </div>,
+            path: `/app/${app.id}`,
+            component: ( // Define component lazily or directly as needed
+                <Suspense fallback={<LoadingPlaceholder />}>
+                    {/* Ensure ChatComponent is correctly created or imported */}
+                    {React.createElement(ChatComponent({ appId: app.id }))}
+                </Suspense>
+            ),
+            defaultSize,
+            isDisabled: app.is_disabled,
+            description: app.description
+        }));
 
-            // Add installed apps to the desktop without modifying existing apps
-            setApps(prevApps => {
-                return [...prevApps, ...installedAppIcons];
-            });
-        }
-    }, [installedApps]);
+        // Get default apps from registry using registry key as ID
+        const defaultAppsFromRegistry = Object.entries(appRegistry).map(([key, app]) => ({
+            ...app,
+            id: key
+        }));
 
-    // Dock apps - using appRegistry application information
+        // Combine default apps and installed apps using a Map to handle potential overrides and ensure uniqueness by ID
+        const combinedAppsMap = new Map<string, AppDefinition>();
+
+        // Add default apps first
+        defaultAppsFromRegistry.forEach(app => combinedAppsMap.set(app.id, app));
+
+        // Add/update with installed apps (using their API ID as the key)
+        installedAppDefinitions.forEach(app => combinedAppsMap.set(app.id, app));
+
+        // Update the state with the unique, combined list from the map values
+        setApps(Array.from(combinedAppsMap.values()));
+
+    }, [installedApps]); // Re-run whenever the raw installedApps list changes
+
+    // Dock apps - definition remains the same
     const dockApps = [
-        {
-            name: appRegistry.walletFinder.title,
-            icon: appRegistry.walletFinder.icon,
-            path: appRegistry.walletFinder.path
-        },
-        {
-            name: appRegistry.messages.title,
-            icon: appRegistry.messages.icon,
-            path: appRegistry.messages.path
-        },
-        {
-            name: appRegistry.settings.title,
-            icon: appRegistry.settings.icon,
-            path: appRegistry.settings.path,
-        }
+        { name: appRegistry.walletFinder.title, icon: appRegistry.walletFinder.icon, path: appRegistry.walletFinder.path },
+        { name: appRegistry.messages.title, icon: appRegistry.messages.icon, path: appRegistry.messages.path },
+        { name: appRegistry.settings.title, icon: appRegistry.settings.icon, path: appRegistry.settings.path, }
     ];
 
-    // Handle application click
+    // Handle application click (Uses stable ID: registry key or API ID)
     const handleAppClick = (id: string) => {
         if (isJiggling) {
-            // Click on the application in the jiggling mode does not perform any operation
             return;
         }
 
-        // Find app definition
         const iosApp = apps.find(app => app.id === id);
         if (!iosApp) return;
 
-        // Handle installed apps from App Store
-        if (iosApp.path.startsWith('/app/')) {
-            const appStoreAppId = iosApp.path.replace('/app/', '');
-            const installedApp = installedApps.find(app => app.id === appStoreAppId);
-
-            if (installedApp) {
-                const installedAppConfig = {
-                    id: appStoreAppId,
-                    path: iosApp.path,
-                    title: installedApp.name,
-                    icon: iosApp.icon,
-                    component: iosApp.component,
-                    defaultSize: iosApp.defaultSize || defaultSize,
-                    description: installedApp.description
-                };
-
-                // add installed app to appRegistry
-                appRegistry[appStoreAppId] = installedAppConfig;
-
-                // create window with installed app
-                const appWindow = createAppWindow(appStoreAppId);
-
-                if (appWindow) {
-                    openApp(appWindow);
-                }
-                return;
-            }
+        // Check if the app is disabled
+        if (iosApp.isDisabled) {
+            setAppToUninstall(iosApp); // Store the full definition for the dialog
+            setShowConfirmDialog(true);
+            return;
         }
 
-        // Find complete application configuration
-        const appKey = Object.keys(appRegistry).find(
-            key => appRegistry[key].path === iosApp.path
-        );
+        // Handle installed apps (path check is still valid)
+        if (iosApp.path.startsWith('/app/')) {
+            const appStoreAppId = iosApp.id; // The ID is the App Store ID
 
-        if (appKey && appRegistry[appKey].onIconClick) {
-            // If the application defines a custom click processing function, execute it
-            appRegistry[appKey].onIconClick();
-        } else {
-            // Otherwise, the default behavior is to open the application window
-            // Determine appId from path (remove leading slash)
-            const appId = iosApp.path.startsWith('/') ? iosApp.path.substring(1) : iosApp.path;
-            // Create application window and open
-            const appWindow = createAppWindow(appId);
+            // Ensure the app definition is temporarily in appRegistry if needed by createAppWindow
+            // (Assuming createAppWindow might look up by ID in appRegistry)
+            if (!appRegistry[appStoreAppId]) {
+                appRegistry[appStoreAppId] = { ...iosApp }; // Add definition
+            }
+
+            const appWindow = createAppWindow(appStoreAppId);
             if (appWindow) {
                 openApp(appWindow);
             } else {
-                // If the corresponding application window definition is not found, fall back to traditional navigation
-                navigate(iosApp.path);
+                console.error(`Could not create window for installed app: ${appStoreAppId}`);
+                // Optionally navigate or show error
             }
+            return; // Stop processing here for installed apps
+        }
+
+        // Handle default apps (ID is the registry key)
+        const appKey = id;
+        if (appRegistry[appKey]?.onIconClick) {
+            appRegistry[appKey].onIconClick!();
+        } else if (appRegistry[appKey]) { // Check if it's a standard app to open
+            const appWindow = createAppWindow(appKey);
+            if (appWindow) {
+                openApp(appWindow);
+            } else {
+                // Fallback navigation if window creation fails but app exists
+                navigate(appRegistry[appKey].path);
+            }
+        } else {
+            console.error(`App definition not found for key/ID: ${id}`);
         }
     };
 
-    // Handle right-click menu
+    // Handle right-click menu (Uses stable ID)
     const handleContextMenu = (e: React.MouseEvent, appId: string) => {
         e.preventDefault();
-
-        const app = apps.find(app => app.id === appId);
+        const app = apps.find(a => a.id === appId);
         if (!app) return;
 
         setContextMenuPosition({ x: e.clientX, y: e.clientY });
-        setSelectedApp(app.title);
+        setSelectedAppId(appId); // Store the unique ID
         setShowContextMenu(true);
     };
 
@@ -411,26 +450,34 @@ const IOSDesktopContent = ({
     // Handle renaming
     const handleRename = () => {
         setShowContextMenu(false);
-        setShowRenameDialog(true);
+        setShowRenameDialog(true); // RenameDialog will get app details via selectedAppId
     };
 
     // Confirm renaming
     const handleConfirmRename = (newName: string) => {
-        if (selectedApp) {
+        if (selectedAppId) {
             setApps(prev => prev.map(app =>
-                app.title === selectedApp ? { ...app, title: newName } : app
+                app.id === selectedAppId ? { ...app, title: newName } : app
             ));
-            setSelectedApp(null);
+            setSelectedAppId(null); // Clear selection
             setShowRenameDialog(false);
         }
     };
 
     // Handle deleting applications
     const handleDelete = () => {
-        if (selectedApp) {
-            setApps(prev => prev.filter(app => app.title !== selectedApp));
+        if (selectedAppId) {
+            const appToDelete = apps.find(a => a.id === selectedAppId);
+            // Only allow deleting non-installed apps this way
+            if (appToDelete && !appToDelete.path.startsWith('/app/')) {
+                setApps(prev => prev.filter(app => app.id !== selectedAppId));
+            } else if (appToDelete && appToDelete.isDisabled) {
+                // If it's a disabled installed app, trigger the uninstall dialog
+                setAppToUninstall(appToDelete);
+                setShowConfirmDialog(true);
+            }
             setShowContextMenu(false);
-            setSelectedApp(null);
+            setSelectedAppId(null); // Clear selection
         }
     };
 
@@ -438,8 +485,8 @@ const IOSDesktopContent = ({
     const handleDesktopClick = () => {
         if (showContextMenu) {
             setShowContextMenu(false);
+            setSelectedAppId(null); // Clear selection
         }
-
         if (isJiggling) {
             setIsJiggling(false);
         }
@@ -450,23 +497,27 @@ const IOSDesktopContent = ({
         setShowDockLabels(!showDockLabels);
     };
 
-    // Listen for Escape key to close dialogs
+    // Listen for Escape key
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                if (showRenameDialog) {
+                if (showConfirmDialog) { // Close confirm dialog first
+                    setShowConfirmDialog(false);
+                    setAppToUninstall(null);
+                } else if (showRenameDialog) {
                     setShowRenameDialog(false);
+                    setSelectedAppId(null); // Clear selection
                 } else if (showContextMenu) {
                     setShowContextMenu(false);
+                    setSelectedAppId(null); // Clear selection
                 } else if (isJiggling) {
                     setIsJiggling(false);
                 }
             }
         };
-
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [showRenameDialog, showContextMenu, isJiggling]);
+    }, [showRenameDialog, showContextMenu, isJiggling, showConfirmDialog]);
 
     // Double-click handling
     useEffect(() => {
@@ -491,6 +542,31 @@ const IOSDesktopContent = ({
         // Do not display custom menu here, just prevent default menu
         return false;
     };
+
+    // Handle confirming uninstall
+    const handleConfirmUninstall = async () => {
+        if (!appToUninstall) return;
+
+        const appStoreAppId = appToUninstall.id; // ID is the App Store ID
+
+        try {
+            await uninstallApp(appStoreAppId);
+            // Update the raw installedApps list; the useEffect will update the main 'apps' state
+            setInstalledApps(prev => prev.filter(app => app.id !== appStoreAppId));
+            console.log(`App ${appToUninstall.title} uninstalled successfully.`);
+        } catch (error) {
+            console.error(`Failed to uninstall app ${appToUninstall.title}:`, error);
+            // TODO: Show user-facing error message
+        } finally {
+            setShowConfirmDialog(false);
+            setAppToUninstall(null);
+            setSelectedAppId(null); // Also clear selection if uninstall was triggered from context menu
+        }
+    };
+
+    // Find app details for dialogs based on selectedAppId
+    const appForContextMenu = selectedAppId ? apps.find(a => a.id === selectedAppId) : null;
+    const appForRenameDialog = selectedAppId ? apps.find(a => a.id === selectedAppId) : null;
 
     return (
         <div
@@ -534,6 +610,7 @@ const IOSDesktopContent = ({
                             onClick={() => handleAppClick(app.id)}
                             onContextMenu={(e) => handleContextMenu(e, app.id)}
                             isJiggling={isJiggling}
+                            isDisabled={app.isDisabled}
                         />
                     ))}
                 </div>
@@ -562,11 +639,11 @@ const IOSDesktopContent = ({
 
             {/* Context menu */}
             <AnimatePresence>
-                {showContextMenu && selectedApp && (
+                {showContextMenu && appForContextMenu && (
                     <ContextMenu
-                        appName={selectedApp}
+                        appTitle={appForContextMenu.title}
                         position={contextMenuPosition}
-                        onClose={() => setShowContextMenu(false)}
+                        onClose={() => { setShowContextMenu(false); setSelectedAppId(null); }}
                         onRename={handleRename}
                         onDelete={handleDelete}
                     />
@@ -575,11 +652,23 @@ const IOSDesktopContent = ({
 
             {/* Rename dialog */}
             <AnimatePresence>
-                {showRenameDialog && selectedApp && (
+                {showRenameDialog && appForRenameDialog && (
                     <RenameDialog
-                        appName={selectedApp}
-                        onClose={() => setShowRenameDialog(false)}
+                        appTitle={appForRenameDialog.title}
+                        onClose={() => { setShowRenameDialog(false); setSelectedAppId(null); }}
                         onConfirm={handleConfirmRename}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Uninstall Confirmation Dialog */}
+            <AnimatePresence>
+                {showConfirmDialog && appToUninstall && (
+                    <ConfirmDialog
+                        title="Uninstall App?"
+                        message={`"${appToUninstall.title}" has been disabled by the administrator. Do you want to uninstall it?`}
+                        onClose={() => { setShowConfirmDialog(false); setAppToUninstall(null); }}
+                        onConfirm={handleConfirmUninstall}
                     />
                 )}
             </AnimatePresence>
