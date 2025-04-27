@@ -1,17 +1,34 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { StreamingMessage } from '@/lib/streaming/types';
 import { Loader2, AlertCircle, AlertTriangle, Lock, Play, Pause, Volume2, ExternalLink, ImageIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkUnwrapImages from 'remark-unwrap-images';
 import { CodeBlock } from '@/components/ui/code-block';
 
 // Image Component for Markdown
 const MarkdownImage = ({ src, alt, title }: { src: string, alt?: string, title?: string }) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [hasError, setHasError] = useState(false);
+    const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
+    const imageRef = useRef<HTMLImageElement>(null);
 
-    const handleLoad = () => setIsLoaded(true);
+    const handleLoad = () => {
+        // Get natural dimensions when loaded to maintain aspect ratio
+        if (imageRef.current) {
+            setImageDimensions({
+                width: imageRef.current.naturalWidth,
+                height: imageRef.current.naturalHeight
+            });
+        }
+        // Use requestAnimationFrame to delay showing the image until next paint
+        // This reduces layout shifts and jittering
+        requestAnimationFrame(() => {
+            setIsLoaded(true);
+        });
+    };
+
     const handleError = () => setHasError(true);
 
     if (hasError) {
@@ -33,24 +50,48 @@ const MarkdownImage = ({ src, alt, title }: { src: string, alt?: string, title?:
         );
     }
 
+    // Calculate aspect ratio placeholder based on standard 16:9 or use a fixed height
+    const placeholderHeight = 250; // Default height when loading
+
     return (
-        <div className="my-4 relative">
+        <div
+            className="my-4 relative will-change-contents will-change-transform"
+            // Reserve space with a fixed height to prevent layout shifts
+            style={{
+                minHeight: !isLoaded ? `${placeholderHeight}px` : 'auto',
+                // Only set a specific height once loaded if we have dimensions
+                height: isLoaded && imageDimensions.height > 0 ? 'auto' : undefined,
+                // Add content-visibility to improve rendering performance
+                contentVisibility: 'auto',
+                containIntrinsicSize: '0 250px'
+            }}
+        >
             {!isLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-muted/20 rounded-md">
+                <div className="absolute inset-0 flex items-center justify-center bg-muted/20 rounded-md" style={{ height: `${placeholderHeight}px` }}>
                     <Loader2 className="h-6 w-6 text-primary animate-spin" />
                 </div>
             )}
             <img
+                ref={imageRef}
                 src={src}
                 alt={alt || 'Image'}
                 title={title}
                 className={cn(
-                    "max-w-full h-auto rounded-md border border-muted/30",
-                    !isLoaded && "opacity-0",
-                    isLoaded && "opacity-100 transition-opacity duration-200"
+                    "max-w-full h-auto rounded-md border border-muted/30 transform-gpu",
+                    !isLoaded ? "opacity-0" : "opacity-100 transition-opacity duration-300"
                 )}
+                style={{
+                    // Apply hardware acceleration with transform to reduce jank
+                    transform: "translate3d(0, 0, 0)",
+                    // Make invisible but keep space reserved when loading
+                    visibility: isLoaded ? 'visible' : 'hidden',
+                }}
                 onLoad={handleLoad}
                 onError={handleError}
+                // Add loading="lazy" for browser-level lazy loading
+                loading="lazy"
+                // Add decoding="async" to decode images off the main thread
+                decoding="async"
             />
         </div>
     );
@@ -112,8 +153,8 @@ const InlineAudioPlayer = ({ src, label }: { src: string, label?: React.ReactNod
     const viewBoxSize = (radius + 2) * 2;
 
     return (
-        <span className="inline-flex items-center gap-2 transition-all duration-300">
-            <span className="relative inline-flex items-center justify-center">
+        <span className="inline-flex items-center gap-2 transition-all duration-300 align-middle -mt-0.5">
+            <span className="relative inline-flex items-center justify-center align-middle">
                 {/* Circular button with progress ring */}
                 <button
                     onClick={togglePlayPause}
@@ -122,6 +163,7 @@ const InlineAudioPlayer = ({ src, label }: { src: string, label?: React.ReactNod
                         isExpanded ? "bg-primary/10 w-8 h-8" : "bg-primary/5 w-7 h-7 hover:bg-primary/10"
                     )}
                     aria-label={isPlaying ? "Pause" : "Play"}
+                    style={{ transform: "translateY(1px)" }}
                 >
                     {/* Progress circle */}
                     {isPlaying && (
@@ -152,7 +194,7 @@ const InlineAudioPlayer = ({ src, label }: { src: string, label?: React.ReactNod
 
                     {/* Play/Pause icon */}
                     <span className={cn(
-                        "relative z-10 transition-transform duration-300",
+                        "relative z-10 transition-transform duration-300 flex items-center justify-center",
                         isPlaying ? "scale-90" : "scale-100"
                     )}>
                         {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
@@ -163,12 +205,12 @@ const InlineAudioPlayer = ({ src, label }: { src: string, label?: React.ReactNod
             {/* Time and label */}
             {isExpanded && (
                 <>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground inline-flex items-center">
                         {formatTime(currentTime)}
                     </span>
 
                     {label && (
-                        <span className="text-sm text-muted-foreground/80 max-w-[120px] truncate">
+                        <span className="text-sm text-muted-foreground/80 max-w-[120px] truncate inline-flex items-center">
                             {label}
                         </span>
                     )}
@@ -193,7 +235,31 @@ interface StreamingMessageContentProps {
     className?: string;
 }
 
-export function StreamingMessageContent({ message, className }: StreamingMessageContentProps) {
+// Original component function
+function StreamingMessageContentComponent({ message, className }: StreamingMessageContentProps) {
+    // Add ref for content container to handle scroll anchoring
+    const contentRef = useRef<HTMLDivElement>(null);
+
+    // Use useEffect to apply scroll anchoring
+    useEffect(() => {
+        // When streaming content updates, maintain scroll position relative to content
+        if (message.status === 'streaming' && contentRef.current) {
+            // Get current scroll position
+            const container = contentRef.current.closest('.scroll-area');
+            if (container && container.scrollHeight > container.clientHeight) {
+                // If we're scrolled near the bottom, keep scrolling as content grows
+                const isNearBottom = container.scrollTop + container.clientHeight >=
+                    container.scrollHeight - 200;
+
+                if (isNearBottom) {
+                    requestAnimationFrame(() => {
+                        container.scrollTop = container.scrollHeight;
+                    });
+                }
+            }
+        }
+    }, [message.content, message.status]);
+
     // Handle empty content
     if (!message.content && message.status === 'pending') {
         return (
@@ -250,9 +316,15 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
 
     // Handle streaming text (possibly Markdown)
     return (
-        <div className={cn('prose dark:prose-invert', className)}>
+        <div
+            ref={contentRef}
+            className={cn(
+                'prose dark:prose-invert will-change-contents',
+                className
+            )}
+        >
             <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkUnwrapImages]}
                 components={{
                     img({ src, alt, title }) {
                         if (!src) return null;
@@ -260,7 +332,6 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
                     },
                     a(props) {
                         const { href, children } = props;
-
                         if (!href) return <span>{children}</span>;
 
                         // Check if this is an image link by file extension
@@ -276,10 +347,12 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
                             return <MarkdownImage src={href} alt={String(children)} />;
                         }
 
-                        // Check if this is an audio link
+
+                        // Audio link detection remains
                         const audioFileRegex = /\.(mp3|wav|ogg|m4a|flac)(?=[?#]|$)/i;
-                        if (href && audioFileRegex.test(href)) {
-                            return <InlineAudioPlayer src={href} label={children} />;
+                        const isAliyunAudio = href.includes('aliyuncs.com') && href.includes('audio');
+                        if (href && (audioFileRegex.test(href) || isAliyunAudio)) {
+                            return (<span className="inline-block align-middle"><InlineAudioPlayer src={href} label={children} /></span>);
                         }
 
                         // Regular link
@@ -331,4 +404,7 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
             )}
         </div>
     );
-} 
+}
+
+// Export the memoized component
+export const StreamingMessageContent = React.memo(StreamingMessageContentComponent); 

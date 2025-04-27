@@ -25,10 +25,10 @@ export function formatTime(dateStr: string): string {
             // If it's today, display time
             return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         } else {
-            // Otherwise, display date and time
-            return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) +
-                ' ' +
-                date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            // Otherwise, display date in MM/DD format and time
+            const month = date.getMonth() + 1; // getMonth() returns 0-11
+            const day = date.getDate();
+            return `${month}/${day} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
         }
     } catch (error) {
         console.error('Date formatting error:', error);

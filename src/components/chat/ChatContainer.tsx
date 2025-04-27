@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, Dispatch, SetStateAction } from 'react';
+import React, { useCallback, useState, useEffect, Dispatch, SetStateAction, useMemo } from 'react';
 import { Chat } from '@/types/chat';
 import { StreamingMessageBubble } from '@/components/streaming/StreamingMessageBubble';
 import { EmptyChatState } from './EmptyChatState';
@@ -45,26 +45,73 @@ export function ChatContainer({
             }
         }, [isStreaming]);
 
-        const lastMessage = streamingContext.messages[streamingContext.messages.length - 1];
-        if (lastMessage && lastMessage.status === 'error' && lastMessage.sender === 'ai') {
-            if (!lastError && lastMessage.content.startsWith('Error:')) {
-                setLastError({
-                    message: lastMessage.content,
-                    type: lastMessage.metadata?.errorType,
-                    status: lastMessage.metadata?.errorStatus
-                });
+        // This effect should only update lastError if the last message IS an error
+        useEffect(() => {
+            if (!streamingContext || !streamingContext.messages || streamingContext.messages.length === 0) {
+                setLastError(null);
+                return;
             }
-        }
+            const lastMessage = streamingContext.messages[streamingContext.messages.length - 1];
+            if (lastMessage && lastMessage.status === 'error' && lastMessage.sender === 'ai') {
+                if (!lastError || lastError.message !== lastMessage.content) { // Only update if error changed
+                    setLastError({
+                        message: lastMessage.content,
+                        type: lastMessage.metadata?.errorType,
+                        status: lastMessage.metadata?.errorStatus
+                    });
+                }
+            } else if (lastError) {
+                // If the last message is NOT an error, clear the error state
+                setLastError(null);
+            }
+        }, [streamingContext?.messages, lastError]); // Depend on messages array reference
+
     } catch (error) {
-        console.log('StreamingProvider not available, using chat metadata for stages');
+        // console.log('StreamingProvider not available, using chat metadata for stages');
+        // Ensure lastError is cleared if context is unavailable
+        useEffect(() => {
+            setLastError(null);
+        }, []);
     }
 
     const handleRetryMessage = useCallback(() => {
-        setLastError(null);
+        setLastError(null); // Clear error on retry
         if (onRetry) {
             onRetry();
         }
     }, [onRetry]);
+
+    // Memoize the message transformation logic
+    const messages = useMemo(() => {
+        if (!currentChat || !currentChat.messages) return [];
+
+        // Get the ID of the actual last message in the original array for comparison
+        const actualLastMessageId = currentChat.messages.length > 0
+            ? currentChat.messages[currentChat.messages.length - 1].id
+            : null;
+
+        return currentChat.messages
+            .filter(msg => msg.sender !== 'system')
+            .map(msg => {
+                const isLastErrorTarget = msg.sender === 'ai' && msg.id === actualLastMessageId && lastError;
+
+                // Create the base message object
+                const streamingMsg: StreamingMessage = {
+                    id: msg.id,
+                    content: isLastErrorTarget ? lastError.message : msg.content,
+                    sender: msg.sender as 'user' | 'ai' | 'system',
+                    status: isLastErrorTarget ? 'error' : 'completed',
+                    createdAt: msg.createdAt,
+                    metadata: isLastErrorTarget ? {
+                        errorType: lastError.type,
+                        errorStatus: lastError.status
+                    } : undefined
+                };
+
+                return streamingMsg;
+            });
+        // Dependencies: Only recompute when the original messages array or lastError changes
+    }, [currentChat?.messages, lastError]);
 
     if (isLoadingChats) {
         return (
@@ -81,32 +128,16 @@ export function ChatContainer({
         return <EmptyChatState onNewChat={onNewChat} setInputValue={setInputValue} />;
     }
 
-    const messages = currentChat.messages
-        .filter(msg => msg.sender !== 'system')
-        .map(msg => {
-            const streamingMsg: StreamingMessage = {
-                id: msg.id,
-                content: msg.content,
-                sender: msg.sender as 'user' | 'ai' | 'system',
-                status: 'completed',
-                createdAt: msg.createdAt
-            };
-
-            if (msg.sender === 'ai' && msg === currentChat.messages[currentChat.messages.length - 1] && lastError) {
-                streamingMsg.status = 'error';
-                streamingMsg.content = lastError.message || msg.content;
-                streamingMsg.metadata = {
-                    errorType: lastError.type,
-                    errorStatus: lastError.status
-                };
-            }
-
-            return streamingMsg;
-        });
-
+    // Use the memoized messages array
     if (messages.length === 0) {
         return <EmptyChatState onNewChat={onNewChat} setInputValue={setInputValue} />;
     }
+
+    // Determine if the *very last* message in the *memoized* list should show streaming indicator
+    const lastMemoizedMessage = messages[messages.length - 1];
+    const showStreamingIndicator = isStreaming &&
+        lastMemoizedMessage?.sender === 'ai' &&
+        lastMemoizedMessage?.status !== 'error'; // Only show if not error
 
     return (
         <div className="py-16 space-y-4" style={{ transform: transformY, transition: 'transform 0.3s ease-in-out' }}>
@@ -114,8 +145,9 @@ export function ChatContainer({
                 {messages.map((message) => (
                     <StreamingMessageBubble
                         key={message.id}
-                        message={message}
-                        isStreaming={isStreaming && message.sender === 'ai' && message === messages[messages.length - 1] && message.status !== 'error'}
+                        message={message} // Pass the memoized message object
+                        // Pass streaming status specifically for *this* message
+                        isStreaming={showStreamingIndicator && message.id === lastMemoizedMessage.id}
                         onRetry={message.status === 'error' ? handleRetryMessage : undefined}
                     />
                 ))}
