@@ -175,7 +175,7 @@ export const AppWindowProvider: React.FC<AppWindowProviderProps> = ({ children }
     }, []);
 
     // Resize an app window
-    const resizeApp = useCallback((id: string, size: { width: number; height: number }) => {
+    const resizeApp = useCallback((id: string, size: { width: number | string; height: number | string }) => {
         setOpenWindows(prev => prev.map(window =>
             window.id === id ? { ...window, size } : window
         ));
@@ -239,8 +239,8 @@ export const AppWindowProvider: React.FC<AppWindowProviderProps> = ({ children }
             // Single window centered
             const window = visibleWindows[0];
             moveApp(window.id, {
-                x: (viewportWidth - window.size.width) / 2,
-                y: (viewportHeight - window.size.height) / 2
+                x: (viewportWidth - Number(window.size.width)) / 2,
+                y: (viewportHeight - Number(window.size.height)) / 2
             });
         } else if (visibleWindows.length === 2) {
             // Two windows left and right

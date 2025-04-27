@@ -157,8 +157,8 @@ export const AppWindow: React.FC<AppWindowProps> = ({ window }) => {
         e.stopPropagation();
         setIsResizing(true);
         resizeStartRef.current = {
-            width: window.size.width,
-            height: window.size.height,
+            width: Number(window.size.width),
+            height: Number(window.size.height),
             x: e.clientX,
             y: e.clientY
         };
@@ -178,8 +178,8 @@ export const AppWindow: React.FC<AppWindowProps> = ({ window }) => {
             e.stopPropagation();
             setIsResizing(true);
             resizeStartRef.current = {
-                width: window.size.width,
-                height: window.size.height,
+                width: Number(window.size.width),
+                height: Number(window.size.height),
                 x: touch.clientX,
                 y: touch.clientY
             };
@@ -216,8 +216,8 @@ export const AppWindow: React.FC<AppWindowProps> = ({ window }) => {
         let animationFrameId: number | null = null;
         let lastPositionX = window.position.x;
         let lastPositionY = window.position.y;
-        let lastWidth = window.size.width;
-        let lastHeight = window.size.height;
+        let lastWidth = Number(window.size.width);
+        let lastHeight = Number(window.size.height);
         let lastMoveTime = 0;
 
         // Use requestAnimationFrame to optimize drag performance
@@ -232,7 +232,7 @@ export const AppWindow: React.FC<AppWindowProps> = ({ window }) => {
         };
 
         const updateWindowSize = (width: number, height: number) => {
-            if (Math.abs(width - lastWidth) < 0.5 && Math.abs(height - lastHeight) < 0.5) {
+            if (Math.abs(width - Number(lastWidth)) < 0.5 && Math.abs(height - Number(lastHeight)) < 0.5) {
                 return; // If the change is too small, ignore it
             }
 
@@ -257,8 +257,8 @@ export const AppWindow: React.FC<AppWindowProps> = ({ window }) => {
                 const viewportHeight = globalThis.window.innerHeight;
 
                 // Calculate window boundaries
-                const minX = -window.size.width / 2;
-                const maxX = viewportWidth - window.size.width / 2;
+                const minX = -Number(window.size.width) / 2;
+                const maxX = viewportWidth - Number(window.size.width) / 2;
                 const minY = 0;
                 const maxY = viewportHeight - 40;
 
@@ -326,8 +326,8 @@ export const AppWindow: React.FC<AppWindowProps> = ({ window }) => {
                 // Ensure the window does not completely disappear outside the viewport
                 if (window.position.x > viewportWidth - 40) {
                     moveApp(window.id, { ...window.position, x: viewportWidth - 40 });
-                } else if (window.position.x < -window.size.width + 40) {
-                    moveApp(window.id, { ...window.position, x: -window.size.width + 40 });
+                } else if (window.position.x < -Number(window.size.width) + 40) {
+                    moveApp(window.id, { ...window.position, x: -Number(window.size.width) + 40 });
                 }
             }
 
@@ -358,8 +358,8 @@ export const AppWindow: React.FC<AppWindowProps> = ({ window }) => {
                 const viewportHeight = globalThis.window.innerHeight;
 
                 // Calculate window boundaries
-                const minX = -window.size.width / 2;
-                const maxX = viewportWidth - window.size.width / 2;
+                const minX = -Number(window.size.width) / 2;
+                const maxX = viewportWidth - Number(window.size.width) / 2;
                 const minY = 0;
                 const maxY = viewportHeight - 40;
 
