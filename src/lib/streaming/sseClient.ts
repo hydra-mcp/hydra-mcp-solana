@@ -120,7 +120,7 @@ export async function sendSSERequest<T>(
                 let errorType = ""
                 try {
                     errorData = JSON.parse(errorData);
-                    errorMessage = (errorData as any).message || errorData;
+                    errorMessage = (errorData as any).message || (errorData as any).detail || errorData;
                     errorType = (errorData as any).type || "";
                 } catch (error) {
                     console.warn('[SSEClient] Failed to parse error event:', error, errorData);
