@@ -240,7 +240,7 @@ export function IOSDesktop() {
     const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
     const [isJiggling, setIsJiggling] = useState(false);
     const [showRenameDialog, setShowRenameDialog] = useState(false);
-    const [showDockLabels, setShowDockLabels] = useState(true);
+    const [showDockLabels, setShowDockLabels] = useState(false);
     const desktopRef = useRef<HTMLDivElement>(null);
 
     return (
@@ -520,14 +520,14 @@ const IOSDesktopContent = ({
     }, [showRenameDialog, showContextMenu, isJiggling, showConfirmDialog]);
 
     // Double-click handling
-    useEffect(() => {
-        const handleDoubleClick = () => {
-            handleDockLabelToggle();
-        };
+    // useEffect(() => {
+    //     const handleDoubleClick = () => {
+    //         handleDockLabelToggle();
+    //     };
 
-        desktopRef.current?.addEventListener('dblclick', handleDoubleClick);
-        return () => desktopRef.current?.removeEventListener('dblclick', handleDoubleClick);
-    }, [showDockLabels]);
+    //     desktopRef.current?.addEventListener('dblclick', handleDoubleClick);
+    //     return () => desktopRef.current?.removeEventListener('dblclick', handleDoubleClick);
+    // }, [showDockLabels]);
 
     // Wallpaper URL
     const wallpaperUrl = isDarkMode
@@ -629,7 +629,7 @@ const IOSDesktopContent = ({
             </div>
 
             {/* Prompt information */}
-            <motion.div
+            {/* <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1, duration: 0.5 }}
@@ -639,7 +639,7 @@ const IOSDesktopContent = ({
                 <div className="bg-black/20 backdrop-blur-sm py-1.5 px-4 rounded-full inline-block">
                     Double-click desktop to hide/show Dock labels | Right-click application icon to view more options
                 </div>
-            </motion.div>
+            </motion.div> */}
 
             {/* Context menu */}
             <AnimatePresence>
