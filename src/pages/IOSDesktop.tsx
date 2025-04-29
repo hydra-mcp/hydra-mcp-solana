@@ -8,11 +8,13 @@ import { useTheme, WALLPAPERS } from '@/hooks/use-theme';
 import { AnimatePresence, motion } from 'framer-motion';
 import { WindowManager } from '@/components/ios/WindowManager';
 import { createAppWindow, getDefaultAppPosition } from '@/components/ios/AppRegistry';
-import { AppDefinition, appRegistry, ChatComponent, defaultSize, LoadingPlaceholder } from '@/components/ios/appConfig';
+import { AppDefinition, appRegistry, defaultSize, LoadingPlaceholder, appGroups } from '@/components/ios/appConfig';
 import { useAppWindow } from '@/contexts/AppWindowContext';
 import { AppItem, uninstallApp } from '@/lib/appStoreService';
 import { useAppInstall } from '@/contexts/AppInstallContext';
 import { v4 as uuidv4 } from 'uuid';
+import { Wallet, Search, Settings, Store } from 'lucide-react';
+import { ChatComponent } from '@/components/ios/AppComponents';
 
 // Context menu component
 interface ContextMenuProps {
@@ -362,7 +364,8 @@ const IOSDesktopContent = ({
             ),
             defaultSize,
             isDisabled: app.is_disabled,
-            description: app.description
+            description: app.description,
+            group: 'installed' // automatically assign installed group to installed apps
         }));
 
         // Get default apps from registry using registry key as ID
@@ -619,18 +622,163 @@ const IOSDesktopContent = ({
                 className="pt-14 mx-auto container"
                 onContextMenu={handleDesktopContextMenu}
             >
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-x-4 gap-y-12 sm:gap-x-6 md:gap-x-8 justify-items-center px-4 sm:px-8 md:px-12 lg:px-16 max-w-[1600px] mx-auto">
-                    {apps.map((app) => (
-                        <IOSIcon
-                            key={app.id}
-                            name={app.title}
-                            icon={app.icon}
-                            onClick={() => handleAppClick(app.id)}
-                            onContextMenu={(e) => handleContextMenu(e, app.id)}
-                            isJiggling={isJiggling}
-                            isDisabled={app.isDisabled}
-                        />
-                    ))}
+                <div className="px-4 sm:px-8 md:px-12 lg:px-16 max-w-[1600px] mx-auto space-y-10">
+                    {/* adaptive width group layout */}
+                    <div className="flex flex-wrap gap-6">
+                        {Object.values(appGroups).map((group) => {
+                            // filter apps belong to current group
+                            const groupApps = apps.filter(app => app.group === group.id);
+
+                            // only show groups with apps
+                            if (groupApps.length === 0) return null;
+
+                            // calculate columns of apps per row
+                            const calculateColumns = (breakpoint: string) => {
+                                if (!group.adaptiveWidth) {
+                                    // non-adaptive width group use standard columns
+                                    return {
+                                        xs: 3,  // mobile device display 3 columns
+                                        sm: 4,  // small screen display 4 columns
+                                        md: 6,  // medium screen display 6 columns
+                                        lg: 8   // large screen display 8 columns
+                                    }[breakpoint] || 3;
+                                } else {
+                                    // adaptive width group adjust columns based on container width and app count
+                                    // width ratio is the same as standard, keep layout consistent
+                                    return {
+                                        xs: 3,
+                                        sm: 4,
+                                        md: 5,
+                                        lg: 6
+                                    }[breakpoint] || 3;
+                                }
+                            };
+
+                            // set group container style
+                            const groupContainerStyle: React.CSSProperties = {
+                                flex: group.adaptiveWidth ? '1 1 auto' : '0 0 100%',
+                                minWidth: group.adaptiveWidth ? group.minWidth : '100%',
+                                maxWidth: group.adaptiveWidth ? group.maxWidth : '100%',
+                            };
+
+                            return (
+                                <div
+                                    key={group.id}
+                                    className={cn(
+                                        "rounded-xl p-5 backdrop-blur-sm shadow-sm group",
+                                        isDarkMode
+                                            ? "bg-gray-800/40 border border-gray-700/50"
+                                            : "bg-white/30 border border-gray-200/50",
+                                        !group.adaptiveWidth && "w-full",
+                                        "transition-all duration-300 ease-in-out hover:shadow-md",
+                                        isDarkMode
+                                            ? "hover:bg-gray-800/60 hover:border-gray-600/60"
+                                            : "hover:bg-white/50 hover:border-gray-300/70"
+                                    )}
+                                    style={groupContainerStyle}
+                                >
+                                    <div className="flex items-center mb-4">
+                                        <div className={cn(
+                                            "w-7 h-7 rounded-full flex items-center justify-center mr-2.5",
+                                            isDarkMode ? group.color : group.secondaryColor || group.color,
+                                            "transition-transform duration-300 group-hover:scale-110"
+                                        )}>
+                                            {group.icon}
+                                        </div>
+                                        <h3 className={cn(
+                                            "text-sm font-semibold",
+                                            isDarkMode ? "text-gray-200" : "text-gray-800",
+                                            "transition-colors duration-300",
+                                            isDarkMode ? "group-hover:text-white" : "group-hover:text-gray-900"
+                                        )}>
+                                            {group.title}
+                                        </h3>
+                                    </div>
+                                    <div className={cn(
+                                        "grid gap-x-4 gap-y-10 justify-items-center",
+                                        "group-hover:scale-[1.01] transition-transform duration-500"
+                                    )}
+                                        style={{
+                                            // force using the same app spacing, ensure the spacing is consistent in all groups
+                                            gridTemplateColumns: group.adaptiveWidth
+                                                ? "repeat(auto-fill, minmax(80px, 1fr))"
+                                                : "repeat(8, minmax(0, 1fr))",
+                                            columnGap: "2rem",
+                                            rowGap: "2.5rem"
+                                        }}
+                                    >
+                                        {groupApps.map((app) => (
+                                            <IOSIcon
+                                                key={app.id}
+                                                name={app.title}
+                                                icon={app.icon}
+                                                onClick={() => handleAppClick(app.id)}
+                                                onContextMenu={(e) => handleContextMenu(e, app.id)}
+                                                isJiggling={isJiggling}
+                                                isDisabled={app.isDisabled}
+                                                className="transition-all duration-300 group-hover:translate-y-[-2px]"
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* show apps without group (if any) */}
+                    {apps.filter(app => !app.group && app.id !== 'home').length > 0 && (
+                        <div className={cn(
+                            "rounded-xl p-5 backdrop-blur-sm shadow-sm w-full group",
+                            isDarkMode
+                                ? "bg-gray-800/40 border border-gray-700/50"
+                                : "bg-white/30 border border-gray-200/50",
+                            "transition-all duration-300 ease-in-out hover:shadow-md",
+                            isDarkMode
+                                ? "hover:bg-gray-800/60 hover:border-gray-600/60"
+                                : "hover:bg-white/50 hover:border-gray-300/70"
+                        )}>
+                            <div className="flex items-center mb-4">
+                                <div className={cn(
+                                    "w-7 h-7 rounded-full flex items-center justify-center mr-2.5",
+                                    isDarkMode ? "bg-amber-600" : "bg-amber-500",
+                                    "transition-transform duration-300 group-hover:scale-110"
+                                )}>
+                                    <Store className="w-4 h-4 text-white" />
+                                </div>
+                                <h3 className={cn(
+                                    "text-sm font-semibold",
+                                    isDarkMode ? "text-gray-200" : "text-gray-800",
+                                    "transition-colors duration-300",
+                                    isDarkMode ? "group-hover:text-white" : "group-hover:text-gray-900"
+                                )}>
+                                    Other Applications
+                                </h3>
+                            </div>
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-x-4 gap-y-10 justify-items-center group-hover:scale-[1.01] transition-transform duration-500"
+                                style={{
+                                    // ensure "other applications" group uses the same spacing as previous groups
+                                    gridTemplateColumns: "repeat(8, minmax(0, 1fr))",
+                                    columnGap: "2rem",
+                                    rowGap: "2.5rem"
+                                }}
+                            >
+                                {apps
+                                    .filter(app => !app.group && app.id !== 'home')
+                                    .map((app) => (
+                                        <IOSIcon
+                                            key={app.id}
+                                            name={app.title}
+                                            icon={app.icon}
+                                            onClick={() => handleAppClick(app.id)}
+                                            onContextMenu={(e) => handleContextMenu(e, app.id)}
+                                            isJiggling={isJiggling}
+                                            isDisabled={app.isDisabled}
+                                            className="transition-all duration-300 group-hover:translate-y-[-2px]"
+                                        />
+                                    ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

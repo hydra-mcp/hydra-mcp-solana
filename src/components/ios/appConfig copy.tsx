@@ -16,15 +16,13 @@ import {
     Check,
     Package,
     Trash2,
-    X,
-    Store
+    X
 } from 'lucide-react';
 import { useTheme, toggleThemeDirectly } from '@/hooks/use-theme';
 import { CASignalIcon } from './AppIcons';
 import AppStoreComponent from '@/components/AppStore/AppStoreComponent';
 // Import ChatPageProps from ChatPage
 import type { ChatPageProps } from '@/pages/ChatPage';
-import { CaSignalComponent, SmartWalletComponent, DeepSearchComponent, SolRechargeComponent, SettingsApp, ThemeApp, PhotosApp, WalletFinderComponent, ChatComponent } from './AppComponents';
 
 // Common loading placeholder component
 export const LoadingPlaceholder = () => (
@@ -36,6 +34,282 @@ export const LoadingPlaceholder = () => (
     </div>
 );
 
+// Lazy load WalletFinder component to improve performance
+const WalletFinderComponent = lazy(() => import('@/pages/WalletFinder').then(module => ({
+    default: () => {
+        // This is to display in a modal popup rather than a page-level component
+        const { WalletFinder } = module;
+        return <WalletFinder isModal={true} />;
+    }
+})));
+
+// Lazy load Chat component
+export const ChatComponent = (props: ChatPageProps) => lazy(() => import('@/pages/ChatPage').then(module => ({
+    default: () => {
+        // Load ChatPage component and set it to modal mode
+        const { ChatPage } = module;
+        return <ChatPage {...props} />;
+    }
+})));
+
+// Lazy load CaSignal component
+const CaSignalComponent = lazy(() => import('@/pages/CaSignal').then(module => ({
+    default: () => {
+        // Load CaSignal component and set it to modal mode
+        const { CaSignal } = module;
+        return <CaSignal />;
+    }
+})));
+
+// Lazy load SmartWallet component
+const SmartWalletComponent = lazy(() => import('@/pages/SmartWallet').then(module => ({
+    default: () => {
+        // Load SmartWallet component and set it to modal mode
+        const { SmartWallet } = module;
+        return <SmartWallet />;
+    }
+})));
+
+const DeepSearchComponent = lazy(() => import('@/pages/DeepSearch').then(module => ({
+    default: () => {
+        // Load DeepSearch component and set it to modal mode
+        const { DeepSearch } = module;
+        return <DeepSearch />;
+    }
+})));
+
+const SolRechargeComponent = lazy(() => import('@/pages/SolanaPaymentPage').then(module => ({
+    default: () => {
+        // Load SolanaPaymentPage component and set it to modal mode
+        const { SolanaPaymentPage } = module;
+        return <SolanaPaymentPage />;
+    }
+})));
+
+// Settings app component
+const SettingsApp = () => {
+    const { isDarkMode, toggleTheme } = useTheme();
+
+    return (
+        <div className={cn(
+            "h-full flex flex-col",
+            isDarkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
+        )}>
+            <div className="border-b px-4 py-3 flex items-center justify-between dark:border-gray-700">
+                <h1 className="text-lg font-semibold">Settings</h1>
+                <Settings className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+                <div className={cn(
+                    "rounded-lg mb-4 overflow-hidden border",
+                    isDarkMode ? "border-gray-700" : "border-gray-200"
+                )}>
+                    <div className={cn(
+                        "p-4 flex items-center justify-between cursor-pointer hover:bg-gray-200/50 dark:hover:bg-gray-800/50",
+                        isDarkMode ? "bg-gray-800" : "bg-white"
+                    )}>
+                        <div className="flex items-center">
+                            <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center mr-3">
+                                <Sliders className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                                <h3 className="font-medium">Appearance</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Choose light or dark theme</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={toggleTheme}
+                            className={cn(
+                                "px-3 py-1.5 rounded-full text-sm",
+                                isDarkMode
+                                    ? "bg-gray-700 text-gray-300"
+                                    : "bg-gray-200 text-gray-700"
+                            )}
+                        >
+                            {isDarkMode ? "Dark" : "Light"}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Other settings items placeholder */}
+                <div
+                    className={cn(
+                        "rounded-lg mb-4 p-4 border",
+                        isDarkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+                    )}
+                >
+                    <div className="flex items-center">
+                        <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center mr-3",
+                            "bg-blue-500"
+                        )}>
+                            <div className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="font-medium">Setting CA Analysis option</h3>
+                            <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-2" />
+                        </div>
+                    </div>
+                </div>
+                <div
+                    className={cn(
+                        "rounded-lg mb-4 p-4 border",
+                        isDarkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+                    )}
+                >
+                    <div className="flex items-center">
+                        <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center mr-3",
+                            "bg-green-500"
+                        )}>
+                            <div className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="font-medium">Setting CA Signal option</h3>
+                            <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-2" />
+                        </div>
+                    </div>
+                </div>
+                <div
+                    className={cn(
+                        "rounded-lg mb-4 p-4 border",
+                        isDarkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+                    )}
+                >
+                    <div className="flex items-center">
+                        <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center mr-3",
+                            "bg-amber-500"
+                        )}>
+                            <div className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="font-medium">Setting CA Signal option</h3>
+                            <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-2" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Theme app component
+const ThemeApp = () => {
+    const { isDarkMode, toggleTheme } = useTheme();
+
+    return (
+        <div className={cn(
+            "h-full flex flex-col",
+            isDarkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
+        )}>
+            <div className="border-b px-4 py-3 flex items-center justify-between dark:border-gray-700">
+                <h1 className="text-lg font-semibold">Theme</h1>
+                <Settings className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+                <div className={cn(
+                    "rounded-lg mb-4 overflow-hidden border",
+                    isDarkMode ? "border-gray-700" : "border-gray-200"
+                )}>
+                    <div className={cn(
+                        "p-4 flex items-center justify-between cursor-pointer hover:bg-gray-200/50 dark:hover:bg-gray-800/50",
+                        isDarkMode ? "bg-gray-800" : "bg-white"
+                    )}>
+                        <div className="flex items-center">
+                            <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center mr-3">
+                                <Sliders className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                                <h3 className="font-medium">Appearance</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Choose light or dark theme</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={toggleTheme}
+                            className={cn(
+                                "px-3 py-1.5 rounded-full text-sm",
+                                isDarkMode
+                                    ? "bg-gray-700 text-gray-300"
+                                    : "bg-gray-200 text-gray-700"
+                            )}
+                        >
+                            {isDarkMode ? "Dark" : "Light"}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Other settings items placeholder */}
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                        key={i}
+                        className={cn(
+                            "rounded-lg mb-4 p-4 border",
+                            isDarkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+                        )}
+                    >
+                        <div className="flex items-center">
+                            <div className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center mr-3",
+                                ["bg-blue-500", "bg-green-500", "bg-amber-500"][i]
+                            )}>
+                                <div className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="font-medium">Setting option {i + 1}</h3>
+                                <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-2" />
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+// Photos app component
+const PhotosApp = () => {
+    const { isDarkMode } = useTheme();
+
+    // Simulate photo data
+    const photoItems = Array.from({ length: 12 }).map((_, i) => ({
+        id: i.toString(),
+        url: `https://source.unsplash.com/random/400x400?sig=${i}`,
+        title: `Photo ${i + 1}`
+    }));
+
+    return (
+        <div className={cn(
+            "h-full flex flex-col",
+            isDarkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
+        )}>
+            <div className="border-b px-4 py-3 flex items-center justify-between dark:border-gray-700">
+                <h1 className="text-lg font-semibold">Photos</h1>
+                <Image className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {photoItems.map((photo) => (
+                        <div
+                            key={photo.id}
+                            className={cn(
+                                "aspect-square rounded-lg overflow-hidden border",
+                                isDarkMode ? "border-gray-700" : "border-gray-200"
+                            )}
+                        >
+                            <img
+                                src={photo.url}
+                                alt={photo.title}
+                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // App definitions
 export interface AppDefinition {
@@ -62,62 +336,9 @@ export interface AppDefinition {
         }>;
     };
     isDisabled?: boolean;
-    group?: string;
 }
 
 export const defaultSize = { width: '80%', height: '85%' }
-
-// define app group information
-export interface AppGroup {
-    id: string;
-    title: string;
-    icon: ReactNode;
-    color: string;
-    secondaryColor?: string;
-    adaptiveWidth?: boolean; // whether to support adaptive width
-    minWidth?: string; // minimum width
-    maxWidth?: string; // maximum width
-}
-
-// app group configuration
-export const appGroups: Record<string, AppGroup> = {
-    walletTools: {
-        id: 'walletTools',
-        title: 'Wallet Analysis Tools',
-        icon: <Wallet className="w-4 h-4 text-white" />,
-        color: 'bg-blue-600',
-        secondaryColor: 'bg-blue-500',
-        adaptiveWidth: true,
-        minWidth: '50%',
-        maxWidth: '60%'
-    },
-    searchApps: {
-        id: 'searchApps',
-        title: 'Search & Applications',
-        icon: <Search className="w-4 h-4 text-white" />,
-        color: 'bg-purple-600',
-        secondaryColor: 'bg-purple-500',
-        adaptiveWidth: true,
-        minWidth: '30%',
-        maxWidth: '40%'
-    },
-    systemUtils: {
-        id: 'systemUtils',
-        title: 'System & Utilities',
-        icon: <Settings className="w-4 h-4 text-white" />,
-        color: 'bg-green-600',
-        secondaryColor: 'bg-green-500',
-        adaptiveWidth: false
-    },
-    installed: {
-        id: 'installed',
-        title: 'Installed Applications',
-        icon: <Store className="w-4 h-4 text-white" />,
-        color: 'bg-amber-600',
-        secondaryColor: 'bg-amber-500',
-        adaptiveWidth: false
-    }
-}
 
 // AppStore component
 const AppStoreApp = () => {
@@ -138,8 +359,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         ),
         defaultSize,
         description: 'Find the smart wallet of blockchain project.',
-        status: 'online',
-        group: 'walletTools'
+        status: 'online'
     },
     settings: {
         id: 'settings',
@@ -149,8 +369,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         component: <SettingsApp />,
         defaultSize,
         description: 'Change your settings',
-        status: 'online',
-        group: 'systemUtils'
+        status: 'online'
     },
     theme: {
         id: 'theme',
@@ -161,8 +380,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         defaultSize,
         description: 'Change your theme',
         status: 'online',
-        onIconClick: toggleThemeDirectly,
-        group: 'systemUtils'
+        onIconClick: toggleThemeDirectly
     },
     messages: {
         id: 'messages',
@@ -178,7 +396,6 @@ export const appRegistry: Record<string, AppDefinition> = {
         defaultSize,
         description: 'Chat with your friends',
         status: 'online',
-        group: 'systemUtils',
         chatModuleTexts: {
             welcomeTitle: 'Welcome to Hydra OS',
             welcomeDescription: 'You can access all apps through the desktop or Dock bar.',
@@ -265,8 +482,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         ),
         defaultSize: { width: '65%', height: '70%' },
         description: 'View your calendar',
-        status: 'online',
-        group: 'systemUtils'
+        status: 'online'
     },
     // mail: {
     //     id: 'mail',
@@ -308,7 +524,6 @@ export const appRegistry: Record<string, AppDefinition> = {
         defaultSize,
         description: 'Based on the trading behavior of smart addresses on the chain, we will push project-related information.',
         status: 'coming_soon',
-        group: 'walletTools',
         chatModuleTexts: {
             welcomeDescription: 'We will push the CA of relevant qualified projects in real time. Based on the trading behavior of smart addresses on the chain, we will push project-related information, such as: project CA, the number of smart addresses that have purchased the project, the average purchase amount of smart funds, market capitalization, number of holders, and other data, for users to reference whether to follow up and buy.',
             modules: [
@@ -332,7 +547,6 @@ export const appRegistry: Record<string, AppDefinition> = {
         defaultSize,
         description: 'We will promptly push some smart addresses discovered on the chain to users, making it convenient for them to add these smart addresses to their monitoring system for future trading reference.',
         status: 'coming_soon',
-        group: 'walletTools',
         chatModuleTexts: {
             welcomeDescription: 'We will promptly push some smart addresses discovered on the chain to users, making it convenient for them to add these smart addresses to their monitoring system for future trading reference.',
             modules: [
@@ -356,7 +570,6 @@ export const appRegistry: Record<string, AppDefinition> = {
         defaultSize,
         description: 'Advanced AI-powered code analysis and debugging tool for complex task execution and self-improvement.',
         status: 'coming_soon',
-        group: 'searchApps',
         chatModuleTexts: {
             welcomeDescription: 'Our latest CODEACT feature testing window collects the HYDRA-CodeAct dataset for instruction tuning. The trained HYDRA-CodeAct can perform complex tasks and self-debug and improve.',
             modules: [
@@ -380,7 +593,6 @@ export const appRegistry: Record<string, AppDefinition> = {
         defaultSize,
         description: 'Convenient SOL token recharge service with real-time transaction monitoring and secure wallet integration.',
         status: 'online',
-        group: 'systemUtils',
         chatModuleTexts: {
             welcomeDescription: 'Welcome to SOL Recharge service. We provide secure and efficient SOL token recharge with real-time transaction monitoring.',
             modules: [
@@ -400,7 +612,6 @@ export const appRegistry: Record<string, AppDefinition> = {
         defaultSize,
         description: 'Explore and install the latest applications and tools for Hydra OS',
         status: 'online',
-        group: 'searchApps',
         chatModuleTexts: {
             welcomeDescription: 'Welcome to the MCP App Store, where you can browse, download, and install the latest blockchain applications and tools.',
             modules: [
