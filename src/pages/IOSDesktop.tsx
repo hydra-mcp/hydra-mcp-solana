@@ -243,6 +243,15 @@ export function IOSDesktop() {
     const [showDockLabels, setShowDockLabels] = useState(false);
     const desktopRef = useRef<HTMLDivElement>(null);
 
+    // Get the initializeApps function from the context
+    const { initializeApps } = useAppInstall();
+
+    // Initialize apps when the component mounts
+    useEffect(() => {
+        // Initialize installed apps when the desktop loads
+        initializeApps();
+    }, [initializeApps]);
+
     return (
         <IOSDesktopContent
             isDarkMode={isDarkMode}
@@ -302,7 +311,7 @@ const IOSDesktopContent = ({
     navigate: (path: string) => void;
 }) => {
     const { openApp } = useAppWindow();
-    const { installedApps: contextInstalledApps, uninstallAppAndRefresh } = useAppInstall();
+    const { installedApps: contextInstalledApps, uninstallAppAndRefresh, initialized, isLoading } = useAppInstall();
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [appToUninstall, setAppToUninstall] = useState<AppDefinition | null>(null);
 
@@ -317,6 +326,11 @@ const IOSDesktopContent = ({
 
     // Effect to merge installed apps into the main 'apps' state
     useEffect(() => {
+        // Only update apps if the context has been initialized
+        if (!initialized && !isLoading) {
+            return;
+        }
+
         // Convert installed apps from API (AppItem) to AppDefinition format
         const installedAppDefinitions = contextInstalledApps.map((app): AppDefinition => ({
             id: app.id, // Use the ACTUAL App Store ID from API
@@ -369,7 +383,7 @@ const IOSDesktopContent = ({
         // Update the state with the unique, combined list from the map values
         setApps(Array.from(combinedAppsMap.values()));
 
-    }, [contextInstalledApps]); // Re-run whenever contextInstalledApps changes
+    }, [contextInstalledApps, initialized, isLoading]); // Re-run whenever contextInstalledApps or initialization state changes
 
     // Dock apps - definition remains the same
     const dockApps = [

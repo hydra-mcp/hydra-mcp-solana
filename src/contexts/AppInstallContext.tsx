@@ -7,6 +7,8 @@ interface AppInstallContextType {
     installAppAndRefresh: (appId: string) => Promise<boolean>;
     uninstallAppAndRefresh: (appId: string) => Promise<boolean>;
     isLoading: boolean;
+    initialized: boolean;
+    initializeApps: () => Promise<void>;
 }
 
 const AppInstallContext = createContext<AppInstallContextType | null>(null);
@@ -14,6 +16,7 @@ const AppInstallContext = createContext<AppInstallContextType | null>(null);
 export function AppInstallProvider({ children }: { children: ReactNode }) {
     const [installedApps, setInstalledApps] = useState<AppItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [initialized, setInitialized] = useState(false);
 
     const refreshInstalledApps = async (): Promise<AppItem[]> => {
         setIsLoading(true);
@@ -64,10 +67,18 @@ export function AppInstallProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // Initial fetch of installed apps
-    useEffect(() => {
-        refreshInstalledApps();
-    }, []);
+    // Initialize apps only when requested
+    const initializeApps = async (): Promise<void> => {
+        if (!initialized && !isLoading) {
+            await refreshInstalledApps();
+            setInitialized(true);
+        }
+    };
+
+    // Remove the automatic fetch on mount
+    // useEffect(() => {
+    //     refreshInstalledApps();
+    // }, []);
 
     return (
         <AppInstallContext.Provider value={{
@@ -75,7 +86,9 @@ export function AppInstallProvider({ children }: { children: ReactNode }) {
             refreshInstalledApps,
             installAppAndRefresh,
             uninstallAppAndRefresh,
-            isLoading
+            isLoading,
+            initialized,
+            initializeApps
         }}>
             {children}
         </AppInstallContext.Provider>
