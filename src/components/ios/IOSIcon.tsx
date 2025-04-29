@@ -142,7 +142,7 @@ export function IOSIcon({
             </motion.div>
 
             <motion.div
-                className="mt-2 px-2 py-1 flex justify-center items-center w-full max-w-[90px]"
+                className="mt-2 px-2 py-1 flex justify-center items-center w-full"
                 animate={{
                     opacity: isPressed ? 0.7 : 1,
                     scale: isHovered ? 1.05 : 1.01
@@ -152,12 +152,15 @@ export function IOSIcon({
                 }}
             >
                 <span
-                    className="text-xs font-medium text-white text-center max-w-full whitespace-nowrap"
+                    className="text-xs font-medium text-white text-center overflow-visible whitespace-nowrap"
                     style={{
                         textShadow: "0px 1px 2px rgba(0,0,0,0.8)",
                         transform: "scale(var(--scale, 1))",
                         transformOrigin: "center",
-                        wordBreak: "keep-all"
+                        wordBreak: "keep-all",
+                        display: "inline-block",
+                        width: "auto",
+                        maxWidth: "none"
                     }}
                 >
                     {name}
