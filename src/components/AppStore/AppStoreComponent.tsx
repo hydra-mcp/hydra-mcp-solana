@@ -67,10 +67,10 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
             try {
                 // Load apps based on selected category
                 const appsData = await fetchApps(selectedCategory);
-                setApps(appsData);
+                setApps(appsData.app_list);
 
                 // Derive installed apps directly from the appsData response
-                const initiallyInstalled = appsData
+                const initiallyInstalled = appsData.app_list
                     .filter(app => app.installed)
                     .map(app => app.id);
                 setInstalledApps(initiallyInstalled);

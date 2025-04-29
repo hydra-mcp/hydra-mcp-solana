@@ -22,7 +22,7 @@ export function AppInstallProvider({ children }: { children: ReactNode }) {
         setIsLoading(true);
         try {
             const appsData = await fetchApps();
-            const installed = appsData.filter(app => app.installed);
+            const installed = appsData.installed_apps.filter(app => app.installed);
             setInstalledApps(installed);
             return installed;
         } catch (error) {

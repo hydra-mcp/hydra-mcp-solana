@@ -24,6 +24,12 @@ export interface AppItem {
     is_disabled?: boolean;
 }
 
+// Updated API response structure
+export interface AppsData {
+    app_list: AppItem[];
+    installed_apps: AppItem[];
+}
+
 // Define the specific data structure returned by the install endpoint
 interface InstallAppData {
     success: boolean;
@@ -66,16 +72,18 @@ export async function fetchAppCategories(): Promise<AppCategory[]> {
     }
 }
 
-// Fetch apps with optional category filter
-export async function fetchApps(category?: string): Promise<AppItem[]> {
+// Fetch apps with optional category filter - returning both app list and installed apps
+export async function fetchApps(category?: string): Promise<AppsData> {
     try {
         const endpoint = category && category !== 'all'
             ? `/apps?category=${encodeURIComponent(category)}`
             : '/apps';
-        // Expect the response to be ApiResponse containing an array of AppItem
-        const result = await apiRequest<ApiResponse<AppItem[]>>(endpoint);
-        // Extract the array from the 'data' property
-        if (result.status === 'success' && Array.isArray(result.data)) {
+
+        // Expect the response to be ApiResponse containing AppsData with app_list and installed_apps
+        const result = await apiRequest<ApiResponse<AppsData>>(endpoint);
+
+        // Check if the result has the expected structure and contains app_list and installed_apps
+        if (result.status === 'success' && result.data && result.data.app_list && result.data.installed_apps) {
             return result.data;
         } else {
             console.error('API response error or unexpected format for apps:', result);
@@ -83,8 +91,8 @@ export async function fetchApps(category?: string): Promise<AppItem[]> {
         }
     } catch (error) {
         console.error('Error fetching apps:', error);
-        // Return empty array if API fails
-        return [];
+        // Return empty arrays if API fails
+        return { app_list: [], installed_apps: [] };
     }
 }
 
