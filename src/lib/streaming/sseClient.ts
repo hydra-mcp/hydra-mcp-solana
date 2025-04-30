@@ -251,31 +251,6 @@ export async function sendSSERequest<T>(
                 }
             });
 
-            // Handle content event
-            // source.addEventListener('content', function (e) {
-            //     const event = e as SSEEvent;
-            //     const data = event.data || '';
-
-            //     try {
-            //         const jsonData = JSON.parse(data);
-            //         const content = jsonData.choices?.[0]?.delta?.content || jsonData.content || '';
-
-            //         if (content) {
-            //             callbacks.onChunk({
-            //                 type: 'content',
-            //                 content: content
-            //             });
-            //         }
-            //     } catch (error) {
-            //         console.warn('[SSEClient] Failed to parse content event:', error, data);
-            //         // Try to use data directly
-            //         callbacks.onChunk({
-            //             type: 'content',
-            //             content: typeof data === 'string' ? data : ''
-            //         });
-            //     }
-            // });
-
             // Handle message event (default event)
             source.addEventListener('message', function (e) {
                 const event = e as SSEEvent;

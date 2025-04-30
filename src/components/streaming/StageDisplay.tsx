@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { StreamingStage, StageStatus } from '@/lib/streaming/types';
+import { StreamingStage, StageStatus, MCPToolCallDetail, WalletProgressDetail } from '@/lib/streaming/types';
 import {
     Loader2,
     CheckCircle,
@@ -9,13 +9,36 @@ import {
     Sparkles,
     Wallet,
     Activity,
-    AlertTriangle
+    AlertTriangle,
+    TerminalSquare
 } from 'lucide-react';
 
 interface StageDisplayProps {
     stages: StreamingStage[];
     className?: string;
 }
+
+// Type guards for detail types
+const isWalletProgressDetail = (detail: any): detail is WalletProgressDetail => {
+    return detail &&
+        'current' in detail &&
+        'total' in detail &&
+        'wallet' in detail;
+};
+
+const isWalletCompletedDetail = (detail: any): detail is WalletProgressDetail => {
+    return detail &&
+        'high_value_count' in detail &&
+        'total' in detail &&
+        'processed' in detail;
+};
+
+const isMcpToolCallDetail = (detail: any): detail is MCPToolCallDetail => {
+    return detail &&
+        'server_name' in detail &&
+        'tool_name' in detail &&
+        'call_id' in detail;
+};
 
 export function StageDisplay({ stages, className }: StageDisplayProps) {
     // Filter out stages without any actual content
@@ -46,17 +69,10 @@ export function StageDisplay({ stages, className }: StageDisplayProps) {
                 const stageText = stage.message.trim() || stage.content.trim();
                 const stageDetail = stage.detail;
 
-                // Check if this is a wallet analysis progress stage
-                const isWalletProgress = stageDetail &&
-                    stageDetail.current !== undefined &&
-                    stageDetail.total !== undefined &&
-                    stageDetail.wallet !== undefined;
-
-                // Check if this is a wallet analysis completed stage
-                const isWalletCompleted = stageDetail &&
-                    stageDetail.high_value_count !== undefined &&
-                    stageDetail.total !== undefined &&
-                    stageDetail.processed !== undefined;
+                // Use type guards for each detail type
+                const isWalletProgress = stageDetail && isWalletProgressDetail(stageDetail);
+                const isWalletCompleted = stageDetail && isWalletCompletedDetail(stageDetail);
+                const isMcpToolCall = stageDetail && isMcpToolCallDetail(stageDetail);
 
                 // This check should be redundant now due to our filtering above
                 if (!stageText) return null;
@@ -164,6 +180,72 @@ export function StageDisplay({ stages, className }: StageDisplayProps) {
                                         </div>
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* MCP Tool Call Status */}
+                        {isMcpToolCall && (
+                            <div className="ml-8 mt-1 mb-2">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <div className="flex items-center gap-1.5 text-xs text-cyan-600">
+                                        <TerminalSquare className="h-3 w-3" />
+                                        <span className="font-medium">
+                                            {stageDetail.server_name}
+                                        </span>
+                                    </div>
+                                    <div className="text-xs text-slate-500 ml-2">
+                                        <span className="font-medium text-cyan-600">
+                                            {stageDetail.tool_name}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Tool Call Info */}
+                                <div className="mt-1 p-2 bg-cyan-50 dark:bg-cyan-900/20 rounded-md border border-cyan-100 dark:border-cyan-800">
+                                    <div className="text-xs text-slate-600 dark:text-slate-300">
+                                        <span className="font-medium">Arguments:</span>
+                                        <div className="mt-1 font-mono text-xs bg-white/50 dark:bg-slate-800/50 p-1.5 rounded border border-slate-200 dark:border-slate-700 overflow-x-auto">
+                                            {stageDetail.arguments && (
+                                                <pre className="whitespace-pre-wrap break-words">
+                                                    {typeof stageDetail.arguments === 'string'
+                                                        ? stageDetail.arguments
+                                                        : JSON.stringify(stageDetail.arguments, null, 2)}
+                                                </pre>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Status indicator */}
+                                    <div className="mt-2 flex items-center justify-between">
+                                        <div className="flex items-center gap-1.5">
+                                            <div className={cn(
+                                                "h-2 w-2 rounded-full",
+                                                isCompleted
+                                                    ? "bg-green-500"
+                                                    : isError
+                                                        ? "bg-red-500"
+                                                        : "bg-cyan-500 animate-pulse"
+                                            )}></div>
+                                            <span className={cn(
+                                                "text-xs font-medium",
+                                                isCompleted
+                                                    ? "text-green-600"
+                                                    : isError
+                                                        ? "text-red-600"
+                                                        : "text-cyan-600"
+                                            )}>
+                                                {isCompleted
+                                                    ? "Completed"
+                                                    : isError
+                                                        ? "Failed"
+                                                        : "Processing..."}
+                                            </span>
+                                        </div>
+                                        <div className="text-xs text-slate-500">
+                                            <span className="font-mono text-slate-400">ID: {stageDetail.call_id.substring(0, 8)}...</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         )}
 

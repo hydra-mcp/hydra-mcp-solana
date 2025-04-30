@@ -24,6 +24,14 @@ export interface WalletProgressDetail {
     wallet: string;
 }
 
+export interface MCPToolCallDetail {
+    server_name: string;
+    tool_name: string;
+    status: string;
+    arguments: string | Record<string, any>;
+    call_id: string;
+}
+
 // Stage Status Enum
 export enum StageStatus {
     Start = "start",
@@ -38,7 +46,7 @@ export enum StageStatus {
 export interface StreamingStage {
     id: string;
     content: string;
-    detail?: Record<string, any> | WalletProgressDetail;
+    detail?: Record<string, any> | WalletProgressDetail | MCPToolCallDetail;
     message: string;
     status: StageStatus;
     sessionId?: string;
