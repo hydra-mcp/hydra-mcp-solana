@@ -130,7 +130,8 @@ export function StreamingMessageBubble({
                     ? "bg-primary text-primary-foreground rounded-tr-none"
                     : isError
                         ? "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 rounded-tl-none"
-                        : "bg-muted text-muted-foreground rounded-tl-none"
+                        : "bg-muted text-muted-foreground rounded-tl-none",
+                "select-text"
             )}>
                 {/* Handle content based on sender */}
                 {isUser ? (
