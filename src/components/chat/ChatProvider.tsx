@@ -168,6 +168,7 @@ function StreamingAwareChat({
     const {
         sendMessage: sendStreamMessage,
         isProcessing,
+        resetProcessingState,
     } = useChatWithStreaming({
         apiEndpoint,
         onUpdateChat: updateChat,
@@ -225,11 +226,16 @@ function StreamingAwareChat({
         });
     };
 
-    // Wrap createNewChat to include clearMessages
+    // Wrap createNewChat to include clearMessages and resetProcessingState
     const createNewChatWrapped = () => {
+        // Reset processing state from the streaming hook
+        resetProcessingState();
+
+        // Clear messages from the streaming context
         if (clearMessages) {
             clearMessages();
         }
+        // Call the original chat creation logic
         createNewChat();
     };
 

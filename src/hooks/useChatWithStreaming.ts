@@ -38,6 +38,13 @@ export function useChatWithStreaming({
     // Get streaming context
     let streamingContext;
 
+    /**
+     * Reset processing state
+     */
+    const resetProcessingState = useCallback(() => {
+        setIsProcessing(false);
+    }, []);
+
     try {
         // Get streaming context from provider
         streamingContext = useStreaming();
@@ -307,9 +314,10 @@ export function useChatWithStreaming({
     }, [apiEndpoint, isProcessing, onUpdateChat, onError, streamingContext, config]);
 
     return {
-        sendMessage,
         isProcessing,
         isRefreshingAuth,
+        sendMessage,
+        resetProcessingState,
         sessionId: streamingContext?.sessionId || 'default'
     };
 } 
