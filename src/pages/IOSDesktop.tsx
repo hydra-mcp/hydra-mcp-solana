@@ -74,7 +74,7 @@ const ContextMenu = ({ appTitle, position, onClose, onRename, onDelete }: Contex
                     Rename
                 </motion.button>
 
-                <motion.button
+                {/* <motion.button
                     variants={itemVariants}
                     initial="hidden"
                     animate="visible"
@@ -83,7 +83,7 @@ const ContextMenu = ({ appTitle, position, onClose, onRename, onDelete }: Contex
                     className="text-left py-1.5 px-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
                 >
                     Move
-                </motion.button>
+                </motion.button> */}
 
                 <motion.button
                     variants={itemVariants}
@@ -485,16 +485,34 @@ const IOSDesktopContent = ({
     const handleDelete = () => {
         if (selectedAppId) {
             const appToDelete = apps.find(a => a.id === selectedAppId);
-            // Only allow deleting non-installed apps this way
-            if (appToDelete && !appToDelete.path.startsWith('/app/')) {
+
+            if (!appToDelete) {
+                setShowContextMenu(false);
+                setSelectedAppId(null);
+                return;
+            }
+
+            // For regular non-installed apps, just remove from UI state
+            if (!appToDelete.path.startsWith('/app/')) {
                 setApps(prev => prev.filter(app => app.id !== selectedAppId));
-            } else if (appToDelete && appToDelete.isDisabled) {
-                // If it's a disabled installed app, trigger the uninstall dialog
+                setShowContextMenu(false);
+                setSelectedAppId(null);
+                return;
+            }
+
+            // For all installed apps, show the confirmation dialog
+            // This matches the behavior in AppStoreComponent.tsx
+            if (appToDelete.path.startsWith('/app/')) {
                 setAppToUninstall(appToDelete);
                 setShowConfirmDialog(true);
+                setShowContextMenu(false);
+                setSelectedAppId(null);
+                return;
             }
+
+            // Default fallback - just close the context menu
             setShowContextMenu(false);
-            setSelectedAppId(null); // Clear selection
+            setSelectedAppId(null);
         }
     };
 
@@ -566,20 +584,30 @@ const IOSDesktopContent = ({
 
         const appStoreAppId = appToUninstall.id; // ID is the App Store ID
 
+        // Close confirmation dialog immediately
+        setShowConfirmDialog(false);
+
+        // Track uninstalling state (could be displayed with a loading indicator if desired)
+        // This matches behavior in AppStoreComponent.tsx
+        const uninstallingAppTitle = appToUninstall.title;
+
         try {
             // Use the context function instead of direct API call
             const success = await uninstallAppAndRefresh(appStoreAppId);
 
             if (!success) {
-                throw new Error(`Failed to uninstall app ${appToUninstall.title}`);
+                throw new Error(`Failed to uninstall app ${uninstallingAppTitle}`);
             }
 
-            console.log(`App ${appToUninstall.title} uninstalled successfully.`);
+            console.log(`App ${uninstallingAppTitle} uninstalled successfully.`);
+
+            // Update local apps state to reflect the uninstall
+            // This ensures UI is consistent
+            setApps(prevApps => prevApps.filter(app => app.id !== appStoreAppId));
         } catch (error) {
-            console.error(`Failed to uninstall app ${appToUninstall.title}:`, error);
+            console.error(`Failed to uninstall app ${uninstallingAppTitle}:`, error);
             // TODO: Show user-facing error message
         } finally {
-            setShowConfirmDialog(false);
             setAppToUninstall(null);
             setSelectedAppId(null); // Also clear selection if uninstall was triggered from context menu
         }
@@ -832,7 +860,7 @@ const IOSDesktopContent = ({
                 {showConfirmDialog && appToUninstall && (
                     <ConfirmDialog
                         title="Uninstall App?"
-                        message={`"${appToUninstall.title}" has been disabled by the administrator. Do you want to uninstall it?`}
+                        message={`Do you want to uninstall the app "${appToUninstall.title}"?`}
                         onClose={() => { setShowConfirmDialog(false); setAppToUninstall(null); }}
                         onConfirm={handleConfirmUninstall}
                     />
