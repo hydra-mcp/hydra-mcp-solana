@@ -144,6 +144,7 @@ export const appGroups: Record<string, AppGroup> = {
 export const appRegistry: Record<string, AppDefinition> = {
     walletFinder: {
         id: 'wallet-finder',
+        appType: AppType.Pro,
         path: '/wallet-finder',
         title: 'CA Analysis',
         icon: <WalletFinderIcon />,
@@ -159,6 +160,8 @@ export const appRegistry: Record<string, AppDefinition> = {
     },
     caSignal: {
         id: 'ca-signal',
+        appType: AppType.Pro,
+
         path: '/ca-signal',
         title: 'CA Signal',
         icon: <CASignalIcon />,
@@ -183,6 +186,7 @@ export const appRegistry: Record<string, AppDefinition> = {
     },
     smartWallet: {
         id: 'smart-wallet',
+        appType: AppType.Pro,
         path: '/smart-wallet',
         title: 'Smart Wallet',
         icon: <SmartWalletIcon />,
@@ -207,6 +211,7 @@ export const appRegistry: Record<string, AppDefinition> = {
     },
     deepSearch: {
         id: 'deep-search',
+        appType: AppType.System,
         path: '/deep-search',
         title: 'Deep Search',
         icon: <DeepSearchIcon />,
@@ -231,6 +236,8 @@ export const appRegistry: Record<string, AppDefinition> = {
     },
     appStore: {
         id: 'app-store',
+        appType: AppType.System,
+
         path: '/app-store',
         title: 'MCP App Store',
         icon: <AppStoreIcon />,
@@ -251,6 +258,7 @@ export const appRegistry: Record<string, AppDefinition> = {
     },
     agentBuilder: {
         id: 'agent-builder',
+        appType: AppType.System,
         path: '/agent-builder',
         title: 'Agent Builder',
         icon: <AgentBuilderIcon />,
@@ -272,6 +280,7 @@ export const appRegistry: Record<string, AppDefinition> = {
     },
     solRecharge: {
         id: 'sol-recharge',
+        appType: AppType.System,
         path: '/sol-recharge',
         title: 'Recharge',
         icon: <RechargeIcon />,
@@ -296,6 +305,7 @@ export const appRegistry: Record<string, AppDefinition> = {
     },
     settings: {
         id: 'settings',
+        appType: AppType.System,
         path: '/settings',
         title: 'Settings',
         icon: <SettingsIcon />,
@@ -307,6 +317,7 @@ export const appRegistry: Record<string, AppDefinition> = {
     },
     theme: {
         id: 'theme',
+        appType: AppType.System,
         path: '/theme',
         title: 'Theme',
         icon: <ThemeIcon />,
@@ -319,13 +330,14 @@ export const appRegistry: Record<string, AppDefinition> = {
     },
     messages: {
         id: 'messages',
+        appType: AppType.System,
         path: '/chat',
         title: 'Messages',
         icon: <MessagesIcon />,
         component: (
             <Suspense fallback={<LoadingPlaceholder />}>
                 {/* Pass proper ChatPageProps to ChatComponent */}
-                {React.createElement(ChatComponent({ appId: '' }))}
+                {React.createElement(ChatComponent({ appId: '', appType: AppType.System }))}
             </Suspense>
         ),
         defaultSize,
@@ -354,6 +366,7 @@ export const appRegistry: Record<string, AppDefinition> = {
     // },
     home: {
         id: 'home',
+        appType: AppType.System,
         path: '/',
         title: 'Home',
         icon: <HomeIcon />,
@@ -396,6 +409,7 @@ export const appRegistry: Record<string, AppDefinition> = {
     // },
     calendar: {
         id: 'calendar',
+        appType: AppType.System,
         path: '/calendar',
         title: 'Calendar',
         icon: <CalendarIcon />,

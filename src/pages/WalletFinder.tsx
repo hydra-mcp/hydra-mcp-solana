@@ -8,7 +8,7 @@ export function WalletFinder({ isModal = false }: { isModal?: boolean }) {
             isModal={isModal}
             apiEndpoint="/chat/completions"
             appId="walletFinder"
-            appType={AppType.Agent}
+            appType={AppType.Pro}
         />
     );
 } 
