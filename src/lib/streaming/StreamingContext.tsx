@@ -128,6 +128,9 @@ export function StreamingProvider({
                             const stageContent = processedChunk.stage.content || '';
                             const stageDetail = processedChunk.stage.detail || {};
                             const stageMessage = processedChunk.stage.message || '';
+                            // check if the stage is a combined stage by checking the field
+                            const combineField = stageDetail.combin_via_field;
+                            const combineFieldContent = stageDetail[combineField];
 
                             // Generate a unique ID for this stage
                             const stageId = crypto.randomUUID();
@@ -139,16 +142,30 @@ export function StreamingProvider({
 
                             // If a stage with the same content exists, update its status AND detail object
                             for (let i = 0; i < updatedPrev.length; i++) {
-                                if (updatedPrev[i].content === stageContent) {
-                                    updatedPrev[i] = {
-                                        ...updatedPrev[i],
-                                        status: stageStatus,
-                                        // Always update the detail object with the latest values
-                                        detail: stageDetail,
-                                        message: stageMessage
-                                    };
-                                    needToAdd = false;
-                                    break;
+                                if (combineFieldContent) {
+                                    const currentCombineFieldContent = updatedPrev[i].detail[combineField];
+                                    if (currentCombineFieldContent === combineFieldContent) {
+                                        updatedPrev[i] = {
+                                            ...updatedPrev[i],
+                                            status: stageStatus,
+                                            detail: stageDetail,
+                                            message: stageMessage
+                                        };
+                                        needToAdd = false;
+                                        break;
+                                    }
+                                } else {
+                                    if (updatedPrev[i].content === stageContent) {
+                                        updatedPrev[i] = {
+                                            ...updatedPrev[i],
+                                            status: stageStatus,
+                                            // Always update the detail object with the latest values
+                                            detail: stageDetail,
+                                            message: stageMessage
+                                        };
+                                        needToAdd = false;
+                                        break;
+                                    }
                                 }
                             }
 

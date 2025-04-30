@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ChevronDown, Info, Menu, RefreshCcw, Plus } from 'lucide-react';
+import { ChevronDown, Info, Menu, RefreshCcw, Plus, ActivitySquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -38,6 +38,8 @@ export function ChatInterface({
     const { isDarkMode } = useTheme();
     const [hasStageError, setHasStageError] = useState(false);
     const [inputValue, setInputValue] = useState('');
+    const [forceShowStages, setForceShowStages] = useState(false);
+    const [allStagesCompleted, setAllStagesCompleted] = useState(false);
 
     const [isLocalStreaming, setIsLocalStreaming] = useState(false);
     let streamingState = {
@@ -61,6 +63,22 @@ export function ChatInterface({
     );
     const hasValidStages = validStages.length > 0;
 
+    // Check if all stages are completed
+    useEffect(() => {
+        if (!hasValidStages) {
+            setAllStagesCompleted(false);
+            return;
+        }
+
+        const allCompleted = validStages.every(stage =>
+            stage.status === StageStatus.Completed ||
+            stage.status === StageStatus.Error ||
+            stage.status === StageStatus.Warning
+        );
+
+        setAllStagesCompleted(allCompleted);
+    }, [validStages, hasValidStages]);
+
     // Update hasStageError whenever validStages changes
     useEffect(() => {
         if (hasValidStages) {
@@ -81,8 +99,16 @@ export function ChatInterface({
         }
     }, [messages]);
 
-    const showStage = isStreaming && hasValidStages;
-    const stageRef = useRef<HTMLDivElement>(null);
+    // Reset force show stages when new message is sent
+    useEffect(() => {
+        if (isStreaming) {
+            setForceShowStages(false);
+        }
+    }, [isStreaming]);
+
+    // Changed showStage logic to allow StageDisplay to handle its own collapsing
+    // When all stages are completed, we still want to show the StageDisplay so it can display its collapsed state
+    const showStage = hasValidStages;
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
     const {
@@ -103,6 +129,8 @@ export function ChatInterface({
     const handleSendMessage = useCallback((message: string) => {
         // reset error status when sending message
         setHasStageError(false);
+        // reset force show stages
+        setForceShowStages(false);
         // clear the status and error in StreamingContext before sending a new message
         if (clearMessages) {
             clearMessages();
@@ -446,23 +474,11 @@ export function ChatInterface({
                             <div ref={messagesEndRef} className="h-4" />
                         </div>
                     </ScrollArea>
-                    {/* showStage &&  */}
                     {showStage && (
-                        <div
-                            ref={stageRef}
-                            className={cn(
-                                "mt-4 mb-2 max-w-[90%]",
-                                "bg-background/35 backdrop-blur-sm",
-                                "border border-primary/10 shadow-md rounded-lg",
-                                "animate-fade-in will-change-transform",
-                                "fixed bottom-16 left-1/2 -translate-x-1/2"
-                            )}
-                        >
-                            <StageDisplay
-                                stages={validStages}
-                                className="rounded-lg"
-                            />
-                        </div>
+                        <StageDisplay
+                            stages={validStages}
+                            maxHeight={modalMode ? 250 : 350}
+                        />
                     )}
 
                     {/* Scroll to bottom button */}
