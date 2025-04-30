@@ -52,7 +52,7 @@ export interface AppDefinition {
     description?: string;
     status?: 'online' | 'coming_soon';
     onIconClick?: () => void;
-    chatModuleTexts?: {
+    suggestedQuestions?: {
         welcomeTitle?: string;
         welcomeDescription?: string;
         modules?: Array<{
@@ -107,7 +107,7 @@ export const appGroups: Record<string, AppGroup> = {
         icon: <Settings className="w-4 h-4 text-white" />,
         color: 'bg-green-600',
         secondaryColor: 'bg-green-500',
-        adaptiveWidth: false
+        adaptiveWidth: true
     },
     installed: {
         id: 'installed',
@@ -115,7 +115,19 @@ export const appGroups: Record<string, AppGroup> = {
         icon: <Store className="w-4 h-4 text-white" />,
         color: 'bg-amber-600',
         secondaryColor: 'bg-amber-500',
-        adaptiveWidth: false
+        adaptiveWidth: true,
+        minWidth: '60%',
+        maxWidth: '100%'
+    },
+    userAgents: {
+        id: 'userAgents',
+        title: 'My Created Agents',
+        icon: <Puzzle className="w-4 h-4 text-white" />,
+        color: 'bg-indigo-600',
+        secondaryColor: 'bg-indigo-500',
+        adaptiveWidth: true,
+        minWidth: '50%',
+        maxWidth: '100%'
     }
 }
 
@@ -150,7 +162,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         description: 'Based on the trading behavior of smart addresses on the chain, we will push project-related information.',
         status: 'coming_soon',
         group: 'walletTools',
-        chatModuleTexts: {
+        suggestedQuestions: {
             welcomeDescription: 'We will push the CA of relevant qualified projects in real time. Based on the trading behavior of smart addresses on the chain, we will push project-related information, such as: project CA, the number of smart addresses that have purchased the project, the average purchase amount of smart funds, market capitalization, number of holders, and other data, for users to reference whether to follow up and buy.',
             modules: [
                 { title: 'Project CA', content: 'The CA of the project', icon: <CreditCard className="h-5 w-5" /> },
@@ -174,7 +186,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         description: 'We will promptly push some smart addresses discovered on the chain to users, making it convenient for them to add these smart addresses to their monitoring system for future trading reference.',
         status: 'coming_soon',
         group: 'walletTools',
-        chatModuleTexts: {
+        suggestedQuestions: {
             welcomeDescription: 'We will promptly push some smart addresses discovered on the chain to users, making it convenient for them to add these smart addresses to their monitoring system for future trading reference.',
             modules: [
                 { title: 'Smart Address', content: 'The smart address discovered on chain', icon: <CreditCard className="h-5 w-5" /> },
@@ -198,7 +210,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         description: 'Advanced AI-powered code analysis and debugging tool for complex task execution and self-improvement.',
         status: 'coming_soon',
         group: 'searchApps',
-        chatModuleTexts: {
+        suggestedQuestions: {
             welcomeDescription: 'Our latest CODEACT feature testing window collects the HYDRA-CodeAct dataset for instruction tuning. The trained HYDRA-CodeAct can perform complex tasks and self-debug and improve.',
             modules: [
                 { title: 'Code Analysis', content: 'Deep analysis of code structure and patterns', icon: <Code className="h-5 w-5" /> },
@@ -218,7 +230,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         description: 'Explore and install the latest applications and tools for Hydra OS',
         status: 'online',
         group: 'searchApps',
-        chatModuleTexts: {
+        suggestedQuestions: {
             welcomeDescription: 'Welcome to the MCP App Store, where you can browse, download, and install the latest blockchain applications and tools.',
             modules: [
                 { title: 'Application Classification', content: 'Browse applications by function category', icon: <Puzzle className="h-5 w-5" /> },
@@ -242,7 +254,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         description: 'Build your own agent with the help of AI',
         status: 'online',
         group: 'searchApps',
-        chatModuleTexts: {
+        suggestedQuestions: {
             welcomeDescription: 'Build your own agent with the help of AI',
             modules: [
                 { title: 'Agent Builder', content: 'Build your own agent with the help of AI', icon: <Code className="h-5 w-5" /> }
@@ -263,7 +275,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         description: 'Convenient SOL token recharge service with real-time transaction monitoring and secure wallet integration.',
         status: 'online',
         group: 'systemUtils',
-        chatModuleTexts: {
+        suggestedQuestions: {
             welcomeDescription: 'Welcome to SOL Recharge service. We provide secure and efficient SOL token recharge with real-time transaction monitoring.',
             modules: [
                 { title: 'Wallet Integration', content: 'Secure connection with Phantom wallet for seamless transactions', icon: <Wallet className="h-5 w-5" /> },
@@ -308,10 +320,10 @@ export const appRegistry: Record<string, AppDefinition> = {
             </Suspense>
         ),
         defaultSize,
-        description: 'Chat with your friends',
+        description: 'Chat with Hydra AI',
         status: 'online',
         group: 'systemUtils',
-        chatModuleTexts: {
+        suggestedQuestions: {
             welcomeTitle: 'Welcome to Hydra OS',
             welcomeDescription: 'You can access all apps through the desktop or Dock bar.',
             modules: [

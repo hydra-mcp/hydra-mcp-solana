@@ -71,6 +71,17 @@ export interface AgentCreationResponse {
     message: string;
 }
 
+// User Agent interface
+export interface UserAgent {
+    id: string;
+    name: string;
+    logo: string | null;
+    description?: string;
+    suggested_questions?: string[];
+    category?: string;
+    created_at?: string;
+}
+
 // Fetch available app categories
 export async function fetchAppCategories(): Promise<AppCategory[]> {
     try {
@@ -204,5 +215,22 @@ export async function createAgent(agentData: AgentCreationData): Promise<AgentCr
         console.error('Error creating agent:', error);
         // Rethrow the error so the component can handle it
         throw error;
+    }
+}
+
+// Fetch user created agents
+export async function fetchUserAgents(): Promise<UserAgent[]> {
+    try {
+        const result = await apiRequest<ApiResponse<UserAgent[]>>('/apps/agents');
+
+        if (result.status === 'success' && Array.isArray(result.data)) {
+            return result.data;
+        } else {
+            console.error('API response error or unexpected format for user agents:', result);
+            throw new Error(result.error || 'Failed to fetch user agents or unexpected format');
+        }
+    } catch (error) {
+        console.error('Error fetching user agents:', error);
+        return [];
     }
 }

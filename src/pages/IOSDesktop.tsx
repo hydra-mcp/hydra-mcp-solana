@@ -10,10 +10,10 @@ import { WindowManager } from '@/components/ios/WindowManager';
 import { createAppWindow, getDefaultAppPosition } from '@/components/ios/AppRegistry';
 import { AppDefinition, appRegistry, defaultSize, LoadingPlaceholder, appGroups } from '@/components/ios/appConfig';
 import { useAppWindow } from '@/contexts/AppWindowContext';
-import { AppItem, uninstallApp } from '@/lib/appStoreService';
+import { AppItem, uninstallApp, UserAgent, fetchUserAgents } from '@/lib/appStoreService';
 import { useAppInstall } from '@/contexts/AppInstallContext';
 import { v4 as uuidv4 } from 'uuid';
-import { Wallet, Search, Settings, Store } from 'lucide-react';
+import { Wallet, Search, Settings, Store, Puzzle } from 'lucide-react';
 import { ChatComponent } from '@/components/ios/AppComponents';
 
 // Context menu component
@@ -316,6 +316,8 @@ const IOSDesktopContent = ({
     const { installedApps: contextInstalledApps, uninstallAppAndRefresh, initialized, isLoading } = useAppInstall();
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [appToUninstall, setAppToUninstall] = useState<AppDefinition | null>(null);
+    const [userAgents, setUserAgents] = useState<UserAgent[]>([]);
+    const [isLoadingAgents, setIsLoadingAgents] = useState(false);
 
     // Combined state for all desktop apps (default + installed)
     // Initialized with default apps using registry key as ID
@@ -325,6 +327,79 @@ const IOSDesktopContent = ({
             id: key // Use registry key as ID
         }))
     );
+
+    // Fetch user agents
+    useEffect(() => {
+        const fetchAgents = async () => {
+            setIsLoadingAgents(true);
+            try {
+                const agents = await fetchUserAgents();
+                setUserAgents(agents);
+
+                // Convert user agents to app definitions
+                const agentAppDefinitions: AppDefinition[] = agents.map((agent): AppDefinition => ({
+                    id: `${agent.id}`, // Prefix with 'agent-' to avoid ID conflicts
+                    title: agent.name,
+                    icon: agent.logo ? (
+                        <div className="w-full h-full rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                            <img
+                                src={agent.logo}
+                                alt={agent.name}
+                                className="w-full h-full object-cover rounded-xl"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                }}
+                            />
+                            <div className={cn("text-2xl text-white font-bold hidden")}>
+                                {agent.name.substring(0, 1)}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl">
+                            <Puzzle className="w-1/2 h-1/2 text-white" />
+                        </div>
+                    ),
+                    path: `/agent/${agent.id}`,
+                    component: (
+                        <Suspense fallback={<LoadingPlaceholder />}>
+                            {React.createElement(ChatComponent({ appId: agent.id }))}
+                        </Suspense>
+                    ),
+                    defaultSize,
+                    description: agent.description || `Custom agent: ${agent.name}`,
+                    group: 'userAgents',
+                    suggestedQuestions: {
+                        welcomeDescription: agent.description || `Custom agent: ${agent.name}`,
+                        modules: agent.suggested_questions?.map(question => ({
+                            title: '',
+                            content: question,
+                        }))
+                    }
+                }));
+
+                // Update apps state with user agent apps
+                setApps(prevApps => {
+                    const apps = [...prevApps];
+                    agentAppDefinitions.forEach(app => {
+                        const index = apps.findIndex(a => a.id === app.id);
+                        if (index === -1) {
+                            apps.push(app);
+                        }
+                    });
+                    return apps;
+                });
+
+            } catch (error) {
+                console.error('Failed to fetch user agents:', error);
+            } finally {
+                setIsLoadingAgents(false);
+            }
+        };
+
+        // Fetch agents when component mounts
+        fetchAgents();
+    }, []);
 
     // Effect to merge installed apps into the main 'apps' state
     useEffect(() => {
@@ -368,25 +443,19 @@ const IOSDesktopContent = ({
             group: 'installed' // automatically assign installed group to installed apps
         }));
 
-        // Get default apps from registry using registry key as ID
-        const defaultAppsFromRegistry = Object.entries(appRegistry).map(([key, app]) => ({
-            ...app,
-            id: key
-        }));
+        // update installed apps
+        setApps(prevApps => {
+            const apps = [...prevApps];
+            installedAppDefinitions.forEach(app => {
+                const index = apps.findIndex(a => a.id === app.id);
+                if (index === -1) {
+                    apps.push(app);
+                }
+            });
+            return apps;
+        });
 
-        // Combine default apps and installed apps using a Map to handle potential overrides and ensure uniqueness by ID
-        const combinedAppsMap = new Map<string, AppDefinition>();
-
-        // Add default apps first
-        defaultAppsFromRegistry.forEach(app => combinedAppsMap.set(app.id, app));
-
-        // Add/update with installed apps (using their API ID as the key)
-        installedAppDefinitions.forEach(app => combinedAppsMap.set(app.id, app));
-
-        // Update the state with the unique, combined list from the map values
-        setApps(Array.from(combinedAppsMap.values()));
-
-    }, [contextInstalledApps, initialized, isLoading]); // Re-run whenever contextInstalledApps or initialization state changes
+    }, [contextInstalledApps, initialized, isLoading]);
 
     // Dock apps - definition remains the same
     const dockApps = [
@@ -411,8 +480,8 @@ const IOSDesktopContent = ({
             return;
         }
 
-        // Handle installed apps (path check is still valid)
-        if (iosApp.path.startsWith('/app/')) {
+        // Handle apps (path check is still valid)
+        if (iosApp.path.startsWith('/app/') || iosApp.path.startsWith('/agent/')) {
             const appStoreAppId = iosApp.id; // The ID is the App Store ID
 
             // Ensure the app definition is temporarily in appRegistry if needed by createAppWindow
@@ -732,7 +801,7 @@ const IOSDesktopContent = ({
                                                 ? "repeat(auto-fill, minmax(80px, 1fr))"
                                                 : "repeat(8, minmax(0, 1fr))",
                                             columnGap: "2rem",
-                                            rowGap: "2.5rem"
+                                            rowGap: "0.2rem"
                                         }}
                                     >
                                         {groupApps.map((app) => (
@@ -787,7 +856,7 @@ const IOSDesktopContent = ({
                                     // ensure "other applications" group uses the same spacing as previous groups
                                     gridTemplateColumns: "repeat(8, minmax(0, 1fr))",
                                     columnGap: "2rem",
-                                    rowGap: "2.5rem"
+                                    rowGap: "0.2rem"
                                 }}
                             >
                                 {apps

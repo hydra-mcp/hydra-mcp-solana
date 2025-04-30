@@ -6,9 +6,11 @@ import AgentFormComponent from '@/components/AgentBuilder/AgentFormComponent';
 import ServerSelectorComponent from '@/components/AgentBuilder/ServerSelectorComponent';
 import { AgentCreationData, createAgent, AppCategory, fetchAppCategories } from '@/lib/appStoreService';
 import { motion } from 'framer-motion';
+import { useAppWindow } from '@/contexts/AppWindowContext';
 
 export function AgentBuilder() {
     const { isDarkMode } = useTheme();
+    const { closeApp, getAppByPath } = useAppWindow();
 
     // Form state
     const [name, setName] = useState('');
@@ -88,9 +90,12 @@ export function AgentBuilder() {
 
             if (result.success) {
                 setSuccess(true);
-                // Redirect to the agent page after a brief delay
+                // Close the current window after a brief delay to show success message
                 setTimeout(() => {
-                    window.location.href = '/agents';
+                    const currentWindow = getAppByPath('/agent-builder');
+                    if (currentWindow) {
+                        closeApp(currentWindow.id);
+                    }
                 }, 2000);
             } else {
                 setError(result.message || 'Failed to create agent');

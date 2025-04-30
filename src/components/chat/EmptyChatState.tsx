@@ -47,7 +47,7 @@ export function EmptyChatState({ onNewChat, setInputValue }: EmptyChatStateProps
     const appName = config.appDefinition?.title || 'Chat';
 
     // use custom texts, if not provided, use default texts
-    const moduleTexts = config.appDefinition?.chatModuleTexts || {};
+    const moduleTexts = config.appDefinition?.suggestedQuestions || {};
     const welcomeTitle = moduleTexts.welcomeTitle || `Welcome to ${appName}`;
     const welcomeDescription = moduleTexts.welcomeDescription ||
         (config.appDefinition?.description || "I'm your AI assistant. How can I help you today?");

@@ -28,7 +28,7 @@ export function ChatPage({
         ...defaultApp,
         id: appId,
         title: appId, // Use appId as title if no app definition is found
-        chatModuleTexts: defaultApp.chatModuleTexts // Use default chat module texts
+        suggestedQuestions: defaultApp.suggestedQuestions // Use default chat module texts
     };
 
     return (
