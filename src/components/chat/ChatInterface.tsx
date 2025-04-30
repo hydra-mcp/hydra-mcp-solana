@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { ChevronDown, Info, Menu, RefreshCcw, Plus, ActivitySquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -226,34 +227,50 @@ export function ChatInterface({
         }
     }, [modalMode, inputRef]);
 
-    // Replace the transformY/paddingTop effect with a memoized calculation that doesn't cause layout shifts
-    const [stageTransformValues, setStageTransformValues] = useState({ transform: 'translateY(0)', padding: '4rem' });
+    // Refs for measurement and dynamic padding
+    const stageDisplayRef = useRef<HTMLDivElement>(null);
+    const scrollContentRef = useRef<HTMLDivElement>(null);
 
-    // Replace the existing transform effect with a memoized version that only updates when necessary
+    // State for dynamic padding based on StageDisplay height
+    const [stageDisplayHeight, setStageDisplayHeight] = useState(0);
+
+    // Effect to measure StageDisplay height and set padding for scroll area
     useEffect(() => {
-        if (showStage === false || validStages.length === 0) {
-            // Only update if actually changing to avoid unnecessary renders
-            if (stageTransformValues.transform !== 'translateY(0)') {
-                setStageTransformValues({ transform: 'translateY(0)', padding: '4rem' });
+        const element = stageDisplayRef.current;
+        if (!element || !showStage) {
+            // Reset height if StageDisplay is not shown or ref is not available
+            if (stageDisplayHeight !== 0) {
+                setStageDisplayHeight(0);
             }
             return;
         }
 
-        // Use requestAnimationFrame to batch these changes with rendering
-        const transformValue = validStages.length * 2 + 2;
-        const newTransform = `translateY(-${transformValue}rem)`;
-        const newPadding = `${transformValue}rem`;
+        // Use ResizeObserver to dynamically update height
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                // Add buffer (e.g., 1rem or 16px) to the measured height
+                const newHeight = entry.contentRect.height + 16;
+                // Only update state if height actually changed to avoid loops
+                if (newHeight !== stageDisplayHeight) {
+                    setStageDisplayHeight(newHeight);
+                }
+            }
+        });
 
-        // Only update state if values actually changed
-        if (stageTransformValues.transform !== newTransform || stageTransformValues.padding !== newPadding) {
-            requestAnimationFrame(() => {
-                setStageTransformValues({
-                    transform: newTransform,
-                    padding: newPadding
-                });
-            });
+        resizeObserver.observe(element);
+
+        // Perform an initial measurement in case ResizeObserver doesn't fire immediately
+        const initialHeight = element.offsetHeight + 16;
+        if (initialHeight !== stageDisplayHeight) {
+            setStageDisplayHeight(initialHeight);
         }
-    }, [validStages, showStage, stageTransformValues]);
+
+        // Cleanup observer on unmount or when element/showStage changes
+        return () => {
+            resizeObserver.disconnect();
+        };
+        // Re-run effect if showStage changes or if the initial measurement was 0
+    }, [showStage, stageDisplayHeight]);
 
     const handleRetry = useCallback(() => {
         if (!currentChat || !currentChat.messages || currentChat.messages.length === 0 || isProcessing) {
@@ -399,7 +416,10 @@ export function ChatInterface({
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    onClick={createNewChat}
+                                    onClick={() => {
+                                        // clearMessages is now called within createNewChat via context
+                                        createNewChat();
+                                    }}
                                     className={cn(
                                         "fixed z-30 rounded-full shadow-md transition-all duration-300 hover:scale-105 group",
                                         "backdrop-blur-sm border",
@@ -460,12 +480,17 @@ export function ChatInterface({
                         )}
                         onScroll={debouncedHandleScroll}
                     >
-                        <div className="px-4 relative will-change-transform">
+                        {/* Apply ref and dynamic padding to this inner div */}
+                        <div
+                            ref={scrollContentRef}
+                            className="px-4 relative will-change-transform transition-padding duration-300 ease-in-out"
+                            style={{
+                                paddingBottom: `${stageDisplayHeight}px`,
+                            }}
+                        >
                             <ChatContainer
                                 currentChat={currentChat}
                                 onNewChat={createNewChat}
-                                transformY={stageTransformValues.transform}
-                                paddingTop={stageTransformValues.padding}
                                 onRetry={handleRetry}
                                 setInputValue={setInputValue}
                             />
@@ -474,12 +499,18 @@ export function ChatInterface({
                             <div ref={messagesEndRef} className="h-4" />
                         </div>
                     </ScrollArea>
-                    {showStage && (
-                        <StageDisplay
-                            stages={validStages}
-                            maxHeight={modalMode ? 250 : 350}
-                        />
-                    )}
+
+                    {/* Wrap StageDisplay with AnimatePresence */}
+                    <AnimatePresence>
+                        {showStage && (
+                            <StageDisplay
+                                key="stage-display"
+                                ref={stageDisplayRef}
+                                stages={validStages}
+                                maxHeight={modalMode ? 250 : 350}
+                            />
+                        )}
+                    </AnimatePresence>
 
                     {/* Scroll to bottom button */}
                     {isScrolledUp && showScrollToBottom && (
@@ -491,7 +522,7 @@ export function ChatInterface({
                                 isDarkMode
                                     ? "bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-700/30"
                                     : "bg-blue-100 hover:bg-blue-200 text-blue-600 border border-blue-200",
-                                modalMode ? "bottom-24 right-6" : "bottom-24 right-6",
+                                modalMode ? "bottom-36 right-6" : "bottom-36 right-6",
                                 !modalMode && sidebarEnabled && isSidebarOpen ? "lg:right-6" : "right-6"
                             )}
                             onClick={() => {

@@ -6,6 +6,7 @@ import { useScrollBehavior } from '@/hooks/useScrollBehavior';
 import { ChatContext } from '@/context/ChatContext';
 import { StreamingProvider } from '@/lib/streaming/StreamingContext';
 import { useChatWithStreaming } from '@/hooks/useChatWithStreaming';
+import { useStreaming } from '@/lib/streaming/StreamingContext';
 
 interface ChatProviderProps {
     children: ReactNode;
@@ -162,6 +163,7 @@ function StreamingAwareChat({
     children: ReactNode;
 }) {
     const { toast } = useToast();
+    const { clearMessages } = useStreaming();
 
     const {
         sendMessage: sendStreamMessage,
@@ -223,6 +225,14 @@ function StreamingAwareChat({
         });
     };
 
+    // Wrap createNewChat to include clearMessages
+    const createNewChatWrapped = () => {
+        if (clearMessages) {
+            clearMessages();
+        }
+        createNewChat();
+    };
+
     // Context value
     const contextValue = {
         config,
@@ -231,7 +241,7 @@ function StreamingAwareChat({
         currentChat,
         isProcessing,
         isLoadingChats,
-        createNewChat,
+        createNewChat: createNewChatWrapped,
         deleteChat,
         sendMessage,
         clearAllChats,
