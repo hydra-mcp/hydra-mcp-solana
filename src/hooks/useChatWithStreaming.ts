@@ -5,6 +5,7 @@ import { sendChatStream, ChunkType } from '@/lib/streaming/sseClient';
 import { StreamingMessage, MessageChunk } from '@/lib/streaming/types';
 import { generateChatTitle } from '@/lib/utils';
 import { AppDefinition } from '@/components/ios/AppRegistry';
+import { AppType } from '@/components/ios/appConfig';
 
 /**
  * Streaming chat hook configuration
@@ -58,7 +59,7 @@ export function useChatWithStreaming({
     const sendMessage = useCallback(async (
         chatId: string,
         currentChat: Chat,
-        content: string
+        content: string,
     ) => {
         // Input validation
         if (!content.trim() || !chatId || isProcessing) return;
@@ -138,6 +139,7 @@ export function useChatWithStreaming({
             // Send request using SSE client
             await sendChatStream(
                 apiEndpoint,
+                currentChat.appType,
                 messages,
                 (chunk: ChunkType) => {
                     // Process chunk in streaming context if available

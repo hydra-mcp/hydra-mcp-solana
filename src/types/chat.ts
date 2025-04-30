@@ -1,3 +1,4 @@
+import { AppType } from "@/components/ios/appConfig";
 import { ApiResponse } from "./api";
 
 // Message sender type
@@ -18,7 +19,8 @@ export interface Chat {
   messages: Message[];
   createdAt: string;
   updatedAt: string;
-  appId?: string;
+  appId: string;
+  appType: AppType;
   metadata?: Record<string, any>;
 }
 

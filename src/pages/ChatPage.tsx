@@ -1,20 +1,22 @@
 import React from 'react';
 import { ChatProvider } from '@/components/chat/ChatProvider';
 import { ChatInterface } from '@/components/chat/ChatInterface';
-import { appRegistry } from '@/components/ios/appConfig';
+import { appRegistry, AppType } from '@/components/ios/appConfig';
 
 export interface ChatPageProps {
     isModal?: boolean;
     apiEndpoint?: string;
     appId?: string;
+    appType: AppType;
     showScrollToBottom?: boolean;
     scrollButtonThreshold?: number;
 }
 
 export function ChatPage({
     isModal = true,
-    apiEndpoint = '/mcp/chat/completions',
+    apiEndpoint = '/chat/completions',
     appId = '',
+    appType,
     showScrollToBottom = true,
     scrollButtonThreshold = 100
 }: ChatPageProps) {
@@ -35,6 +37,7 @@ export function ChatPage({
         <ChatProvider
             apiEndpoint={apiEndpoint}
             appDefinition={appDefinition}
+            appType={appType}
             options={{
                 enableHistory: true,
                 historyStorageKey: `chat-history-${appId}`,

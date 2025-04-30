@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Chat } from '@/types/chat';
 import { uuid } from '@/lib/utils';
 import { saveChats, loadChats, loadAppChats, clearAppChats } from '@/lib/api';
+import { AppType } from '@/components/ios/appConfig';
 
 interface UseChatStateOptions {
     enableHistory?: boolean;
     initialSystemMessage?: string;
     appId?: string;
+    appType?: AppType;
 }
 
 export function useChatState(options: UseChatStateOptions = {}) {
@@ -14,6 +16,7 @@ export function useChatState(options: UseChatStateOptions = {}) {
         enableHistory = true,
         initialSystemMessage,
         appId,
+        appType,
     } = options;
 
     const [chats, setChats] = useState<Chat[]>([]);
@@ -27,6 +30,9 @@ export function useChatState(options: UseChatStateOptions = {}) {
 
     // Current selected chat
     const currentChat = chats.find(chat => chat.id === currentChatId) || null;
+    if (currentChat) {
+        currentChat.appType = appType;
+    }
 
     // Create a new chat
     const createNewChat = () => {
@@ -48,6 +54,7 @@ export function useChatState(options: UseChatStateOptions = {}) {
             createdAt: new Date().toLocaleString(),
             updatedAt: new Date().toLocaleString(),
             appId,
+            appType,
             metadata: initialSystemMessage ? { systemMessage: initialSystemMessage } : undefined
         };
 

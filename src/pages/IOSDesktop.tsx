@@ -8,7 +8,7 @@ import { useTheme, WALLPAPERS } from '@/hooks/use-theme';
 import { AnimatePresence, motion } from 'framer-motion';
 import { WindowManager } from '@/components/ios/WindowManager';
 import { createAppWindow, getDefaultAppPosition } from '@/components/ios/AppRegistry';
-import { AppDefinition, appRegistry, defaultSize, LoadingPlaceholder, appGroups } from '@/components/ios/appConfig';
+import { AppDefinition, appRegistry, defaultSize, LoadingPlaceholder, appGroups, AppType } from '@/components/ios/appConfig';
 import { useAppWindow } from '@/contexts/AppWindowContext';
 import { AppItem, uninstallApp, UserAgent, fetchUserAgents } from '@/lib/appStoreService';
 import { useAppInstall } from '@/contexts/AppInstallContext';
@@ -340,6 +340,7 @@ const IOSDesktopContent = ({
                 const agentAppDefinitions: AppDefinition[] = agents.map((agent): AppDefinition => ({
                     id: `${agent.id}`, // Prefix with 'agent-' to avoid ID conflicts
                     title: agent.name,
+                    appType: AppType.Agent,
                     icon: agent.logo ? (
                         <div className="w-full h-full rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
                             <img
@@ -363,7 +364,7 @@ const IOSDesktopContent = ({
                     path: `/agent/${agent.id}`,
                     component: (
                         <Suspense fallback={<LoadingPlaceholder />}>
-                            {React.createElement(ChatComponent({ appId: agent.id }))}
+                            {React.createElement(ChatComponent({ appId: agent.id, appType: AppType.Agent }))}
                         </Suspense>
                     ),
                     defaultSize,
@@ -412,6 +413,7 @@ const IOSDesktopContent = ({
         const installedAppDefinitions = contextInstalledApps.map((app): AppDefinition => ({
             id: app.id, // Use the ACTUAL App Store ID from API
             title: app.name,
+            appType: AppType.MCP,
             icon: app.icon ?
                 <div className="w-full h-full rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                     <img
@@ -434,7 +436,7 @@ const IOSDesktopContent = ({
             component: ( // Define component lazily or directly as needed
                 <Suspense fallback={<LoadingPlaceholder />}>
                     {/* Ensure ChatComponent is correctly created or imported */}
-                    {React.createElement(ChatComponent({ appId: app.id }))}
+                    {React.createElement(ChatComponent({ appId: app.id, appType: AppType.MCP }))}
                 </Suspense>
             ),
             defaultSize,

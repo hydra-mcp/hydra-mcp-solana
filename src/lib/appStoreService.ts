@@ -1,5 +1,5 @@
 import { apiRequest, ApiResponse } from "./api";
-
+import { AppType } from "@/components/ios/appConfig";
 // App Store API functions
 export interface AppCategory {
     id: string;
@@ -8,6 +8,7 @@ export interface AppCategory {
 
 export interface AppItem {
     id: string;
+    appType: AppType;
     name: string;
     description: string;
     category: string;

@@ -4,6 +4,7 @@
 
 import { SSE } from '@/lib/sse';
 import { StageStatus } from './types';
+import { AppType } from '@/components/ios/appConfig';
 /**
  * Define SSE event type
  */
@@ -382,9 +383,10 @@ export async function sendSSERequest<T>(
  */
 export async function sendChatStream(
     url: string,
+    appType: AppType,
     messages: Array<{ role: string, content: string }>,
     onChunk: (chunk: ChunkType) => void,
-    appId?: string
+    appId?: string,
 ): Promise<any> {
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
     const fullUrl = `${baseUrl}${url}`;
@@ -395,7 +397,7 @@ export async function sendChatStream(
     };
 
     // Append appId to URL if provided
-    const requestUrl = appId ? `${fullUrl}?appId=${encodeURIComponent(appId)}` : fullUrl;
+    const requestUrl = appId ? `${fullUrl}?appId=${encodeURIComponent(appId)}&app_type=${appType}` : fullUrl;
 
     console.log(`[SSEClient] Sending chat stream request to ${requestUrl}`);
 

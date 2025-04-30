@@ -7,10 +7,11 @@ import { ChatContext } from '@/context/ChatContext';
 import { StreamingProvider } from '@/lib/streaming/StreamingContext';
 import { useChatWithStreaming } from '@/hooks/useChatWithStreaming';
 import { useStreaming } from '@/lib/streaming/StreamingContext';
-
+import { AppType } from '@/components/ios/appConfig';
 interface ChatProviderProps {
     children: ReactNode;
     apiEndpoint: string;
+    appType: AppType;
     appDefinition?: AppDefinition;
     options?: {
         enableHistory?: boolean;
@@ -23,6 +24,7 @@ interface ChatProviderProps {
 export function ChatProvider({
     children,
     apiEndpoint,
+    appType,
     appDefinition,
     options = {}
 }: ChatProviderProps) {
@@ -62,6 +64,7 @@ export function ChatProvider({
         enableHistory,
         initialSystemMessage,
         appId,
+        appType,
     });
 
     const {
@@ -94,6 +97,7 @@ export function ChatProvider({
         >
             <StreamingAwareChat
                 apiEndpoint={apiEndpoint}
+                appType={appType}
                 inputRef={inputRef}
                 currentChatId={currentChatId}
                 currentChat={currentChat}
@@ -144,6 +148,7 @@ function StreamingAwareChat({
     children
 }: {
     apiEndpoint: string;
+    appType: AppType;
     inputRef: React.RefObject<HTMLTextAreaElement>;
     currentChatId: string | null;
     currentChat: any;

@@ -36,6 +36,14 @@ export const LoadingPlaceholder = () => (
     </div>
 );
 
+export enum AppType {
+    MCP = 'mcp',
+    Agent = 'agent',
+    System = 'system',
+    Pro = "pro",
+    Other = 'other'
+}
+
 
 // App definitions
 export interface AppDefinition {
@@ -44,6 +52,7 @@ export interface AppDefinition {
     title: string;
     icon: ReactNode;
     component: ReactNode;
+    appType: AppType;
     defaultSize: {
         width: number | string;
         height: number | string;

@@ -3,6 +3,7 @@ import { Chat, Message, OpenAIResponse } from '@/types/chat';
 import { triggerApiError } from '@/components/ErrorHandler';
 import { useAuth } from '@/contexts/AuthContext';
 import { sendChatStream, ChunkType } from '@/lib/streaming/sseClient';
+import { AppType } from '@/components/ios/appConfig';
 
 // Add type definition for SSE events
 interface SSEEvent extends CustomEvent {
@@ -230,18 +231,15 @@ export async function mockStreamResponse(message: string, onChunk: (chunk: strin
   };
 }
 
-export async function sendWalletFinderMessage(message: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
-  return sendStreamMessage('/agent/chat/completions', message, chatHistory, onChunk);
-}
-
-// WalletFinder stream message request
-export async function sendChatMessage(message: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
-  return sendStreamMessage('/mcp/chat/completions', message, chatHistory, onChunk);
+// Chat stream message request
+export async function sendChatMessage(message: string, appType: AppType, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
+  return sendStreamMessage(`/chat/completions?app_type=${appType}`, message, chatHistory, onChunk);
 }
 
 // Stream message request implemented using SSE.ts
 export async function sendStreamMessage(
   url: string,
+  appType: AppType,
   message: string,
   chatHistory: Message[],
   onChunk: (chunk: string) => void
@@ -264,6 +262,7 @@ export async function sendStreamMessage(
     // Use the new SSE client to send the request
     const result = await sendChatStream(
       url,
+      appType,
       messages,
       // Process data blocks, convert to string and pass to the original onChunk callback
       (chunk: ChunkType) => {
