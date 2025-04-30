@@ -1,24 +1,7 @@
-
 import React, { ReactNode, lazy, Suspense, useState, useEffect } from 'react';
-import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, DeepSearchIcon, RechargeIcon, ThemeIcon, AppStoreIcon } from './AppIcons';
 import { cn } from '@/lib/utils';
 import {
     Calendar, Settings, Sliders, Image, Mail, Home, Search, SignalIcon,
-    HelpCircle, Info, Puzzle, Lightbulb, BarChart3, Users, DollarSign, CreditCard, Activity,
-    Code,
-    Bug,
-    BookOpen,
-    Zap,
-    Wallet,
-    Shield,
-    Download,
-    Loader2,
-    Star,
-    Check,
-    Package,
-    Trash2,
-    X,
-    Store
 } from 'lucide-react';
 
 import { useTheme, toggleThemeDirectly } from '@/hooks/use-theme';
@@ -77,6 +60,14 @@ export const SolRechargeComponent = lazy(() => import('@/pages/SolanaPaymentPage
         // Load SolanaPaymentPage component and set it to modal mode
         const { SolanaPaymentPage } = module;
         return <SolanaPaymentPage />;
+    }
+})));
+
+export const AgentBuilderComponent = lazy(() => import('@/pages/AgentBuilder').then(module => ({
+    default: () => {
+        // Load AgentBuilder component and set it to modal mode
+        const { AgentBuilder } = module;
+        return <AgentBuilder />;
     }
 })));
 

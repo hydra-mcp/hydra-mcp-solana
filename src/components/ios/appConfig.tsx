@@ -1,5 +1,5 @@
 import React, { ReactNode, lazy, Suspense, useState, useEffect } from 'react';
-import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, DeepSearchIcon, RechargeIcon, ThemeIcon, AppStoreIcon } from './AppIcons';
+import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, DeepSearchIcon, RechargeIcon, ThemeIcon, AppStoreIcon, AgentBuilderIcon } from './AppIcons';
 import { cn } from '@/lib/utils';
 import {
     Calendar, Settings, Sliders, Image, Mail, Home, Search, SignalIcon,
@@ -24,7 +24,7 @@ import { CASignalIcon } from './AppIcons';
 import AppStoreComponent from '@/components/AppStore/AppStoreComponent';
 // Import ChatPageProps from ChatPage
 import type { ChatPageProps } from '@/pages/ChatPage';
-import { CaSignalComponent, SmartWalletComponent, DeepSearchComponent, SolRechargeComponent, SettingsApp, ThemeApp, PhotosApp, WalletFinderComponent, ChatComponent } from './AppComponents';
+import { CaSignalComponent, SmartWalletComponent, DeepSearchComponent, SolRechargeComponent, SettingsApp, ThemeApp, PhotosApp, WalletFinderComponent, ChatComponent, AgentBuilderComponent } from './AppComponents';
 
 // Common loading placeholder component
 export const LoadingPlaceholder = () => (
@@ -225,6 +225,27 @@ export const appRegistry: Record<string, AppDefinition> = {
                 { title: 'Top Recommendations', content: 'View the top applications loved by users', icon: <Star className="h-5 w-5" /> },
                 { title: 'New Releases', content: 'Explore the latest released applications', icon: <Zap className="h-5 w-5" /> },
                 { title: 'Application Management', content: 'Manage installed applications and updates', icon: <Settings className="h-5 w-5" /> }
+            ]
+        }
+    },
+    agentBuilder: {
+        id: 'agent-builder',
+        path: '/agent-builder',
+        title: 'Agent Builder',
+        icon: <AgentBuilderIcon />,
+        component: (
+            <Suspense fallback={<LoadingPlaceholder />}>
+                <AgentBuilderComponent />
+            </Suspense>
+        ),
+        defaultSize,
+        description: 'Build your own agent with the help of AI',
+        status: 'online',
+        group: 'searchApps',
+        chatModuleTexts: {
+            welcomeDescription: 'Build your own agent with the help of AI',
+            modules: [
+                { title: 'Agent Builder', content: 'Build your own agent with the help of AI', icon: <Code className="h-5 w-5" /> }
             ]
         }
     },

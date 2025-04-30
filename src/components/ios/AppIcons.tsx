@@ -1,4 +1,4 @@
-import { Wallet, MessageSquare, Settings, Image, Home, Search, Calendar, Mail, BarChart, DollarSign, CreditCard, Zap, SunMoon, Grid, Store } from 'lucide-react';
+import { Wallet, MessageSquare, Settings, Image, Home, Search, Calendar, Mail, BarChart, DollarSign, CreditCard, Zap, SunMoon, Grid, Store, Bot } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -574,6 +574,52 @@ export const AppStoreIcon = ({ className }: { className?: string }) => {
                         }}
                     >
                         <span className="text-[8px] font-bold text-white">new</span>
+                    </motion.div>
+                </div>
+            }
+        />
+    );
+};
+
+export const AgentBuilderIcon = ({ className }: { className?: string }) => {
+    return (
+        <AppIconBase
+            color="#8b5cf6"
+            secondaryColor="#a78bfa"
+            className={className}
+            icon={
+                <div className="relative">
+                    {/* Main Icon */}
+                    <motion.div
+                        initial={{ scale: 1 }}
+                        animate={{ scale: [1, 1.05, 1] }}
+                        transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            repeatType: "loop",
+                            ease: "easeInOut"
+                        }}
+                    >
+                        <Grid className="w-9 h-9 text-white" />
+                    </motion.div>
+
+                    {/* Sparkle Effect */}
+                    <motion.div
+                        className="absolute -top-1 -right-1 text-yellow-300"
+                        initial={{ opacity: 0.5, scale: 0.8 }}
+                        animate={{
+                            opacity: [0.5, 1, 0.5],
+                            scale: [0.8, 1.0, 0.8],
+                        }}
+                        transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                    >
+                        <div className="bg-purple-800 rounded-full p-0.5">
+                            <Bot className="w-4 h-4" />
+                        </div>
                     </motion.div>
                 </div>
             }
