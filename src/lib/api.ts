@@ -233,7 +233,7 @@ export async function mockStreamResponse(message: string, onChunk: (chunk: strin
 
 // Chat stream message request
 export async function sendChatMessage(message: string, appType: AppType, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
-  return sendStreamMessage(`/chat/completions?app_type=${appType}`, message, chatHistory, onChunk);
+  return sendStreamMessage(`/chat/completions`, appType, message, chatHistory, onChunk);
 }
 
 // Stream message request implemented using SSE.ts
