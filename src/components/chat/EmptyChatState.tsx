@@ -84,7 +84,7 @@ export function EmptyChatState({ onNewChat, setInputValue }: EmptyChatStateProps
                 {welcomeTitle}
             </h2>
 
-            <p className="mb-10 max-w-2xl text-muted-foreground text-lg">
+            <p className="mb-10 max-w-2xl text-muted-foreground text-lg whitespace-pre-line text-left">
                 {welcomeDescription}
             </p>
 

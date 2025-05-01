@@ -1,5 +1,5 @@
 import React, { ReactNode, lazy, Suspense, useState, useEffect } from 'react';
-import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, DeepSearchIcon, RechargeIcon, ThemeIcon, AppStoreIcon, AgentBuilderIcon } from './AppIcons';
+import { WalletFinderIcon, SettingsIcon, MessagesIcon, PhotosIcon, HomeIcon, SearchIcon, CalendarIcon, MailIcon, SmartWalletIcon, RechargeIcon, ThemeIcon, AppStoreIcon, AgentBuilderIcon, AiTradeIcon, HydraResearchIcon } from './AppIcons';
 import { cn } from '@/lib/utils';
 import {
     Calendar, Settings, Sliders, Image, Mail, Home, Search, SignalIcon,
@@ -17,14 +17,19 @@ import {
     Package,
     Trash2,
     X,
-    Store
+    Store,
+    Clock,
+    Bot,
+    FileText,
+    Bell,
+    Eye
 } from 'lucide-react';
 import { useTheme, toggleThemeDirectly } from '@/hooks/use-theme';
 import { CASignalIcon } from './AppIcons';
 import AppStoreComponent from '@/components/AppStore/AppStoreComponent';
 // Import ChatPageProps from ChatPage
 import type { ChatPageProps } from '@/pages/ChatPage';
-import { CaSignalComponent, SmartWalletComponent, DeepSearchComponent, SolRechargeComponent, SettingsApp, ThemeApp, PhotosApp, WalletFinderComponent, ChatComponent, AgentBuilderComponent } from './AppComponents';
+import { CaSignalComponent, SmartWalletComponent, HydraResearchComponent, SolRechargeComponent, SettingsApp, ThemeApp, PhotosApp, WalletFinderComponent, ChatComponent, AgentBuilderComponent, AiTradeComponent } from './AppComponents';
 
 // Common loading placeholder component
 export const LoadingPlaceholder = () => (
@@ -92,7 +97,7 @@ export interface AppGroup {
 export const appGroups: Record<string, AppGroup> = {
     walletTools: {
         id: 'walletTools',
-        title: 'Wallet Analysis Tools',
+        title: 'HYDRAAI Analysis',
         icon: <Wallet className="w-4 h-4 text-white" />,
         color: 'bg-blue-600',
         secondaryColor: 'bg-blue-500',
@@ -154,9 +159,34 @@ export const appRegistry: Record<string, AppDefinition> = {
             </Suspense>
         ),
         defaultSize,
-        description: 'Find the smart wallet of blockchain project.',
+        description: 'AI self-feedback learning method searches for the specified smart contract address.',
         status: 'online',
-        group: 'walletTools'
+        group: 'walletTools',
+        suggestedQuestions: {
+            welcomeDescription: `Search for smart addresses under trending projects by simply sending the project's CA and wait for AI to provide the search results. Currently, only the SOLANA chain is supported, with future support for BSC/BASE/ETH and more. Each query consumes one POINT, priced at 0.01SOL per POINT, and rechargeable.`,
+            modules: [
+                {
+                    title: 'Early Access Offer',
+                    content: 'During the beta period, each query only costs 0.01 SOL. Recharge is supported, accepting both SOL and HDOS.',
+                    icon: <DollarSign className="h-5 w-5" />
+                },
+                {
+                    title: 'Smart Address Search',
+                    content: 'Simply enter the project\'s CA and let HYDRAAI find its smart addresses.',
+                    icon: <Search className="h-5 w-5" />
+                },
+                {
+                    title: 'Insider Address Search',
+                    content: 'Discover early insider addresses of a project for easier future transaction tracking.',
+                    icon: <Wallet className="h-5 w-5" />
+                },
+                {
+                    title: 'Address Ranking',
+                    content: 'Categorize different smart addresses based on risk appetite, transaction frequency, and more.',
+                    icon: <BarChart3 className="h-5 w-5" />
+                }
+            ]
+        }
     },
     caSignal: {
         id: 'ca-signal',
@@ -177,10 +207,26 @@ export const appRegistry: Record<string, AppDefinition> = {
         suggestedQuestions: {
             welcomeDescription: 'We will push the CA of relevant qualified projects in real time. Based on the trading behavior of smart addresses on the chain, we will push project-related information, such as: project CA, the number of smart addresses that have purchased the project, the average purchase amount of smart funds, market capitalization, number of holders, and other data, for users to reference whether to follow up and buy.',
             modules: [
-                { title: 'Project CA', content: 'The CA of the project', icon: <CreditCard className="h-5 w-5" /> },
-                { title: 'Number of Smart Addresses', content: 'The number of smart addresses that have purchased the project', icon: <Users className="h-5 w-5" /> },
-                { title: 'Market Capitalization', content: 'The market capitalization of the project', icon: <BarChart3 className="h-5 w-5" /> },
-                { title: 'Number of Holders', content: 'The number of holders of the project', icon: <Activity className="h-5 w-5" /> }
+                {
+                    title: 'Trading Trends',
+                    content: 'Real-time monitoring of smart money trading trends, AI analysis of the best trading projects.',
+                    icon: <Activity className="h-5 w-5" />
+                },
+                {
+                    title: 'Signal Notifications',
+                    content: 'Once AI detects high-quality trending projects, it will push the relevant project CA in real-time.',
+                    icon: <SignalIcon className="h-5 w-5" />
+                },
+                {
+                    title: 'Project Info',
+                    content: 'Number of active smart addresses, average position size of smart addresses, and more.',
+                    icon: <Info className="h-5 w-5" />
+                },
+                {
+                    title: 'Trend Alerts',
+                    content: 'Immediate notification of sudden changes in trending projects, capturing hot information in real-time.',
+                    icon: <Zap className="h-5 w-5" />
+                }
             ]
         }
     },
@@ -188,7 +234,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         id: 'smart-wallet',
         appType: AppType.Pro,
         path: '/smart-wallet',
-        title: 'Smart Wallet',
+        title: 'Smart Address',
         icon: <SmartWalletIcon />,
         component: (
             <Suspense fallback={<LoadingPlaceholder />}>
@@ -202,27 +248,84 @@ export const appRegistry: Record<string, AppDefinition> = {
         suggestedQuestions: {
             welcomeDescription: 'We will promptly push some smart addresses discovered on the chain to users, making it convenient for them to add these smart addresses to their monitoring system for future trading reference.',
             modules: [
-                { title: 'Smart Address', content: 'The smart address discovered on chain', icon: <CreditCard className="h-5 w-5" /> },
-                { title: 'Transaction History', content: 'Recent transaction records of the smart address', icon: <Activity className="h-5 w-5" /> },
-                { title: 'Portfolio Analysis', content: 'Current portfolio composition and performance', icon: <BarChart3 className="h-5 w-5" /> },
-                { title: 'Trading Strategy', content: 'Trading patterns and strategies analysis', icon: <Lightbulb className="h-5 w-5" /> }
+                {
+                    title: 'Real-time Updates',
+                    content: 'HYDRA will provide real-time updates on the most profitable smart addresses and analysis reports.',
+                    icon: <Activity className="h-5 w-5" />
+                },
+                {
+                    title: 'Pattern Analysis',
+                    content: 'HYDRAAI performs 24-hour smart money transaction pattern analysis and learning.',
+                    icon: <BarChart3 className="h-5 w-5" />
+                },
+                {
+                    title: 'Transaction Alerts',
+                    content: 'Real-time updates and notifications of on-chain transaction behaviors from smart addresses.',
+                    icon: <Bell className="h-5 w-5" />
+                },
+                {
+                    title: 'Insider Addresses',
+                    content: 'Notification of relevant insider trading addresses for easy user tracking.',
+                    icon: <Eye className="h-5 w-5" />
+                }
             ]
         }
     },
-    deepSearch: {
-        id: 'deep-search',
-        appType: AppType.System,
-        path: '/deep-search',
-        title: 'Deep Search',
-        icon: <DeepSearchIcon />,
+    aiTrade: {
+        id: 'ai-trade',
+        appType: AppType.Pro,
+        path: '/ai-trade',
+        title: 'AI Trade',
+        icon: <AiTradeIcon />,
         component: (
             <Suspense fallback={<LoadingPlaceholder />}>
-                <DeepSearchComponent />
+                <AiTradeComponent />
             </Suspense>
         ),
         defaultSize,
-        description: 'Advanced AI-powered code analysis and debugging tool for complex task execution and self-improvement.',
+        description: 'AI-powered trading assistant for complex task execution and self-improvement.',
         status: 'coming_soon',
+        group: 'walletTools',
+        suggestedQuestions: {
+            welcomeDescription: "Through extensive preliminary training and learning, HYDRA AI has developed the capability to search for smart addresses across numerous on-chain projects. It simultaneously learns and establishes a neural network model for the transaction patterns of these smart addresses, attempting to autonomously execute trades. It continuously monitors and verifies transactions, capturing on-chain trading opportunities and executing buy-sell operations 24/7 based on users' risk preferences.",
+            modules: [
+                {
+                    title: 'Cruise Mode',
+                    content: '24-hour continuous search for on-chain opportunities, with record-keeping and pattern learning.',
+                    icon: <Clock className="h-5 w-5" />
+                },
+                {
+                    title: 'Trading Assistant',
+                    content: 'Tell HYDRA AI what type of trading pattern to follow, whether early projects or trending projects.',
+                    icon: <Bot className="h-5 w-5" />
+                },
+                {
+                    title: 'Trading Reports',
+                    content: 'Summary of trending projects within a specified recent timeframe, with immediate risk assessment for trading.',
+                    icon: <FileText className="h-5 w-5" />
+                },
+                {
+                    title: 'Trending Alerts',
+                    content: 'Voice message alerts for sudden trending projects.',
+                    icon: <Bell className="h-5 w-5" />
+                }
+            ]
+        }
+    },
+    hydraResearch: {
+        id: 'hydra-research',
+        appType: AppType.System,
+        path: '/hydra-research',
+        title: 'Hydra Research',
+        icon: <HydraResearchIcon />,
+        component: (
+            <Suspense fallback={<LoadingPlaceholder />}>
+                <HydraResearchComponent />
+            </Suspense>
+        ),
+        defaultSize,
+        description: 'An information aggregation MCP intelligent AGENT in testing, continuously evolving and learning.',
+        status: 'online',
         group: 'searchApps',
         suggestedQuestions: {
             welcomeDescription: 'Our latest CODEACT feature testing window collects the HYDRA-CodeAct dataset for instruction tuning. The trained HYDRA-CodeAct can perform complex tasks and self-debug and improve.',
@@ -243,7 +346,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         icon: <AppStoreIcon />,
         component: <AppStoreComponent />,
         defaultSize,
-        description: 'Explore and install the latest applications and tools for Hydra OS',
+        description: 'Using HYDRAMCP allows you to experience all relevant MCP services on the market.',
         status: 'online',
         group: 'searchApps',
         suggestedQuestions: {
@@ -337,11 +440,11 @@ export const appRegistry: Record<string, AppDefinition> = {
         component: (
             <Suspense fallback={<LoadingPlaceholder />}>
                 {/* Pass proper ChatPageProps to ChatComponent */}
-                {React.createElement(ChatComponent({ appId: '', appType: AppType.System }))}
+                {React.createElement(ChatComponent({ appId: 'message', appType: AppType.System }))}
             </Suspense>
         ),
         defaultSize,
-        description: 'Chat with Hydra AI',
+        description: 'System message center, you can receive system messages here.',
         status: 'online',
         group: 'systemUtils',
         suggestedQuestions: {

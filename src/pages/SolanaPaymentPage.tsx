@@ -194,7 +194,7 @@ export const SolanaPaymentPage: React.FC = () => {
                                     >
                                         <div className="space-y-4 py-2">
                                             <p className="text-sm text-gray-500">
-                                                Select the amount you want to recharge and start the process
+                                                Select the amount you want to recharge and start the process, Each query costs one POINT(0.01 SOL).
                                             </p>
                                             <div className="space-y-2">
                                                 <label htmlFor="amount" className="text-sm font-medium">Recharge amount (SOL)</label>

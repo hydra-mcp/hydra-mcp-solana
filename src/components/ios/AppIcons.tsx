@@ -419,7 +419,87 @@ export const SmartWalletIcon = ({ className }: { className?: string }) => {
     );
 };
 
-export const DeepSearchIcon = ({ className }: { className?: string }) => {
+export const AiTradeIcon = ({ className }: { className?: string }) => {
+    return (
+        <AppIconBase
+            color="#06b6d4"
+            secondaryColor="#0891b2"
+            className={className}
+            icon={
+                <div className="relative">
+                    {/* Main trading chart icon */}
+                    <motion.div
+                        initial={{ scale: 1 }}
+                        animate={{ scale: [1, 1.05, 1] }}
+                        transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            repeatType: "loop",
+                            ease: "easeInOut"
+                        }}
+                    >
+                        <BarChart className="w-9 h-9 text-white" />
+                    </motion.div>
+
+                    {/* Rising trend line effect */}
+                    <motion.div
+                        className="absolute top-1 left-0 right-0 flex justify-center"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{
+                            opacity: [0, 1, 0],
+                            x: [-10, 0, 10],
+                            y: [2, -2, -6]
+                        }}
+                        transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            repeatType: "loop"
+                        }}
+                    >
+                        <div className="w-0.5 h-4 bg-green-400 transform rotate-45 rounded-full" />
+                    </motion.div>
+
+                    {/* Dollar symbol for trade */}
+                    <motion.div
+                        className="absolute bottom-0 right-0"
+                        animate={{
+                            scale: [1, 1.2, 1],
+                            opacity: [0.7, 1, 0.7]
+                        }}
+                        transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            repeatType: "loop"
+                        }}
+                    >
+                        <div className="flex items-center justify-center w-4 h-4 bg-white rounded-full">
+                            <span className="text-[10px] font-bold text-cyan-600">$</span>
+                        </div>
+                    </motion.div>
+
+                    {/* AI indicator */}
+                    <motion.div
+                        className="absolute -top-1 -left-1"
+                        animate={{
+                            opacity: [0.7, 1, 0.7]
+                        }}
+                        transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            repeatType: "loop"
+                        }}
+                    >
+                        <div className="flex items-center justify-center px-1 bg-white/20 backdrop-blur-sm rounded text-[8px] font-bold text-white">
+                            AI
+                        </div>
+                    </motion.div>
+                </div>
+            }
+        />
+    );
+};
+
+export const HydraResearchIcon = ({ className }: { className?: string }) => {
     return (
         <AppIconBase
             color="#5ed7ea"

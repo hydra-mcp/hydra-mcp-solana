@@ -47,11 +47,20 @@ export const SmartWalletComponent = lazy(() => import('@/pages/SmartWallet').the
     }
 })));
 
-export const DeepSearchComponent = lazy(() => import('@/pages/DeepSearch').then(module => ({
+// Lazy load AiTrade component
+export const AiTradeComponent = lazy(() => import('@/pages/AiTrade').then(module => ({
     default: () => {
-        // Load DeepSearch component and set it to modal mode
-        const { DeepSearch } = module;
-        return <DeepSearch />;
+        // Load AiTrade component and set it to modal mode
+        const { AiTrade } = module;
+        return <AiTrade />;
+    }
+})));
+
+export const HydraResearchComponent = lazy(() => import('@/pages/HydraResearch').then(module => ({
+    default: () => {
+        // Load HydraResearch component and set it to modal mode
+        const { HydraResearch } = module;
+        return <HydraResearch />;
     }
 })));
 
