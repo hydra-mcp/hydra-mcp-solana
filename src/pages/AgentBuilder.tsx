@@ -7,10 +7,12 @@ import ServerSelectorComponent from '@/components/AgentBuilder/ServerSelectorCom
 import { AgentCreationData, createAgent, AppCategory, fetchAppCategories } from '@/lib/appStoreService';
 import { motion } from 'framer-motion';
 import { useAppWindow } from '@/contexts/AppWindowContext';
+import { useRefreshAgent } from '@/pages/IOSDesktop';
 
 export function AgentBuilder() {
     const { isDarkMode } = useTheme();
     const { closeApp, getAppByPath } = useAppWindow();
+    const { refreshUserAgents } = useRefreshAgent();
 
     // Form state
     const [name, setName] = useState('');
@@ -36,7 +38,9 @@ export function AgentBuilder() {
             try {
                 setLoadingCategories(true);
                 const data = await fetchAppCategories();
-                setCategories(data);
+                // Filter out the 'all' category
+                const filteredCategories = data.filter(category => category.id !== 'all');
+                setCategories(filteredCategories);
             } catch (error) {
                 console.error('Failed to load categories:', error);
                 setError('Failed to load categories. Please try again.');
@@ -48,11 +52,26 @@ export function AgentBuilder() {
         loadCategories();
     }, []);
 
+    // Validate name whenever it changes
+    useEffect(() => {
+        if (name.trim() && name.trim().length > 15) {
+            setErrors(prev => ({ ...prev, name: 'Agent name cannot exceed 15 characters' }));
+        } else if (name.trim()) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors.name;
+                return newErrors;
+            });
+        }
+    }, [name]);
+
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
 
         if (!name.trim()) {
             newErrors.name = 'Agent name is required';
+        } else if (name.trim().length > 15) {
+            newErrors.name = 'Agent name cannot exceed 15 characters';
         }
 
         if (!category) {
@@ -90,13 +109,17 @@ export function AgentBuilder() {
 
             if (result.success) {
                 setSuccess(true);
+
+                // Refresh the agent list on the desktop
+                await refreshUserAgents();
+
                 // Close the current window after a brief delay to show success message
                 setTimeout(() => {
                     const currentWindow = getAppByPath('/agent-builder');
                     if (currentWindow) {
                         closeApp(currentWindow.id);
                     }
-                }, 2000);
+                }, 1500);
             } else {
                 setError(result.message || 'Failed to create agent');
             }

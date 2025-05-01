@@ -16,6 +16,17 @@ import { v4 as uuidv4 } from 'uuid';
 import { Wallet, Search, Settings, Store, Puzzle } from 'lucide-react';
 import { ChatComponent } from '@/components/ios/AppComponents';
 
+// Create a refresh context to handle agent refreshing
+interface RefreshAgentContextType {
+    refreshUserAgents: () => Promise<void>;
+}
+
+export const RefreshAgentContext = React.createContext<RefreshAgentContextType>({
+    refreshUserAgents: async () => { }
+});
+
+export const useRefreshAgent = () => React.useContext(RefreshAgentContext);
+
 // Context menu component
 interface ContextMenuProps {
     appTitle: string;
@@ -244,6 +255,21 @@ export function IOSDesktop() {
     const [showRenameDialog, setShowRenameDialog] = useState(false);
     const [showDockLabels, setShowDockLabels] = useState(false);
     const desktopRef = useRef<HTMLDivElement>(null);
+    const [userAgents, setUserAgents] = useState<UserAgent[]>([]);
+    const [isLoadingAgents, setIsLoadingAgents] = useState(false);
+
+    // Add refreshUserAgents function
+    const refreshUserAgents = async () => {
+        setIsLoadingAgents(true);
+        try {
+            const agents = await fetchUserAgents();
+            setUserAgents(agents);
+        } catch (error) {
+            console.error('Failed to refresh user agents:', error);
+        } finally {
+            setIsLoadingAgents(false);
+        }
+    };
 
     // Get the initializeApps function from the context
     const { initializeApps } = useAppInstall();
@@ -255,24 +281,29 @@ export function IOSDesktop() {
     }, [initializeApps]);
 
     return (
-        <IOSDesktopContent
-            isDarkMode={isDarkMode}
-            toggleTheme={toggleTheme}
-            showContextMenu={showContextMenu}
-            setShowContextMenu={setShowContextMenu}
-            contextMenuPosition={contextMenuPosition}
-            setContextMenuPosition={setContextMenuPosition}
-            selectedAppId={selectedAppId}
-            setSelectedAppId={setSelectedAppId}
-            isJiggling={isJiggling}
-            setIsJiggling={setIsJiggling}
-            showRenameDialog={showRenameDialog}
-            setShowRenameDialog={setShowRenameDialog}
-            showDockLabels={showDockLabels}
-            setShowDockLabels={setShowDockLabels}
-            desktopRef={desktopRef}
-            navigate={navigate}
-        />
+        <RefreshAgentContext.Provider value={{ refreshUserAgents }}>
+            <IOSDesktopContent
+                isDarkMode={isDarkMode}
+                toggleTheme={toggleTheme}
+                showContextMenu={showContextMenu}
+                setShowContextMenu={setShowContextMenu}
+                contextMenuPosition={contextMenuPosition}
+                setContextMenuPosition={setContextMenuPosition}
+                selectedAppId={selectedAppId}
+                setSelectedAppId={setSelectedAppId}
+                isJiggling={isJiggling}
+                setIsJiggling={setIsJiggling}
+                showRenameDialog={showRenameDialog}
+                setShowRenameDialog={setShowRenameDialog}
+                showDockLabels={showDockLabels}
+                setShowDockLabels={setShowDockLabels}
+                desktopRef={desktopRef}
+                navigate={navigate}
+                userAgents={userAgents}
+                isLoadingAgents={isLoadingAgents}
+                refreshUserAgents={refreshUserAgents}
+            />
+        </RefreshAgentContext.Provider>
     );
 }
 
@@ -293,7 +324,10 @@ const IOSDesktopContent = ({
     showDockLabels,
     setShowDockLabels,
     desktopRef,
-    navigate
+    navigate,
+    userAgents,
+    isLoadingAgents,
+    refreshUserAgents
 }: {
     isDarkMode: boolean;
     toggleTheme: () => void;
@@ -311,13 +345,14 @@ const IOSDesktopContent = ({
     setShowDockLabels: (show: boolean) => void;
     desktopRef: React.RefObject<HTMLDivElement>;
     navigate: (path: string) => void;
+    userAgents: UserAgent[];
+    isLoadingAgents: boolean;
+    refreshUserAgents: () => Promise<void>;
 }) => {
     const { openApp } = useAppWindow();
     const { installedApps: contextInstalledApps, uninstallAppAndRefresh, initialized, isLoading } = useAppInstall();
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [appToUninstall, setAppToUninstall] = useState<AppDefinition | null>(null);
-    const [userAgents, setUserAgents] = useState<UserAgent[]>([]);
-    const [isLoadingAgents, setIsLoadingAgents] = useState(false);
 
     // Combined state for all desktop apps (default + installed)
     // Initialized with default apps using registry key as ID
@@ -330,77 +365,62 @@ const IOSDesktopContent = ({
 
     // Fetch user agents
     useEffect(() => {
-        const fetchAgents = async () => {
-            setIsLoadingAgents(true);
-            try {
-                const agents = await fetchUserAgents();
-                setUserAgents(agents);
-
-                // Convert user agents to app definitions
-                const agentAppDefinitions: AppDefinition[] = agents.map((agent): AppDefinition => ({
-                    id: `${agent.id}`, // Prefix with 'agent-' to avoid ID conflicts
-                    title: agent.name,
-                    appType: AppType.Agent,
-                    icon: agent.logo ? (
-                        <div className="w-full h-full rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                            <img
-                                src={agent.logo}
-                                alt={agent.name}
-                                className="w-full h-full object-cover rounded-xl"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                }}
-                            />
-                            <div className={cn("text-2xl text-white font-bold hidden")}>
-                                {agent.name.substring(0, 1)}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl">
-                            <Puzzle className="w-1/2 h-1/2 text-white" />
-                        </div>
-                    ),
-                    path: `/agent/${agent.id}`,
-                    component: (
-                        <Suspense fallback={<LoadingPlaceholder />}>
-                            {React.createElement(ChatComponent({ appId: agent.id, appType: AppType.Agent }))}
-                        </Suspense>
-                    ),
-                    defaultSize,
-                    description: agent.description || `Custom agent: ${agent.name}`,
-                    group: 'userAgents',
-                    suggestedQuestions: {
-                        welcomeDescription: agent.description || `Custom agent: ${agent.name}`,
-                        modules: agent.suggested_questions?.map(question => ({
-                            title: '',
-                            content: question,
-                        }))
-                    }
-                }));
-
-                // Update apps state with user agent apps
-                setApps(prevApps => {
-                    const apps = [...prevApps];
-                    agentAppDefinitions.forEach(app => {
-                        const index = apps.findIndex(a => a.id === app.id);
-                        if (index === -1) {
-                            apps.push(app);
-                        }
-                    });
-                    return apps;
-                });
-
-            } catch (error) {
-                console.error('Failed to fetch user agents:', error);
-            } finally {
-                setIsLoadingAgents(false);
-            }
-        };
-
-        // Fetch agents when component mounts
-        fetchAgents();
+        refreshUserAgents();
     }, []);
+
+    // Effect to update apps from user agents
+    useEffect(() => {
+        // Convert user agents to app definitions
+        const agentAppDefinitions: AppDefinition[] = userAgents.map((agent): AppDefinition => ({
+            id: `${agent.id}`, // Prefix with 'agent-' to avoid ID conflicts
+            title: agent.name,
+            appType: AppType.Agent,
+            icon: agent.logo ? (
+                <div className="w-full h-full rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                    <img
+                        src={agent.logo}
+                        alt={agent.name}
+                        className="w-full h-full object-cover rounded-xl"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                        }}
+                    />
+                    <div className={cn("text-2xl text-white font-bold hidden")}>
+                        {agent.name.substring(0, 1)}
+                    </div>
+                </div>
+            ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl">
+                    <Puzzle className="w-1/2 h-1/2 text-white" />
+                </div>
+            ),
+            path: `/agent/${agent.id}`,
+            component: (
+                <Suspense fallback={<LoadingPlaceholder />}>
+                    {React.createElement(ChatComponent({ appId: agent.id, appType: AppType.Agent }))}
+                </Suspense>
+            ),
+            defaultSize,
+            description: agent.description || `Custom agent: ${agent.name}`,
+            group: 'userAgents',
+            suggestedQuestions: {
+                welcomeDescription: agent.description || `Custom agent: ${agent.name}`,
+                modules: agent.suggested_questions?.map(question => ({
+                    title: '',
+                    content: question,
+                }))
+            }
+        }));
+
+        // Update apps state with user agent apps
+        setApps(prevApps => {
+            // First, remove all existing user agents
+            const filteredApps = prevApps.filter(app => app.group !== 'userAgents');
+            // Then add the current ones
+            return [...filteredApps, ...agentAppDefinitions];
+        });
+    }, [userAgents]);
 
     // Effect to merge installed apps into the main 'apps' state
     useEffect(() => {
@@ -718,10 +738,10 @@ const IOSDesktopContent = ({
 
             {/* Application icon grid */}
             <div
-                className="pt-14 mx-auto container"
+                className="pt-14 mx-auto"
                 onContextMenu={handleDesktopContextMenu}
             >
-                <div className="px-4 sm:px-8 md:px-12 lg:px-16 max-w-[1600px] mx-auto space-y-10">
+                <div className="px-4 sm:px-8 md:px-20 lg:px-24 max-w-[1600px] mx-auto space-y-10">
                     {/* adaptive width group layout */}
                     <div className="flex flex-wrap gap-6">
                         {Object.values(appGroups).map((group) => {

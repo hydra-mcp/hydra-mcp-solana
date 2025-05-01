@@ -95,6 +95,14 @@ export interface AppGroup {
 
 // app group configuration
 export const appGroups: Record<string, AppGroup> = {
+    agent: {
+        id: 'agent',
+        title: 'Agent Builder',
+        icon: <Puzzle className="w-4 h-4 text-white" />,
+        color: 'bg-blue-600',
+        secondaryColor: 'bg-blue-500',
+        adaptiveWidth: true,
+    },
     walletTools: {
         id: 'walletTools',
         title: 'HYDRAAI Analysis',
@@ -373,7 +381,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         defaultSize,
         description: 'Build your own agent with the help of AI',
         status: 'online',
-        group: 'searchApps',
+        group: 'agent',
         suggestedQuestions: {
             welcomeDescription: 'Build your own agent with the help of AI',
             modules: [
