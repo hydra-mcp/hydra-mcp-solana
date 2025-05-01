@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Ban } from 'lucide-react';
+import { Ban, Flame } from 'lucide-react';
 
 interface IOSIconProps {
     name: string;
@@ -10,6 +10,7 @@ interface IOSIconProps {
     onContextMenu?: (e: React.MouseEvent) => void;
     isJiggling?: boolean;
     isDisabled?: boolean;
+    isHot?: boolean;
     className?: string;
 }
 
@@ -20,6 +21,7 @@ export function IOSIcon({
     onContextMenu,
     isJiggling = false,
     isDisabled,
+    isHot = false,
     className
 }: IOSIconProps) {
     const [isPressed, setIsPressed] = useState(false);
@@ -102,7 +104,7 @@ export function IOSIcon({
         >
             <motion.div
                 className={cn(
-                    "relative w-20 h-20 rounded-2xl shadow-md overflow-hidden flex items-center justify-center",
+                    "relative w-20 h-20 rounded-2xl shadow-md flex items-center justify-center",
                     isPressed ? "shadow-sm" : "shadow-lg"
                 )}
                 animate={{
@@ -127,7 +129,7 @@ export function IOSIcon({
                         repeat: isJiggling ? Infinity : 0,
                         repeatType: "mirror"
                     }}
-                    className="w-full h-full flex items-center justify-center bg-gradient-to-br rounded-2xl"
+                    className="w-full h-full flex items-center justify-center bg-gradient-to-br rounded-2xl overflow-hidden"
                 >
                     {icon}
                     {isDisabled && (
@@ -139,6 +141,36 @@ export function IOSIcon({
                         </>
                     )}
                 </motion.div>
+
+                {/* Hot indicator */}
+                {isHot && (
+                    <AnimatePresence>
+                        <motion.div
+                            className="absolute -top-3 -left-3 z-20"
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{
+                                scale: [0.95, 1.05, 0.95],
+                                opacity: 1,
+                                rotate: [0, 5, -5, 0]
+                            }}
+                            transition={{
+                                scale: {
+                                    repeat: Infinity,
+                                    duration: 1.5
+                                },
+                                rotate: {
+                                    repeat: Infinity,
+                                    duration: 2,
+                                    ease: "easeInOut"
+                                }
+                            }}
+                        >
+                            <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-full p-1.5 shadow-lg border border-orange-300">
+                                <Flame className="w-4 h-4 text-white drop-shadow-md" />
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>
+                )}
             </motion.div>
 
             <motion.div
@@ -152,9 +184,14 @@ export function IOSIcon({
                 }}
             >
                 <span
-                    className="text-xs font-medium text-white text-center overflow-visible whitespace-nowrap"
+                    className={cn(
+                        "text-xs font-medium text-white text-center overflow-visible whitespace-nowrap",
+                        isHot && "text-orange-300 font-semibold"
+                    )}
                     style={{
-                        textShadow: "0px 1px 2px rgba(0,0,0,0.8)",
+                        textShadow: isHot
+                            ? "0px 1px 1px rgba(255,100,0,0.6), 0px 1px 3px rgba(0,0,0,0.9)"
+                            : "0px 1px 2px rgba(0,0,0,0.8)",
                         transform: "scale(var(--scale, 1))",
                         transformOrigin: "center",
                         wordBreak: "keep-all",
@@ -164,6 +201,18 @@ export function IOSIcon({
                     }}
                 >
                     {name}
+                    {isHot && (
+                        <motion.span
+                            className="ml-1 text-yellow-300"
+                            animate={{ opacity: [1, 0.5, 1] }}
+                            transition={{
+                                duration: 1.3,
+                                repeat: Infinity
+                            }}
+                        >
+                            🔥
+                        </motion.span>
+                    )}
                 </span>
             </motion.div>
 

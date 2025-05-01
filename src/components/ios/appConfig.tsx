@@ -77,6 +77,7 @@ export interface AppDefinition {
     };
     isDisabled?: boolean;
     group?: string;
+    isHot?: boolean;
 }
 
 export const defaultSize = { width: '80%', height: '85%' }
@@ -97,7 +98,7 @@ export interface AppGroup {
 export const appGroups: Record<string, AppGroup> = {
     agent: {
         id: 'agent',
-        title: 'Agent Builder',
+        title: 'Agent',
         icon: <Puzzle className="w-4 h-4 text-white" />,
         color: 'bg-blue-600',
         secondaryColor: 'bg-blue-500',
@@ -382,6 +383,7 @@ export const appRegistry: Record<string, AppDefinition> = {
         description: 'Build your own agent with the help of AI',
         status: 'online',
         group: 'agent',
+        isHot: true,
         suggestedQuestions: {
             welcomeDescription: 'Build your own agent with the help of AI',
             modules: [

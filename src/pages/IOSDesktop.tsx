@@ -836,6 +836,7 @@ const IOSDesktopContent = ({
                                                 isJiggling={isJiggling}
                                                 isDisabled={app.isDisabled}
                                                 className="transition-all duration-300 group-hover:translate-y-[-2px]"
+                                                isHot={app.isHot}
                                             />
                                         ))}
                                     </div>
@@ -893,6 +894,7 @@ const IOSDesktopContent = ({
                                             isJiggling={isJiggling}
                                             isDisabled={app.isDisabled}
                                             className="transition-all duration-300 group-hover:translate-y-[-2px]"
+                                            isHot={app.isHot}
                                         />
                                     ))}
                             </div>
