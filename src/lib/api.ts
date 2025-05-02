@@ -70,7 +70,7 @@ export async function apiRequest<T>(
     });
 
     // Handle 401 error - token expired
-    if (response.status === 401) {
+    if (response.status === 401 || response.status === 403) {
       // Need to get the detail from the body
       const errorBody = await response.json().catch(() => ({}));
       const errorMessage = errorBody.detail ||
@@ -229,124 +229,6 @@ export async function mockStreamResponse(message: string, onChunk: (chunk: strin
       },
     ],
   };
-}
-
-// Chat stream message request
-export async function sendChatMessage(message: string, appType: AppType, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
-  return sendStreamMessage(`/chat/completions`, appType, message, chatHistory, onChunk);
-}
-
-// Stream message request implemented using SSE.ts
-export async function sendStreamMessage(
-  url: string,
-  appType: AppType,
-  message: string,
-  chatHistory: Message[],
-  onChunk: (chunk: string) => void
-): Promise<OpenAIResponse> {
-  // Get API URL using environment variable or configuration
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-
-  // If not authenticated, use mock data
-  if (!isAuthenticated()) {
-    return mockStreamResponse(message, onChunk);
-  }
-
-  try {
-    // Convert chat history to OpenAI format
-    const messages = chatHistory.map(msg => ({
-      role: msg.sender === 'user' ? 'user' : 'assistant',
-      content: msg.content
-    }));
-
-    // Use the new SSE client to send the request
-    const result = await sendChatStream(
-      url,
-      appType,
-      messages,
-      // Process data blocks, convert to string and pass to the original onChunk callback
-      (chunk: ChunkType) => {
-        onChunk(JSON.stringify(chunk));
-      }
-    );
-
-    // Return compatible response format
-    return {
-      id: result?.id || Date.now().toString(),
-      choices: [
-        {
-          message: {
-            content: "Stream complete",
-          },
-        },
-      ],
-    };
-  } catch (error) {
-    console.error("Error initializing streaming chat:", error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-
-    onChunk(JSON.stringify({
-      type: 'error',
-      error: {
-        message: errorMessage,
-        type: 'client_error'
-      }
-    }));
-
-    throw error;
-  }
-}
-
-export async function sendMessage(url: string, message: string, chatHistory: Message[], onChunk: (chunk: string) => void): Promise<OpenAIResponse> {
-  try {
-    // Build full URL
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    const fullUrl = `${baseUrl}${url}`;
-
-    // Get access token
-    const token = getAccessToken();
-
-    // Build request headers
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    // Build message body, only include current message
-    const payload = {
-      messages: chatHistory.map(msg => ({ role: msg.sender === 'user' ? 'user' : 'assistant', content: msg.content })),
-      stream: false
-    };
-
-    // Send request
-    const response = await fetch(fullUrl, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload)
-    });
-
-    // Handle error response
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.message || errorData.error || `Request failed, status code: ${response.status}`;
-
-      // Trigger global API error event
-      triggerApiError(errorMessage, response.status, fullUrl);
-
-      throw new Error(errorMessage);
-    }
-
-    // Parse and return response
-    const data = await response.json();
-    onChunk && onChunk(data.choices[0].message.content);
-    return data as OpenAIResponse;
-  } catch (error) {
-    console.error("Send message error:", error);
-    throw error;
-  }
 }
 
 // Chat history management functions

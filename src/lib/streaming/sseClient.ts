@@ -131,7 +131,7 @@ export async function sendSSERequest<T>(
                 console.error('[SSEClient] Error:', errorMessage, errorStatus);
 
                 // Handle 401 error - token expired
-                if (errorStatus === 401) {
+                if (errorStatus === 401 || errorStatus === 403) {
                     console.log('[SSEClient] Attempting to refresh token...');
 
                     // Notify client that token is being refreshed
