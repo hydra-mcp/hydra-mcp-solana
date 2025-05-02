@@ -357,8 +357,6 @@ export function ChatInterface({
         [handleScroll]
     );
 
-    console.log("config", config);
-
     return (
         <div
             onClick={handleWindowClick}

@@ -6,7 +6,7 @@ export function HydraResearch() {
     return (
         <ChatPage
             apiEndpoint="/chat/completions"
-            appId="perplexity-ask"
+            appId="hydraResearch"
             appType={AppType.System}
         />
     );

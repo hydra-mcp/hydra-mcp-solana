@@ -37,6 +37,7 @@ export function ChatProvider({
 
     const { toast } = useToast();
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    debugger
 
     // Initial system message
     const initialSystemMessage = appDefinition?.description;
