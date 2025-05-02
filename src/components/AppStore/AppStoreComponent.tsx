@@ -268,7 +268,7 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                                     whileHover={{ scale: 1.03 }}
                                                     whileTap={{ scale: 0.97 }}
                                                     className={cn(
-                                                        "px-3 py-1.5 rounded-md text-sm font-medium",
+                                                        "px-3 py-1.5 rounded-full text-sm font-medium",
                                                         isDarkMode ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"
                                                     )}
                                                     onClick={(e) => {
@@ -281,7 +281,7 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                                 <motion.button
                                                     whileHover={{ scale: 1.03 }}
                                                     whileTap={{ scale: 0.97 }}
-                                                    className="px-3 py-1.5 rounded-md bg-red-500 hover:bg-red-600 text-white text-sm font-medium shadow-sm hover:shadow-md"
+                                                    className="px-3 py-1.5 rounded-full bg-red-500 hover:bg-red-600 text-white text-sm font-medium shadow-sm hover:shadow-md"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleUninstall(app.id);
@@ -319,8 +319,8 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                                 <div className={cn(
                                                     "ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
                                                     app.audit_status === 'pending'
-                                                        ? isDarkMode ? "bg-yellow-900/30 text-yellow-400" : "bg-yellow-100 text-yellow-800"
-                                                        : isDarkMode ? "bg-red-900/30 text-red-400" : "bg-red-100 text-red-800"
+                                                        ? isDarkMode ? "bg-yellow-900/30 text-yellow-400 border border-yellow-800/30" : "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                                                        : isDarkMode ? "bg-red-900/30 text-red-400 border border-red-800/30" : "bg-red-100 text-red-800 border border-red-200"
                                                 )}>
                                                     {app.audit_status === 'pending' ? (
                                                         <>
@@ -338,7 +338,7 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                             {app.audit_status === 'approved' && (
                                                 <div className={cn(
                                                     "ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-                                                    isDarkMode ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-800"
+                                                    isDarkMode ? "bg-green-900/30 text-green-400 border border-green-800/30" : "bg-green-100 text-green-800 border border-green-200"
                                                 )}>
                                                     <Shield className="w-3 h-3 mr-1" />
                                                     Approved
@@ -351,29 +351,103 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                                     <motion.div
                                                         initial={{ opacity: 0 }}
                                                         animate={{ opacity: 1 }}
-                                                        className="bg-red-100 dark:bg-red-900/30 rounded-lg px-3 py-1.5 flex items-center"
+                                                        className="relative w-10 h-10"
                                                     >
-                                                        <span className="text-xs font-medium text-red-600 dark:text-red-400 flex items-center">
-                                                            <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
-                                                            Uninstalling
-                                                        </span>
+                                                        <svg className="w-10 h-10" viewBox="0 0 36 36">
+                                                            <circle
+                                                                cx="18"
+                                                                cy="18"
+                                                                r="16"
+                                                                fill="none"
+                                                                className={cn(
+                                                                    "stroke-current stroke-[2.5]",
+                                                                    isDarkMode ? "text-gray-700" : "text-gray-200"
+                                                                )}
+                                                            />
+                                                            <motion.circle
+                                                                cx="18"
+                                                                cy="18"
+                                                                r="16"
+                                                                fill="none"
+                                                                className="stroke-red-500 stroke-[2.5]"
+                                                                strokeLinecap="round"
+                                                                strokeDasharray="100"
+                                                                initial={{ strokeDashoffset: 100 }}
+                                                                animate={{ strokeDashoffset: 0 }}
+                                                                transition={{
+                                                                    duration: 1.5,
+                                                                    ease: "easeInOut",
+                                                                    repeat: Infinity,
+                                                                }}
+                                                                style={{
+                                                                    transformOrigin: 'center',
+                                                                    transform: 'rotate(-90deg)'
+                                                                }}
+                                                            />
+                                                        </svg>
+                                                        <motion.div
+                                                            className="absolute inset-0 flex items-center justify-center"
+                                                            initial={{ opacity: 0, scale: 0.8 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{ duration: 0.2 }}
+                                                        >
+                                                            <div className={cn(
+                                                                "w-6 h-6 flex items-center justify-center rounded-full",
+                                                                isDarkMode ? "bg-gray-700 text-gray-300" : "bg-gray-200 text-gray-600"
+                                                            )}>
+                                                                <span className="text-xs">...</span>
+                                                            </div>
+                                                        </motion.div>
                                                     </motion.div>
                                                 </div>
                                             ) : installingApps.includes(app.id) ? (
                                                 <div className="flex items-center gap-1">
-                                                    <div className="relative w-20 h-8">
+                                                    <div className="relative w-10 h-10">
+                                                        <svg className="w-10 h-10" viewBox="0 0 36 36">
+                                                            <circle
+                                                                cx="18"
+                                                                cy="18"
+                                                                r="16"
+                                                                fill="none"
+                                                                className={cn(
+                                                                    "stroke-current stroke-[2.5]",
+                                                                    isDarkMode ? "text-gray-700" : "text-gray-200"
+                                                                )}
+                                                            />
+                                                            <motion.circle
+                                                                cx="18"
+                                                                cy="18"
+                                                                r="16"
+                                                                fill="none"
+                                                                className="stroke-blue-500 stroke-[2.5]"
+                                                                strokeLinecap="round"
+                                                                strokeDasharray="100"
+                                                                initial={{ strokeDashoffset: 100 }}
+                                                                animate={{ strokeDashoffset: 0 }}
+                                                                transition={{
+                                                                    duration: 1.5,
+                                                                    ease: "easeInOut",
+                                                                    repeat: Infinity,
+                                                                }}
+                                                                style={{
+                                                                    transformOrigin: 'center',
+                                                                    transform: 'rotate(-90deg)'
+                                                                }}
+                                                            />
+                                                        </svg>
                                                         <motion.div
-                                                            initial={{ width: '5%' }}
-                                                            animate={{ width: '100%' }}
-                                                            transition={{ duration: 1.2, ease: "easeInOut" }}
-                                                            className="absolute inset-0 bg-blue-500 rounded-lg"
-                                                        />
-                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                            <span className="text-xs font-medium text-white flex items-center">
-                                                                <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                                                                Installing
-                                                            </span>
-                                                        </div>
+                                                            className="absolute inset-0 flex items-center justify-center"
+                                                            initial={{ opacity: 0, scale: 0.8 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{ duration: 0.2 }}
+                                                        >
+                                                            <div className={cn(
+                                                                "w-6 h-6 flex items-center justify-center rounded-full",
+                                                                isDarkMode ? "bg-gray-700 text-gray-300" : "bg-gray-200 text-gray-600"
+                                                            )}>
+                                                                <span className="text-xs">...</span>
+                                                            </div>
+                                                        </motion.div>
                                                     </div>
                                                 </div>
                                             ) : installedApps.includes(app.id) ? (
@@ -382,10 +456,19 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                                         initial={{ scale: 0.8, opacity: 0 }}
                                                         animate={{ scale: 1, opacity: 1 }}
                                                         transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                                                        className="flex items-center justify-center h-7 px-2 rounded-md bg-green-100 dark:bg-green-900/30"
+                                                        className="flex items-center"
                                                     >
-                                                        <Check className="w-4 h-4 text-green-500 dark:text-green-400 mr-1" />
-                                                        <span className="text-xs font-medium text-green-700 dark:text-green-400">Installed</span>
+                                                        <button
+                                                            className={cn(
+                                                                "px-4 py-1.5 rounded-full text-sm font-medium",
+                                                                isDarkMode
+                                                                    ? "bg-gray-700 text-gray-300"
+                                                                    : "bg-gray-200 text-gray-700"
+                                                            )}
+                                                            disabled
+                                                        >
+                                                            Installed
+                                                        </button>
                                                     </motion.div>
                                                     <motion.button
                                                         whileHover={{ scale: 1.05 }}
@@ -423,7 +506,7 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                                 // Replace disabled button with status display for non-approved apps
                                                 app.audit_status && app.audit_status !== 'approved' ? (
                                                     <div className={cn(
-                                                        "px-4 py-1.5 text-sm rounded-lg font-medium flex items-center justify-center gap-2",
+                                                        "px-4 py-1.5 text-sm rounded-full font-medium flex items-center justify-center gap-2",
                                                         app.audit_status === 'pending'
                                                             ? isDarkMode
                                                                 ? "bg-yellow-900/30 text-yellow-400"
@@ -454,14 +537,13 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                                             handleInstall(app.id);
                                                         }}
                                                         className={cn(
-                                                            "px-4 py-1.5 text-sm rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm",
+                                                            "px-4 py-1.5 text-sm rounded-full font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm",
                                                             isDarkMode
                                                                 ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md"
                                                                 : "bg-blue-500 text-white hover:bg-blue-600 hover:shadow-md"
                                                         )}
                                                     >
-                                                        <Download className="w-4 h-4" />
-                                                        Install
+                                                        <span>Get</span>
                                                     </motion.button>
                                                 )
                                             )}
