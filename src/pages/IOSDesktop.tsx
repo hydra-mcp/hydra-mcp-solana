@@ -516,7 +516,7 @@ const IOSDesktopContent = ({
                     name: iosApp.title,
                     description: iosApp.description || '',
                     category: iosApp.category || '',
-                    icon: iosApp.icon,
+                    icon: typeof iosApp.icon === 'string' ? iosApp.icon : null,
                     rating: null,
                     downloads: null,
                     installed: true,
