@@ -78,7 +78,8 @@ export function registerAppIfNeeded(app: AppItem): string {
             defaultSize: { width: '80%', height: '85%' },
             description: app.description,
             group: 'installed',
-            isDisabled: app.is_disabled
+            isDisabled: app.is_disabled,
+            suggestedQuestions: app.suggested_questions
         };
     }
 

@@ -371,6 +371,7 @@ const IOSDesktopContent = ({
 
     // Effect to update apps from user agents
     useEffect(() => {
+        console.log("userAgents", userAgents);
         // Convert user agents to app definitions
         const agentAppDefinitions: AppDefinition[] = userAgents.map((agent): AppDefinition => ({
             id: `${agent.id}`, // Prefix with 'agent-' to avoid ID conflicts
@@ -514,13 +515,14 @@ const IOSDesktopContent = ({
                     id: iosApp.id,
                     name: iosApp.title,
                     description: iosApp.description || '',
-                    category: '',
-                    icon: null, // Will use fallback
+                    category: iosApp.category || '',
+                    icon: iosApp.icon,
                     rating: null,
                     downloads: null,
                     installed: true,
                     is_disabled: iosApp.isDisabled,
-                    appType: iosApp.appType
+                    appType: iosApp.appType,
+                    suggested_questions: iosApp.suggestedQuestions
                 };
 
                 // Register app using our shared utility

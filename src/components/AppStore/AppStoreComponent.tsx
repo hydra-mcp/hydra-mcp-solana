@@ -340,8 +340,13 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                                     "ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
                                                     isDarkMode ? "bg-green-900/30 text-green-400 border border-green-800/30" : "bg-green-100 text-green-800 border border-green-200"
                                                 )}>
-                                                    <Shield className="w-3 h-3 mr-1" />
-                                                    Approved
+                                                    <div className="relative mr-1">
+                                                        <Shield className="w-3.5 h-3.5" />
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <Check className="w-2.5 h-2.5 text-green-400 stroke-[3]" />
+                                                        </div>
+                                                    </div>
+                                                    Reviewed
                                                 </div>
                                             )}
                                         </div>

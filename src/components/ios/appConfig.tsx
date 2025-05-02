@@ -55,7 +55,7 @@ export interface AppDefinition {
     id: string;
     path: string;
     title: string;
-    icon: ReactNode;
+    icon: string | ReactNode;
     component: ReactNode;
     appType: AppType;
     defaultSize: {
@@ -64,6 +64,7 @@ export interface AppDefinition {
     };
     defaultPosition?: { x: number; y: number };
     description?: string;
+    category?: string;
     status?: 'online' | 'coming_soon';
     onIconClick?: () => void;
     suggestedQuestions?: {

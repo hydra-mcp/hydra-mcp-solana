@@ -11,6 +11,13 @@ export interface AppItem {
     appType: AppType;
     name: string;
     description: string;
+    suggested_questions?: {
+        welcomeDescription?: string;
+        modules?: {
+            title: string;
+            content: string;
+        }[];
+    };
     category: string;
     icon: string | null;
     rating: number | null;
