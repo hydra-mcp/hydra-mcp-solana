@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {
-    Download, Loader2, Check, Package, Trash2, Star, ExternalLink
+    Download, Loader2, Check, Package, Trash2, Star, ExternalLink,
+    AlertCircle, Clock, Shield, MessageSquare
 } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
@@ -11,6 +12,10 @@ import {
     AppItem,
 } from '@/lib/appStoreService';
 import { useAppInstall } from '@/contexts/AppInstallContext';
+import { useAppWindow } from '@/contexts/AppWindowContext';
+import { createAppWindow } from '@/components/ios/AppRegistry';
+import { AppType } from '@/components/ios/appConfig';
+import { registerAppIfNeeded } from '@/lib/appRegistryUtils';
 import { motion } from 'framer-motion';
 
 interface AppStoreComponentProps {
@@ -31,6 +36,7 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
         uninstallAppAndRefresh,
         isLoading: contextLoading
     } = useAppInstall();
+    const { openApp, closeApp, activeWindowId } = useAppWindow();
     const [apps, setApps] = useState<AppItem[]>([]);
     const [categories, setCategories] = useState<AppCategory[]>([]);
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -88,6 +94,15 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
 
     // Handle app installation
     const handleInstall = async (appId: string) => {
+        // Find the app to check its audit status
+        const appToInstall = apps.find(app => app.id === appId);
+
+        // Prevent installation if app is not approved
+        if (appToInstall?.audit_status && appToInstall.audit_status !== 'approved') {
+            setError(`This app cannot be installed because it is ${appToInstall.audit_status === 'pending' ? 'pending approval' : 'rejected'}.`);
+            return;
+        }
+
         setInstallingApps(prev => [...prev, appId]);
 
         try {
@@ -132,6 +147,31 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
             setError('Failed to uninstall app. Please try again.');
         } finally {
             setUninstallingApps(prev => prev.filter(id => id !== appId));
+        }
+    };
+
+    // Open chat window with app
+    const handleOpenAppChat = (e: React.MouseEvent, appId: string) => {
+        e.stopPropagation();
+
+        // Find the app from our list of apps
+        const app = apps.find(app => app.id === appId);
+        if (!app) return;
+
+        // Register the app in appRegistry if needed
+        registerAppIfNeeded(app);
+
+        // Create app window and open it
+        const appWindow = createAppWindow(appId);
+        if (appWindow) {
+            openApp(appWindow);
+
+            // Close the current App Store window if it's active
+            if (activeWindowId) {
+                closeApp(activeWindowId);
+            }
+        } else {
+            console.error(`Could not create window for app: ${appId}`);
         }
     };
 
@@ -273,7 +313,38 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex justify-between items-start">
-                                        <h3 className="font-medium">{app.name}</h3>
+                                        <div className="flex items-center">
+                                            <h3 className="font-medium">{app.name}</h3>
+                                            {app.audit_status && app.audit_status !== 'approved' && (
+                                                <div className={cn(
+                                                    "ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                                                    app.audit_status === 'pending'
+                                                        ? isDarkMode ? "bg-yellow-900/30 text-yellow-400" : "bg-yellow-100 text-yellow-800"
+                                                        : isDarkMode ? "bg-red-900/30 text-red-400" : "bg-red-100 text-red-800"
+                                                )}>
+                                                    {app.audit_status === 'pending' ? (
+                                                        <>
+                                                            <Clock className="w-3 h-3 mr-1" />
+                                                            Pending
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <AlertCircle className="w-3 h-3 mr-1" />
+                                                            Rejected
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {app.audit_status === 'approved' && (
+                                                <div className={cn(
+                                                    "ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                                                    isDarkMode ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-800"
+                                                )}>
+                                                    <Shield className="w-3 h-3 mr-1" />
+                                                    Approved
+                                                </div>
+                                            )}
+                                        </div>
                                         <div onClick={e => e.stopPropagation()}>
                                             {uninstallingApps.includes(app.id) ? (
                                                 <div className="flex items-center gap-1">
@@ -333,25 +404,66 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </motion.button>
+                                                    <motion.button
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                        onClick={(e) => handleOpenAppChat(e, app.id)}
+                                                        className={cn(
+                                                            "p-1.5 rounded-full transition-colors flex items-center justify-center",
+                                                            isDarkMode
+                                                                ? "hover:bg-blue-700 text-blue-400 hover:text-blue-300"
+                                                                : "hover:bg-blue-100 text-blue-600 hover:text-blue-700"
+                                                        )}
+                                                        title="Open Chat"
+                                                    >
+                                                        <MessageSquare className="w-4 h-4" />
+                                                    </motion.button>
                                                 </div>
                                             ) : (
-                                                <motion.button
-                                                    whileHover={{ scale: 1.03 }}
-                                                    whileTap={{ scale: 0.97 }}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleInstall(app.id);
-                                                    }}
-                                                    className={cn(
-                                                        "px-4 py-1.5 text-sm rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm",
-                                                        isDarkMode
-                                                            ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md"
-                                                            : "bg-blue-500 text-white hover:bg-blue-600 hover:shadow-md"
-                                                    )}
-                                                >
-                                                    <Download className="w-4 h-4" />
-                                                    Install
-                                                </motion.button>
+                                                // Replace disabled button with status display for non-approved apps
+                                                app.audit_status && app.audit_status !== 'approved' ? (
+                                                    <div className={cn(
+                                                        "px-4 py-1.5 text-sm rounded-lg font-medium flex items-center justify-center gap-2",
+                                                        app.audit_status === 'pending'
+                                                            ? isDarkMode
+                                                                ? "bg-yellow-900/30 text-yellow-400"
+                                                                : "bg-yellow-100 text-yellow-800"
+                                                            : isDarkMode
+                                                                ? "bg-red-900/30 text-red-400"
+                                                                : "bg-red-100 text-red-800"
+                                                    )}>
+                                                        {app.audit_status === 'pending' ? (
+                                                            <>
+                                                                <Clock className="w-4 h-4" />
+                                                                Pending Review
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <AlertCircle className="w-4 h-4" />
+                                                                Rejected
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    // Install button for approved apps
+                                                    <motion.button
+                                                        whileHover={{ scale: 1.03 }}
+                                                        whileTap={{ scale: 0.97 }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleInstall(app.id);
+                                                        }}
+                                                        className={cn(
+                                                            "px-4 py-1.5 text-sm rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm",
+                                                            isDarkMode
+                                                                ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md"
+                                                                : "bg-blue-500 text-white hover:bg-blue-600 hover:shadow-md"
+                                                        )}
+                                                    >
+                                                        <Download className="w-4 h-4" />
+                                                        Install
+                                                    </motion.button>
+                                                )
                                             )}
                                         </div>
                                     </div>

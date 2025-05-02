@@ -15,6 +15,7 @@ import { useAppInstall } from '@/contexts/AppInstallContext';
 import { v4 as uuidv4 } from 'uuid';
 import { Wallet, Search, Settings, Store, Puzzle } from 'lucide-react';
 import { ChatComponent } from '@/components/ios/AppComponents';
+import { registerAppIfNeeded } from '@/lib/appRegistryUtils';
 
 // Create a refresh context to handle agent refreshing
 interface RefreshAgentContextType {
@@ -506,10 +507,24 @@ const IOSDesktopContent = ({
         if (iosApp.path.startsWith('/app/') || iosApp.path.startsWith('/agent/')) {
             const appStoreAppId = iosApp.id; // The ID is the App Store ID
 
-            // Ensure the app definition is temporarily in appRegistry if needed by createAppWindow
-            // (Assuming createAppWindow might look up by ID in appRegistry)
+            // Convert AppDefinition to AppItem format if needed for registerAppIfNeeded
+            // This is necessary because our utility expects AppItem format
             if (!appRegistry[appStoreAppId]) {
-                appRegistry[appStoreAppId] = { ...iosApp }; // Add definition
+                const appItem: AppItem = {
+                    id: iosApp.id,
+                    name: iosApp.title,
+                    description: iosApp.description || '',
+                    category: '',
+                    icon: null, // Will use fallback
+                    rating: null,
+                    downloads: null,
+                    installed: true,
+                    is_disabled: iosApp.isDisabled,
+                    appType: iosApp.appType
+                };
+
+                // Register app using our shared utility
+                registerAppIfNeeded(appItem);
             }
 
             const appWindow = createAppWindow(appStoreAppId);

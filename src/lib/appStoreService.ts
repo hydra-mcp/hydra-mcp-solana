@@ -23,6 +23,7 @@ export interface AppItem {
     installed: boolean;
     installDate?: string | null;
     is_disabled?: boolean;
+    audit_status?: 'pending' | 'approved' | 'rejected';
 }
 
 // Updated API response structure
