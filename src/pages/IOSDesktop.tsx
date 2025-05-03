@@ -371,7 +371,6 @@ const IOSDesktopContent = ({
 
     // Effect to update apps from user agents
     useEffect(() => {
-        console.log("userAgents", userAgents);
         // Convert user agents to app definitions
         const agentAppDefinitions: AppDefinition[] = userAgents.map((agent): AppDefinition => ({
             id: `${agent.id}`, // Prefix with 'agent-' to avoid ID conflicts

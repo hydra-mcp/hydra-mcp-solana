@@ -16,9 +16,7 @@ export interface StreamingMessage {
 }
 
 export interface WalletProgressDetail {
-    current: number;
-    total: number;
-    processed: number;
+    percentage: number;
     is_high_value: boolean;
     high_value_count: number;
     wallet: string;

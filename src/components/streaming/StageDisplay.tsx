@@ -27,16 +27,16 @@ interface StageDisplayProps {
 // Type guards for detail types
 const isWalletProgressDetail = (detail: any): detail is WalletProgressDetail => {
     return detail &&
-        'current' in detail &&
-        'total' in detail &&
-        'wallet' in detail;
+        'percentage' in detail &&
+        'wallet' in detail &&
+        'is_high_value' in detail;
 };
 
 const isWalletCompletedDetail = (detail: any): detail is WalletProgressDetail => {
     return detail &&
         'high_value_count' in detail &&
-        'total' in detail &&
-        'processed' in detail;
+        'percentage' in detail &&
+        'completed' in detail;
 };
 
 const isMcpToolCallDetail = (detail: any): detail is MCPToolCallDetail => {
@@ -257,20 +257,27 @@ export const StageDisplay = forwardRef<HTMLDivElement, StageDisplayProps>(
                                                     <div className="flex items-center justify-between mb-1.5">
                                                         <div className="flex items-center gap-1.5 text-xs text-indigo-600">
                                                             <Wallet className="h-3 w-3" />
-                                                            <span className="font-medium">
-                                                                {stageDetail.is_high_value ? (
+                                                            <span className="font-medium relative h-5 min-w-[200px]">
+                                                                <span className={cn(
+                                                                    "absolute transition-opacity duration-100",
+                                                                    stageDetail.is_high_value ? "opacity-100" : "opacity-0"
+                                                                )}>
                                                                     <span className="text-amber-500 flex items-center gap-1">
                                                                         <span>Smart Wallet Detected</span>
                                                                         <span className="animate-pulse">✨</span>
                                                                     </span>
-                                                                ) : (
-                                                                    "Analyzing Wallets"
-                                                                )}
+                                                                </span>
+                                                                <span className={cn(
+                                                                    "absolute transition-opacity duration-100",
+                                                                    stageDetail.is_high_value ? "opacity-0" : "opacity-100"
+                                                                )}>
+                                                                    Analyzing Wallets
+                                                                </span>
                                                             </span>
                                                         </div>
                                                         <div className="text-xs text-slate-500 ml-2">
                                                             <span className="font-medium text-indigo-600">
-                                                                [{stageDetail.current} / {stageDetail.total}]
+                                                                {(stageDetail.percentage * 100).toFixed(2)}%
                                                             </span>
                                                             <span className="ml-2 text-amber-500 font-medium">
                                                                 {stageDetail.high_value_count} smart wallets found
@@ -288,7 +295,7 @@ export const StageDisplay = forwardRef<HTMLDivElement, StageDisplayProps>(
                                                                         : "bg-gradient-to-r from-indigo-400 to-purple-500"
                                                             )}
                                                             style={{
-                                                                width: `${Math.min(100, (stageDetail.current / stageDetail.total) * 100)}%`
+                                                                width: `${stageDetail.percentage * 100}%`
                                                             }}
                                                         >
                                                             <div className="absolute inset-0 overflow-hidden">
@@ -386,10 +393,10 @@ export const StageDisplay = forwardRef<HTMLDivElement, StageDisplayProps>(
                                                             <span className="text-xs text-slate-500 dark:text-slate-400">Smart Wallets Detected</span>
                                                             <span className="text-sm font-medium text-amber-500">{stageDetail.high_value_count}</span>
                                                         </div>
-                                                        <div className="flex flex-col">
+                                                        {/* <div className="flex flex-col">
                                                             <span className="text-xs text-slate-500 dark:text-slate-400">Processed Wallets</span>
-                                                            <span className="text-sm font-medium">{stageDetail.processed}</span>
-                                                        </div>
+                                                            <span className="text-sm font-medium">{stageDetail.percentage * 100}%</span>
+                                                        </div> */}
                                                     </div>
                                                 </div>
                                             )}
