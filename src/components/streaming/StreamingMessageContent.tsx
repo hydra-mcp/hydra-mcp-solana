@@ -49,33 +49,30 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
     const contentRef = useRef<HTMLDivElement>(null);
 
     // Defer the content updates passed to ReactMarkdown
-    // const deferredContent = useDeferredValue(message.content);
     const messageContent = useMemo(() => {
         const content = message.content
         return removeSvgEmptyLines(escapeBrackets(content))
     }, [message])
 
-    const isStale = message.content !== messageContent; // Check if the UI is lagging behind
-
     // Use useEffect to apply scroll anchoring
-    // useEffect(() => {
-    //     // When streaming content updates, maintain scroll position relative to content
-    //     if (message.status === 'streaming' && contentRef.current) {
-    //         // Get current scroll position
-    //         const container = contentRef.current.closest('.scroll-area');
-    //         if (container && container.scrollHeight > container.clientHeight) {
-    //             // If we're scrolled near the bottom, keep scrolling as content grows
-    //             const isNearBottom = container.scrollTop + container.clientHeight >=
-    //                 container.scrollHeight - 200;
+    useEffect(() => {
+        // When streaming content updates, maintain scroll position relative to content
+        if (message.status === 'streaming' && contentRef.current) {
+            // Get current scroll position
+            const container = contentRef.current.closest('.scroll-area');
+            if (container && container.scrollHeight > container.clientHeight) {
+                // If we're scrolled near the bottom, keep scrolling as content grows
+                const isNearBottom = container.scrollTop + container.clientHeight >=
+                    container.scrollHeight - 200;
 
-    //             if (isNearBottom) {
-    //                 requestAnimationFrame(() => {
-    //                     container.scrollTop = container.scrollHeight;
-    //                 });
-    //             }
-    //         }
-    //     }
-    // }, [message.content, message.status]);
+                if (isNearBottom) {
+                    requestAnimationFrame(() => {
+                        container.scrollTop = container.scrollHeight;
+                    });
+                }
+            }
+        }
+    }, [message.content, message.status]);
 
     // Handle empty content
     if (!message.content && message.status === 'pending') {
@@ -148,35 +145,6 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
                     // img: ({ src, alt, title }) => <MarkdownImage src={src} alt={alt} title={title} />,
                     img: MarkdownImage,
                     a: MarkdownLink,
-                    // a(props) {
-                    //     const { node, href, children, ...rest } = props;
-                    //     if (!href) return <span>{children}</span>;
-
-                    //     // Check if this is an image link by file extension
-                    //     const imageFileRegex = /\.(jpe?g|png|gif|webp|bmp|svg|avif|tiff?)(?=[?#]|$)/i;
-
-                    //     // Check for image service domains or paths
-                    //     const isImageService = /(\/img\/|\/image\/|\/images\/|image_inference_output|\/photos\/)/.test(href);
-
-                    //     // Check for query parameters that suggest an image
-                    //     const hasImageParams = /\?.*(?:img|image|photo|pic|picture|file)=/.test(href);
-
-                    //     if (href && (imageFileRegex.test(href) || isImageService || hasImageParams)) {
-                    //         // Extract potential alt text from children if it's just text
-                    //         const potentialAlt = typeof children === 'string' ? children : undefined;
-                    //         return <MarkdownImage src={href} alt={potentialAlt} />;
-                    //     }
-
-                    //     // Audio link detection remains
-                    //     const audioFileRegex = /\.(mp3|wav|ogg|m4a|flac)(?=[?#]|$)/i;
-                    //     const isAliyunAudio = href.includes('aliyuncs.com') && href.includes('audio');
-                    //     if (href && (audioFileRegex.test(href) || isAliyunAudio)) {
-                    //         return (<span className="inline-block align-middle"><InlineAudioPlayer src={href} label={children} /></span>);
-                    //     }
-
-                    //     // Regular link
-                    //     return <a href={href} target="_blank" rel="noopener noreferrer" {...rest}>{children}</a>;
-                    // },
                     code: MarkdownCode,
                     pre(props: any) {
                         const { children } = props;
