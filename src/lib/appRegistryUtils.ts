@@ -60,7 +60,7 @@ export function registerAppIfNeeded(app: AppItem): string {
         appRegistry[appId] = {
             id: appId,
             title: app.name,
-            appType: AppType.MCP,
+            appType: app.appType,
             path: appPath,
             icon: createAppIcon(app),
             component: createElement(
@@ -73,7 +73,7 @@ export function registerAppIfNeeded(app: AppItem): string {
                         })
                     })
                 },
-                React.createElement(ChatComponent({ appId, appType: AppType.MCP }))
+                React.createElement(ChatComponent({ appId, appType: app.appType }))
             ),
             defaultSize: { width: '80%', height: '85%' },
             description: app.description,

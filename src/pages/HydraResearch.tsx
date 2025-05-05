@@ -7,7 +7,7 @@ export function HydraResearch() {
         <ChatPage
             apiEndpoint="/chat/completions"
             appId="hydraResearch"
-            appType={AppType.System}
+            appType={AppType.Agent}
         />
     );
 } 
