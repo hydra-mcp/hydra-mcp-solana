@@ -134,15 +134,13 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
             ref={contentRef}
             className={cn(
                 'prose dark:prose-invert will-change-contents',
-                // Add a subtle style when content is deferred (optional)
-                // isStale && 'opacity-80 transition-opacity duration-300',
+                'opacity-80 transition-opacity duration-300',
                 className
             )}
         >
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                    // img: ({ src, alt, title }) => <MarkdownImage src={src} alt={alt} title={title} />,
                     img: MarkdownImage,
                     a: MarkdownLink,
                     code: MarkdownCode,
