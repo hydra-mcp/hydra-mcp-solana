@@ -442,33 +442,33 @@ export const appRegistry: Record<string, AppDefinition> = {
         onIconClick: toggleThemeDirectly,
         group: 'systemUtils'
     },
-    messages: {
-        id: 'messages',
-        appType: AppType.System,
-        path: '/chat',
-        title: 'Messages',
-        icon: <MessagesIcon />,
-        component: (
-            <Suspense fallback={<LoadingPlaceholder />}>
-                {/* Pass proper ChatPageProps to ChatComponent */}
-                {React.createElement(ChatComponent({ appId: 'message', appType: AppType.System }))}
-            </Suspense>
-        ),
-        defaultSize,
-        description: 'System message center, you can receive system messages here.',
-        status: 'online',
-        group: 'systemUtils',
-        suggestedQuestions: {
-            welcomeTitle: 'Welcome to Hydra OS',
-            welcomeDescription: 'You can access all apps through the desktop or Dock bar.',
-            modules: [
-                { title: 'Ask a Question', content: 'Ask a question to get started', icon: <HelpCircle className="h-5 w-5" /> },
-                { title: 'Get Information', content: 'Get information about blockchain projects', icon: <Info className="h-5 w-5" /> },
-                { title: 'Solve Problems', content: 'Solve problems related to blockchain projects', icon: <Puzzle className="h-5 w-5" /> },
-                { title: 'Get Recommendations', content: 'Get recommendations for blockchain projects', icon: <Lightbulb className="h-5 w-5" /> }
-            ]
-        }
-    },
+    // messages: {
+    //     id: 'messages',
+    //     appType: AppType.System,
+    //     path: '/chat',
+    //     title: 'Messages',
+    //     icon: <MessagesIcon />,
+    //     component: (
+    //         <Suspense fallback={<LoadingPlaceholder />}>
+    //             {/* Pass proper ChatPageProps to ChatComponent */}
+    //             {React.createElement(ChatComponent({ appId: 'message', appType: AppType.System }))}
+    //         </Suspense>
+    //     ),
+    //     defaultSize,
+    //     description: 'System message center, you can receive system messages here.',
+    //     status: 'online',
+    //     group: 'systemUtils',
+    //     suggestedQuestions: {
+    //         welcomeTitle: 'Welcome to Hydra OS',
+    //         welcomeDescription: 'You can access all apps through the desktop or Dock bar.',
+    //         modules: [
+    //             { title: 'Ask a Question', content: 'Ask a question to get started', icon: <HelpCircle className="h-5 w-5" /> },
+    //             { title: 'Get Information', content: 'Get information about blockchain projects', icon: <Info className="h-5 w-5" /> },
+    //             { title: 'Solve Problems', content: 'Solve problems related to blockchain projects', icon: <Puzzle className="h-5 w-5" /> },
+    //             { title: 'Get Recommendations', content: 'Get recommendations for blockchain projects', icon: <Lightbulb className="h-5 w-5" /> }
+    //         ]
+    //     }
+    // },
     // photos: {
     //     id: 'photos',
     //     path: '/photos',

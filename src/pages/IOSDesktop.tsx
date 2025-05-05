@@ -483,7 +483,8 @@ const IOSDesktopContent = ({
     // Dock apps - definition remains the same
     const dockApps = [
         { name: appRegistry.walletFinder.title, icon: appRegistry.walletFinder.icon, path: appRegistry.walletFinder.path },
-        { name: appRegistry.messages.title, icon: appRegistry.messages.icon, path: appRegistry.messages.path },
+        // { name: appRegistry.messages.title, icon: appRegistry.messages.icon, path: appRegistry.messages.path },
+        { name: appRegistry.agentBuilder.title, icon: appRegistry.agentBuilder.icon, path: appRegistry.agentBuilder.path },
         { name: appRegistry.settings.title, icon: appRegistry.settings.icon, path: appRegistry.settings.path, }
     ];
 

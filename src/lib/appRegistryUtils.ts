@@ -60,7 +60,7 @@ export function registerAppIfNeeded(app: AppItem): string {
         appRegistry[appId] = {
             id: appId,
             title: app.name,
-            appType: app.appType,
+            appType: app.appType || AppType.MCP,
             path: appPath,
             icon: createAppIcon(app),
             component: createElement(
