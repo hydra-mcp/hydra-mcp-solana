@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Pause, Play } from 'lucide-react';
 
@@ -7,20 +7,54 @@ export default function MarkdownAudio({ src, label }: { src: string, label?: Rea
     const [isExpanded, setIsExpanded] = useState(false);
     const [duration, setDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
+    const [debouncedSrc, setDebouncedSrc] = useState<string | undefined>(undefined);
+    const [hasError, setHasError] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
+    const srcTimerRef = useRef<number | null>(null);
+
+    // Debounce src changes to avoid loading incomplete URLs during streaming
+    useEffect(() => {
+        if (srcTimerRef.current) {
+            window.clearTimeout(srcTimerRef.current);
+        }
+
+        // Reset state when src changes
+        if (src !== debouncedSrc) {
+            setHasError(false);
+            if (isPlaying) {
+                setIsPlaying(false);
+            }
+        }
+
+        // Wait for src to stabilize before trying to load
+        srcTimerRef.current = window.setTimeout(() => {
+            setDebouncedSrc(src);
+        }, 300); // 300ms debounce time
+
+        return () => {
+            if (srcTimerRef.current) {
+                window.clearTimeout(srcTimerRef.current);
+            }
+        };
+    }, [src]);
 
     const togglePlayPause = () => {
-        if (audioRef.current) {
-            if (isPlaying) {
-                audioRef.current.pause();
-            } else {
-                audioRef.current.play();
-                if (!isExpanded) {
-                    setIsExpanded(true);
-                }
+        if (!audioRef.current || !debouncedSrc) return;
+
+        if (isPlaying) {
+            audioRef.current.pause();
+        } else {
+            // Try to play and handle failures
+            audioRef.current.play().catch(error => {
+                console.error("Error playing audio:", error);
+                setHasError(true);
+            });
+
+            if (!isExpanded) {
+                setIsExpanded(true);
             }
-            setIsPlaying(!isPlaying);
         }
+        setIsPlaying(!isPlaying);
     };
 
     const onLoadedMetadata = () => {
@@ -37,7 +71,11 @@ export default function MarkdownAudio({ src, label }: { src: string, label?: Rea
 
     const onEnded = () => {
         setIsPlaying(false);
-        // setCurrentTime(0);
+    };
+
+    const onError = () => {
+        setHasError(true);
+        setIsPlaying(false);
     };
 
     const formatTime = (time: number) => {
@@ -46,20 +84,25 @@ export default function MarkdownAudio({ src, label }: { src: string, label?: Rea
         return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     };
 
-    const progress = duration ? (currentTime / duration) * 100 : 0;
+    // Don't render anything if we don't have a stable URL yet
+    if (!debouncedSrc) {
+        return null;
+    }
 
-    // Calculate the radius and circumference for the circular progress
+    // Handle error state
+    if (hasError) {
+        return <span className="text-red-500 text-sm">Audio failed to load</span>;
+    }
+
+    const progress = duration ? (currentTime / duration) * 100 : 0;
     const radius = 12;
     const circumference = 2 * Math.PI * radius;
     const strokeDashoffset = circumference - (progress / 100) * circumference;
-
-    // SVG viewBox size
     const viewBoxSize = (radius + 2) * 2;
 
     return (
         <span className="inline-flex items-center gap-2 transition-all duration-300 align-middle -mt-0.5">
             <span className="relative inline-flex items-center justify-center align-middle">
-                {/* Circular button with progress ring */}
                 <button
                     onClick={togglePlayPause}
                     className={cn(
@@ -69,7 +112,6 @@ export default function MarkdownAudio({ src, label }: { src: string, label?: Rea
                     aria-label={isPlaying ? "Pause" : "Play"}
                     style={{ transform: "translateY(1px)" }}
                 >
-                    {/* Progress circle */}
                     {isPlaying && (
                         <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox={`0 0 ${viewBoxSize} ${viewBoxSize}`}>
                             <circle
@@ -96,7 +138,6 @@ export default function MarkdownAudio({ src, label }: { src: string, label?: Rea
                         </svg>
                     )}
 
-                    {/* Play/Pause icon */}
                     <span className={cn(
                         "relative z-10 transition-transform duration-300 flex items-center justify-center",
                         isPlaying ? "scale-90" : "scale-100"
@@ -106,7 +147,6 @@ export default function MarkdownAudio({ src, label }: { src: string, label?: Rea
                 </button>
             </span>
 
-            {/* Time and label */}
             {isExpanded && (
                 <>
                     <span className="text-xs text-muted-foreground inline-flex items-center">
@@ -121,13 +161,13 @@ export default function MarkdownAudio({ src, label }: { src: string, label?: Rea
                 </>
             )}
 
-            {/* Hidden audio element */}
             <audio
                 ref={audioRef}
-                src={src}
+                src={debouncedSrc}
                 onLoadedMetadata={onLoadedMetadata}
                 onTimeUpdate={onTimeUpdate}
                 onEnded={onEnded}
+                onError={onError}
                 className="hidden"
             />
         </span>
