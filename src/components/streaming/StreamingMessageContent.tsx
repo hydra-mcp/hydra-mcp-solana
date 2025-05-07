@@ -143,7 +143,7 @@ export function StreamingMessageContent({ message, className }: StreamingMessage
                 components={{
                     img: MarkdownImage,
                     a: MarkdownLink,
-                    code: MarkdownCode,
+                    // code: MarkdownCode,
                     pre(props: any) {
                         const { children } = props;
                         return <div className="not-prose my-2 rounded-md overflow-hidden">{children}</div>;

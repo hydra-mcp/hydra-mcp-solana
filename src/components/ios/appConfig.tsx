@@ -350,7 +350,6 @@ export const appRegistry: Record<string, AppDefinition> = {
     appStore: {
         id: 'app-store',
         appType: AppType.System,
-
         path: '/app-store',
         title: 'MCP App Store',
         icon: <AppStoreIcon />,
