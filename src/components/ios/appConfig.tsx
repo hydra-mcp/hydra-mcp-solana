@@ -52,7 +52,6 @@ export enum AppType {
 
 // App definitions
 export interface AppDefinition {
-    id: string;
     path: string;
     title: string;
     icon: string | ReactNode;
@@ -158,8 +157,6 @@ export const appGroups: Record<string, AppGroup> = {
 // Create a registry of all available apps
 export const appRegistry: Record<string, AppDefinition> = {
     walletFinder: {
-        id: 'wallet-finder',
-        appType: AppType.Pro,
         path: '/wallet-finder',
         title: 'CA Analysis',
         icon: <WalletFinderIcon />,
@@ -168,6 +165,7 @@ export const appRegistry: Record<string, AppDefinition> = {
                 <WalletFinderComponent />
             </Suspense>
         ),
+        appType: AppType.Pro,
         defaultSize,
         description: 'AI self-feedback learning method searches for the specified smart contract address.',
         status: 'online',
@@ -199,9 +197,6 @@ export const appRegistry: Record<string, AppDefinition> = {
         }
     },
     caSignal: {
-        id: 'ca-signal',
-        appType: AppType.Pro,
-
         path: '/ca-signal',
         title: 'CA Signal',
         icon: <CASignalIcon />,
@@ -210,6 +205,7 @@ export const appRegistry: Record<string, AppDefinition> = {
                 <CaSignalComponent />
             </Suspense>
         ),
+        appType: AppType.Pro,
         defaultSize,
         description: 'Based on the trading behavior of smart addresses on the chain, we will push project-related information.',
         status: 'coming_soon',
@@ -241,8 +237,6 @@ export const appRegistry: Record<string, AppDefinition> = {
         }
     },
     smartWallet: {
-        id: 'smart-wallet',
-        appType: AppType.Pro,
         path: '/smart-wallet',
         title: 'Smart Address',
         icon: <SmartWalletIcon />,
@@ -251,6 +245,7 @@ export const appRegistry: Record<string, AppDefinition> = {
                 <SmartWalletComponent />
             </Suspense>
         ),
+        appType: AppType.Agent,
         defaultSize,
         description: 'We will promptly push some smart addresses discovered on the chain to users, making it convenient for them to add these smart addresses to their monitoring system for future trading reference.',
         status: 'coming_soon',
@@ -282,8 +277,6 @@ export const appRegistry: Record<string, AppDefinition> = {
         }
     },
     aiTrade: {
-        id: 'ai-trade',
-        appType: AppType.Pro,
         path: '/ai-trade',
         title: 'AI Trade',
         icon: <AiTradeIcon />,
@@ -292,6 +285,7 @@ export const appRegistry: Record<string, AppDefinition> = {
                 <AiTradeComponent />
             </Suspense>
         ),
+        appType: AppType.Pro,
         defaultSize,
         description: 'AI-powered trading assistant for complex task execution and self-improvement.',
         status: 'coming_soon',
@@ -323,8 +317,6 @@ export const appRegistry: Record<string, AppDefinition> = {
         }
     },
     hydraResearch: {
-        id: 'hydra-research',
-        appType: AppType.System,
         path: '/hydra-research',
         title: 'Hydra Research',
         icon: <HydraResearchIcon />,
@@ -333,6 +325,7 @@ export const appRegistry: Record<string, AppDefinition> = {
                 <HydraResearchComponent />
             </Suspense>
         ),
+        appType: AppType.System,
         defaultSize,
         description: 'An information aggregation MCP intelligent AGENT in testing, continuously evolving and learning.',
         status: 'online',
@@ -348,12 +341,11 @@ export const appRegistry: Record<string, AppDefinition> = {
         }
     },
     appStore: {
-        id: 'app-store',
-        appType: AppType.System,
         path: '/app-store',
         title: 'MCP App Store',
         icon: <AppStoreIcon />,
         component: <AppStoreComponent />,
+        appType: AppType.System,
         defaultSize,
         description: 'Using HYDRAMCP allows you to experience all relevant MCP services on the market.',
         status: 'online',
@@ -369,8 +361,6 @@ export const appRegistry: Record<string, AppDefinition> = {
         }
     },
     agentBuilder: {
-        id: 'agent-builder',
-        appType: AppType.System,
         path: '/agent-builder',
         title: 'Agent Builder',
         icon: <AgentBuilderIcon />,
@@ -379,6 +369,7 @@ export const appRegistry: Record<string, AppDefinition> = {
                 <AgentBuilderComponent />
             </Suspense>
         ),
+        appType: AppType.System,
         defaultSize,
         description: 'Build your own agent with the help of AI',
         status: 'online',
@@ -392,8 +383,6 @@ export const appRegistry: Record<string, AppDefinition> = {
         }
     },
     solRecharge: {
-        id: 'sol-recharge',
-        appType: AppType.System,
         path: '/sol-recharge',
         title: 'Recharge',
         icon: <RechargeIcon />,
@@ -402,6 +391,7 @@ export const appRegistry: Record<string, AppDefinition> = {
                 <SolRechargeComponent />
             </Suspense>
         ),
+        appType: AppType.System,
         defaultSize,
         description: 'Convenient SOL token recharge service with real-time transaction monitoring and secure wallet integration.',
         status: 'online',
@@ -417,24 +407,22 @@ export const appRegistry: Record<string, AppDefinition> = {
         }
     },
     settings: {
-        id: 'settings',
-        appType: AppType.System,
         path: '/settings',
         title: 'Settings',
         icon: <SettingsIcon />,
         component: <SettingsApp />,
+        appType: AppType.System,
         defaultSize,
         description: 'Change your settings',
         status: 'online',
         group: 'systemUtils'
     },
     theme: {
-        id: 'theme',
-        appType: AppType.System,
         path: '/theme',
         title: 'Theme',
         icon: <ThemeIcon />,
         component: <ThemeApp />,
+        appType: AppType.System,
         defaultSize,
         description: 'Change your theme',
         status: 'online',
@@ -478,8 +466,6 @@ export const appRegistry: Record<string, AppDefinition> = {
     //     description: 'View your photos'
     // },
     home: {
-        id: 'home',
-        appType: AppType.System,
         path: '/',
         title: 'Home',
         icon: <HomeIcon />,
@@ -492,6 +478,7 @@ export const appRegistry: Record<string, AppDefinition> = {
                 </p>
             </div>
         ),
+        appType: AppType.System,
         defaultSize: { width: '60%', height: '50%' },
         description: 'Home',
         status: 'online'
@@ -521,8 +508,6 @@ export const appRegistry: Record<string, AppDefinition> = {
     //     description: 'Search for files or apps'
     // },
     calendar: {
-        id: 'calendar',
-        appType: AppType.System,
         path: '/calendar',
         title: 'Calendar',
         icon: <CalendarIcon />,
@@ -543,6 +528,7 @@ export const appRegistry: Record<string, AppDefinition> = {
                 </div>
             </div>
         ),
+        appType: AppType.System,
         defaultSize: { width: '65%', height: '70%' },
         description: 'View your calendar',
         status: 'online',

@@ -58,10 +58,8 @@ export function registerAppIfNeeded(app: AppItem): string {
     // Only register if not already in the registry
     if (!appRegistry[appId]) {
         appRegistry[appId] = {
-            id: appId,
-            title: app.name,
-            appType: app.appType || AppType.MCP,
             path: appPath,
+            title: app.name,
             icon: createAppIcon(app),
             component: createElement(
                 Suspense,
@@ -73,8 +71,12 @@ export function registerAppIfNeeded(app: AppItem): string {
                         })
                     })
                 },
-                React.createElement(ChatComponent({ appId, appType: app.appType }))
+                React.createElement(ChatComponent({
+                    appId,
+                    appType: app.appType
+                }))
             ),
+            appType: app.appType || AppType.MCP,
             defaultSize: { width: '80%', height: '85%' },
             description: app.description,
             group: 'installed',

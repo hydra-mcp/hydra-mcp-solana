@@ -28,6 +28,10 @@ export const RefreshAgentContext = React.createContext<RefreshAgentContextType>(
 
 export const useRefreshAgent = () => React.useContext(RefreshAgentContext);
 
+interface AppDefinitionWithId extends AppDefinition {
+    id: string;
+}
+
 // Context menu component
 interface ContextMenuProps {
     appTitle: string;
@@ -353,11 +357,11 @@ const IOSDesktopContent = ({
     const { openApp } = useAppWindow();
     const { installedApps: contextInstalledApps, uninstallAppAndRefresh, initialized, isLoading } = useAppInstall();
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-    const [appToUninstall, setAppToUninstall] = useState<AppDefinition | null>(null);
+    const [appToUninstall, setAppToUninstall] = useState<AppDefinitionWithId | null>(null);
 
     // Combined state for all desktop apps (default + installed)
     // Initialized with default apps using registry key as ID
-    const [apps, setApps] = useState<AppDefinition[]>(() =>
+    const [apps, setApps] = useState<AppDefinitionWithId[]>(() =>
         Object.entries(appRegistry).map(([key, app]) => ({
             ...app,
             id: key // Use registry key as ID
@@ -372,7 +376,7 @@ const IOSDesktopContent = ({
     // Effect to update apps from user agents
     useEffect(() => {
         // Convert user agents to app definitions
-        const agentAppDefinitions: AppDefinition[] = userAgents.map((agent): AppDefinition => ({
+        const agentAppDefinitions: AppDefinitionWithId[] = userAgents.map((agent): AppDefinitionWithId => ({
             id: `${agent.id}`, // Prefix with 'agent-' to avoid ID conflicts
             title: agent.name,
             appType: AppType.Agent,
@@ -431,7 +435,7 @@ const IOSDesktopContent = ({
         }
 
         // Convert installed apps from API (AppItem) to AppDefinition format
-        const installedAppDefinitions = contextInstalledApps.map((app): AppDefinition => ({
+        const installedAppDefinitions = contextInstalledApps.map((app): AppDefinitionWithId => ({
             id: app.id, // Use the ACTUAL App Store ID from API
             title: app.name,
             appType: AppType.MCP,

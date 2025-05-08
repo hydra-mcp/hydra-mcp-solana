@@ -8,11 +8,12 @@ import { StreamingProvider } from '@/lib/streaming/StreamingContext';
 import { useChatWithStreaming } from '@/hooks/useChatWithStreaming';
 import { useStreaming } from '@/lib/streaming/StreamingContext';
 import { AppType } from '@/components/ios/appConfig';
+
 interface ChatProviderProps {
     children: ReactNode;
     apiEndpoint: string;
     appType: AppType;
-    appDefinition?: AppDefinition;
+    appDefinition?: AppDefinition & { id?: string };
     options?: {
         enableHistory?: boolean;
         historyStorageKey?: string;
@@ -41,7 +42,8 @@ export function ChatProvider({
     // Initial system message
     const initialSystemMessage = appDefinition?.description;
 
-    // Get app ID
+    // Get app ID from appDefinition.id (might come from registry key)
+    // The id should be passed explicitly in appDefinition when accessing ChatProvider
     const appId = appDefinition?.id;
 
     // ensure each app has a unique storage key

@@ -3,12 +3,14 @@ import { ChatPage } from './ChatPage';
 import { AppType } from '@/components/ios/appConfig';
 
 export function WalletFinder({ isModal = false }: { isModal?: boolean }) {
+    // The appId matches the key in appRegistry
+    const appId = 'walletFinder';
+
     return (
         <ChatPage
             isModal={isModal}
             apiEndpoint="/chat/completions"
-            appId="walletFinder"
-            appType={AppType.Pro}
+            appId={appId}
         />
     );
 } 

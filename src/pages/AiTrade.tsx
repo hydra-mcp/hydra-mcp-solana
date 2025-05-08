@@ -5,9 +5,7 @@ import { AppType } from '@/components/ios/appConfig';
 export function AiTrade() {
     return (
         <ChatPage
-            apiEndpoint=""
             appId="aiTrade"
-            appType={AppType.Pro}
         />
     );
 } 
