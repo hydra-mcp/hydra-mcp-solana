@@ -157,6 +157,7 @@ const AppStoreComponent: React.FC<AppStoreComponentProps> = ({
         // Find the app from our list of apps
         const app = apps.find(app => app.id === appId);
         if (!app) return;
+        app.appType = AppType.MCP;
 
         // Register the app in appRegistry if needed
         registerAppIfNeeded(app);
