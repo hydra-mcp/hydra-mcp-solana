@@ -73,7 +73,6 @@ export function registerAppIfNeeded(app: AppItem): string {
                 },
                 React.createElement(ChatComponent({
                     appId,
-                    appType: app.appType
                 }))
             ),
             appType: app.appType || AppType.MCP,

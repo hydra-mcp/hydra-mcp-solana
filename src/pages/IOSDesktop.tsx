@@ -403,7 +403,7 @@ const IOSDesktopContent = ({
             path: `/agent/${agent.id}`,
             component: (
                 <Suspense fallback={<LoadingPlaceholder />}>
-                    {React.createElement(ChatComponent({ appId: agent.id, appType: AppType.Agent }))}
+                    {React.createElement(ChatComponent({ appId: agent.id }))}
                 </Suspense>
             ),
             defaultSize,
@@ -461,7 +461,7 @@ const IOSDesktopContent = ({
             component: ( // Define component lazily or directly as needed
                 <Suspense fallback={<LoadingPlaceholder />}>
                     {/* Ensure ChatComponent is correctly created or imported */}
-                    {React.createElement(ChatComponent({ appId: app.id, appType: AppType.MCP }))}
+                    {React.createElement(ChatComponent({ appId: app.id }))}
                 </Suspense>
             ),
             defaultSize,

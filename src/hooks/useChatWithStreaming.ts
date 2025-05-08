@@ -15,7 +15,7 @@ interface UseChatWithStreamingOptions {
     onUpdateChat: (chatId: string, updates: Partial<Chat>) => void;
     onError?: (error: Error) => void;
     config: {
-        appDefinition?: AppDefinition;
+        appDefinition?: AppDefinition & { id: string };
     };
 }
 

@@ -11,10 +11,11 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import TokenPlugin from "@solana-agent-kit/plugin-token";
+// @ts-ignore
 import { usePhantomWallet } from "./PhantomWallet";
 
 
-export const SolanaAgent = () => {
+const SolanaAgent = () => {
   const { phantom, connected, publicKey } = usePhantomWallet();
   console.log("publicKey", publicKey);
 
